@@ -3,32 +3,32 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="cat"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_cat"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>cat</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_cat</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>cat</refname>
-        <refpurpose>
+	<refname>aq cat</refname>
+	<refpurpose>
 	    Dump broker generated plenaries
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
 	    <command>aq cat</command>
-	    <arg choice="plain"><option>--machine <replaceable>MACHINE</replaceable></option></arg>
-	    <arg choice="opt"><option>--generate</option></arg>
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <arg choice="plain"><option>--machine <replaceable>MACHINE</replaceable></option></arg>
+	    <arg><option>--generate</option></arg>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -36,64 +36,93 @@
 	    <group choice="req">
 		<arg choice="plain"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
 		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--metacluster <replaceable>METACLUSTER</replaceable></option></arg>
 	    </group>
-	    <arg choice="opt"><option>--data</option></arg>
-	    <arg choice="opt"><option>--resourcegroup <replaceable>GROUP</replaceable></option></arg>
-	    <group choice="opt">
+	    <arg><option>--data</option></arg>
+	    <arg><option>--client</option></arg>
+	    <arg><option>--resourcegroup <replaceable>GROUP</replaceable></option></arg>
+	    <group>
 		<arg choice="plain"><option>--application <replaceable>NAME</replaceable></option></arg>
 		<arg choice="plain"><option>--filesystem <replaceable>NAME</replaceable></option></arg>
 		<arg choice="plain"><option>--hostlink <replaceable>NAME</replaceable></option></arg>
 		<arg choice="plain"><option>--intervention <replaceable>NAME</replaceable></option></arg>
 		<arg choice="plain"><option>--service_address <replaceable>NAME</replaceable></option></arg>
 		<arg choice="plain"><option>--share <replaceable>NAME</replaceable></option></arg>
-		<arg choice="plain"><option>--reboot_intervention <replaceable>NAME</replaceable></option></arg>
-		<arg choice="plain"><option>--reboot_schedule <replaceable>NAME</replaceable></option></arg>
+		<arg choice="plain"><option>--reboot_intervention</option></arg>
+		<arg choice="plain"><option>--reboot_schedule</option></arg>
 		<arg choice="plain"><option>--virtual_machine <replaceable>NAME</replaceable></option></arg>
 	    </group>
-	    <arg choice="opt"><option>--generate</option></arg>
+	    <arg><option>--generate</option></arg>
+	</cmdsynopsis>
+	<cmdsynopsis>
+	    <command>aq cat</command>
+	    <group choice="req">
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+	    </group>
+	    <arg><option>--resourcegroup <replaceable>GROUP</replaceable></option></arg>
+	    <group>
+		<arg choice="plain"><option>--system_list</option></arg>
+		<arg choice="plain"><option>--auto_start_list</option></arg>
+	    </group>
+	    <arg><option>--generate</option></arg>
 	</cmdsynopsis>
 	<cmdsynopsis>
 	    <command>aq cat</command>
 	    <arg choice="plain"><option>--city <replaceable>CITY</replaceable></option></arg>
-	    <arg choice="opt"><option>--generate</option></arg>
+	    <arg><option>--generate</option></arg>
 	</cmdsynopsis>
 	<cmdsynopsis>
 	    <command>aq cat</command>
 	    <arg choice="plain"><option>--service <replaceable>SERVICE</replaceable></option></arg>
-	    <arg choice="opt"><option>--instance <replaceable>INSTANCE</replaceable></option></arg>
-	    <arg choice="opt"><option>--server</option></arg>
-	    <arg choice="opt"><option>--default</option></arg>
-	    <arg choice="opt"><option>--generate</option></arg>
+	    <arg><option>--instance <replaceable>INSTANCE</replaceable></option></arg>
+	    <arg><option>--server</option></arg>
+	    <arg><option>--default</option></arg>
+	    <arg><option>--generate</option></arg>
 	</cmdsynopsis>
 	<cmdsynopsis>
 	    <command>aq cat</command>
-	    <arg choice="plain"><option>--switch <replaceable>SWITCH</replaceable></option></arg>
-	    <arg choice="opt"><option>--generate</option></arg>
+	    <arg choice="plain"><option>--network_device <replaceable>NETDEV</replaceable></option></arg>
+	    <arg><option>--generate</option></arg>
+	</cmdsynopsis>
+	<cmdsynopsis>
+	    <command>aq cat</command>
+	    <group choice="req">
+		<arg choice="plain"><option>--networkip<replaceable>IP</replaceable></option></arg>
+	    </group>
+	    <group>
+		<arg choice="plain"><option>--network_environment<replaceable>NETENV</replaceable></option></arg>
+	    </group>
+	    <arg><option>--generate</option></arg>
 	</cmdsynopsis>
 	<cmdsynopsis>
 	    <command>aq cat</command>
 	    <arg choice="plain"><option>--personality <replaceable>PERSONALITY</replaceable></option></arg>
-	    <arg choice="opt"><option>--archetype <replaceable>ARCHETYPE</replaceable></option></arg>
-	    <arg choice="opt"><option>--pre_feature</option></arg>
-	    <arg choice="opt"><option>--post_feature</option></arg>
-	    <arg choice="opt"><option>--param_tmpl <replaceable>NAME</replaceable></option></arg>
-	    <arg choice="opt"><option>--generate</option></arg>
+	    <arg><option>--personality_stage <replaceable>STAGE</replaceable></option></arg>
+	    <arg><option>--archetype <replaceable>ARCHETYPE</replaceable></option></arg>
+	    <arg><option>--param_tmpl <replaceable>NAME</replaceable></option></arg>
+	    <arg><option>--generate</option></arg>
+	</cmdsynopsis>
+	<cmdsynopsis>
+	    <command>aq cat</command>
+	    <arg choice="plain"><option>--virtual_switch <replaceable>NAME</replaceable></option></arg>
+	    <arg choice="plain"><option>--data</option></arg>
+	    <arg><option>--generate</option></arg>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq cat</command> command displays the various plenary templates generated and maintained by the broker.
-        </para>
+	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Generic command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--generate</option>
 		</term>
 		<listitem>
@@ -106,7 +135,7 @@
 	<variablelist>
 	    <title>Looking at the host/machine plenaries</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--machine <replaceable>MACHINE</replaceable></option>
 		</term>
 		<listitem>
@@ -117,7 +146,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOSTNAME</replaceable></option>
 		</term>
 		<listitem>
@@ -132,7 +161,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -147,7 +176,22 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--metacluster <replaceable>METACLUSTER</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Display plenaries related to the metacluster <replaceable>METACLUSTER</replaceable>. If
+			no other options are specified, then the object template is displayed. If the
+			<option>--data</option> option is specified, then the template storing all the
+			data for the cluster is displayed. If one of the resource-specific options is
+			specified (e.g. <option>--application</option>, <option>--filesystem</option> etc.),
+			then the named resource is displayed.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--data</option>
 		</term>
 		<listitem>
@@ -158,7 +202,18 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--client</option>
+		</term>
+		<listitem>
+		    <para>
+			In case of clusters, display the plenary template which all members of the cluster
+			include.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--resourcegroup <replaceable>GROUP</replaceable></option>
 		</term>
 		<listitem>
@@ -172,16 +227,18 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--application <replaceable>NAME</replaceable></option>,
 		    <option>--filesystem <replaceable>NAME</replaceable></option>,
 		    <option>--hostlink <replaceable>NAME</replaceable></option>,
 		    <option>--intervention <replaceable>NAME</replaceable></option>,
 		    <option>--service_address <replaceable>NAME</replaceable></option>,
 		    <option>--share <replaceable>NAME</replaceable></option>,
-		    <option>--reboot_intervention <replaceable>NAME</replaceable></option>,
-		    <option>--reboot_schedule <replaceable>NAME</replaceable></option>,
+		    <option>--reboot_intervention</option>,
+		    <option>--reboot_schedule</option>,
 		    <option>--virtual_machine <replaceable>NAME</replaceable></option>
+		    <option>--auto_start_list</option>,
+		    <option>--system_list</option>,
 		</term>
 		<listitem>
 		    <para>
@@ -192,14 +249,29 @@
 	    </varlistentry>
 	</variablelist>
 	<variablelist>
-	    <title>Looking at switch plenaries</title>
+	    <title>Looking at network device plenaries</title>
 	    <varlistentry>
-	        <term>
-		    <option>--switch <replaceable>SWITCH</replaceable></option>
+		<term>
+		    <option>--network_device <replaceable>NETDEV</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-			Display the plenary of the named switch.
+			Display the plenary of the named network device.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	</variablelist>
+	<variablelist>
+	    <title>Looking at network plenaries</title>
+	    <varlistentry>
+	        <term>
+		    <option>--networkip <replaceable>IP</replaceable></option>
+		    <option>--network_environment<replaceable>NETENV</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Display the plenary of the network.  If the <option>--network_environment</option> is
+			not given then it defaults to "internal".
 		    </para>
 		</listitem>
 	    </varlistentry>
@@ -207,7 +279,7 @@
 	<variablelist>
 	    <title>Looking at location plenaries</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--city <replaceable>CITY</replaceable></option>
 		</term>
 		<listitem>
@@ -220,7 +292,7 @@
 	<variablelist>
 	    <title>Looking at service plenaries</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--service <replaceable>SERVICE</replaceable></option>
 		</term>
 		<listitem>
@@ -234,7 +306,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--instance <replaceable>INSTANCE</replaceable></option>
 		</term>
 		<listitem>
@@ -249,7 +321,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--server</option>
 		</term>
 		<listitem>
@@ -261,7 +333,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--default</option>
 		</term>
 		<listitem>
@@ -276,20 +348,19 @@
 	<variablelist>
 	    <title>Looking at personality plenaries</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--personality <replaceable>PERSONALITY</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
 			Display the plenary of the given personality. If no other options are specified, the default
-			top-level plenary is displayed. Use options <option>--pre_feature</option>,
-			<option>--post_feature</option>, and <option>--param_tmpl</option> to select other related
+			top-level plenary is displayed. Use option <option>--param_tmpl</option> to select other related
 			templates.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--archetype <replaceable>ARCHETYPE</replaceable></option>
 		</term>
 		<listitem>
@@ -299,7 +370,17 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--personality_stage <replaceable>STAGE</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Select the stage of the personality to use. Defaults to <literal>current</literal>.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--param_tmpl <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -308,23 +389,18 @@
 		    </para>
 		</listitem>
 	    </varlistentry>
+	</variablelist>
+	<variablelist>
+	    <title>Looking at virtual switch plenaries</title>
 	    <varlistentry>
-	        <term>
-		    <option>--pre_feature</option>
+		<term>
+		    <option>--virtual_switch <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-			Display the template including features before the personality body.
-		    </para>
-		</listitem>
-	    </varlistentry>
-	    <varlistentry>
-	        <term>
-		    <option>--post_feature</option>
-		</term>
-		<listitem>
-		    <para>
-			Display the template including features after the personality body.
+			Display the plenary of the named virtual switch. Virtual switches are currently
+			not compileable, but may be in the future, therefore the <option>--data</option> option
+			is mandatory.
 		    </para>
 		</listitem>
 	    </varlistentry>

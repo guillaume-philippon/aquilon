@@ -3,21 +3,21 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_interface_address"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_interface_address"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_interface_address</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_interface_address</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add interface address</refname>
-        <refpurpose>
+	<refname>aq add interface address</refname>
+	<refpurpose>
 	    Assign an IP address to an interface
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
@@ -27,60 +27,71 @@
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
 	    <group choice="req">
-	        <arg choice="plain"><option>--machine <replaceable>MACHINE</replaceable></option></arg>
-	        <arg choice="plain"><option>--chassis <replaceable>CHASSIS</replaceable></option></arg>
-	        <arg choice="plain"><option>--switch <replaceable>SWITCH</replaceable></option></arg>
+		<arg choice="plain"><option>--machine <replaceable>MACHINE</replaceable></option></arg>
+		<arg choice="plain"><option>--chassis <replaceable>CHASSIS</replaceable></option></arg>
+		<arg choice="plain"><option>--switch <replaceable>SWITCH</replaceable></option></arg>
+		<arg choice="plain"><option>--network_device <replaceable>NETDEV</replaceable></option></arg>
 	    </group>
 	    <arg choice="plain"><option>--interface <replaceable>IFACE</replaceable></option></arg>
-	    <arg choice="opt"><option>--fqdn <replaceable>FQDN</replaceable></option></arg>
-	    <arg choice="opt"><option>--label <replaceable>LABEL</replaceable></option></arg>
-	    <arg choice="opt"><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
+	    <group>
+		<arg choice="plain"><option>--fqdn <replaceable>FQDN</replaceable></option></arg>
+		<arg choice="plain"><option>--shortname <replaceable>NAME</replaceable></option></arg>
+	    </group>
+	    <arg><option>--label <replaceable>LABEL</replaceable></option></arg>
+	    <arg><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
 	    <group>
 		<synopfragmentref linkend="ip-options">IP address options</synopfragmentref>
 	    </group>
-	    <group choice="opt">
+	    <group>
 		<arg choice="plain"><option>--map_to_primary</option></arg>
 		<arg choice="plain"><option>--nomap_to_primary</option></arg>
+		<arg><option>--shared</option></arg>
+	        <arg choice="plain"><option>--priority <replaceable>PRIO</replaceable></option></arg>
 	    </group>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	    <xi:include href="../common/ip_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add interface address</command> command assigns an IP address to
 	    an interface.
 	</para>
 	<para>
 	    Note that you cannot add the primary IP address of a hardware entity using this command.
-	    Primary addresses are created by the <command>add switch</command>, <command>add
+	    Primary addresses are created by the <command>add network device</command>, <command>add
 		chassis</command>, and <command>add host</command> commands.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--machine <replaceable>MACHINE</replaceable></option>,
 		    <option>--chassis <replaceable>CHASSIS</replaceable></option>,
 		    <option>--switch <replaceable>SWITCH</replaceable></option>
+		    <option>--network_device <replaceable>NETDEV</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-		        Specify the hardware entity you wish to add the IP address to. You can use either
+			Specify the hardware entity you wish to add the IP address to. You can use either
 			the hardware label or the primary name for <replaceable>MACHINE</replaceable>,
-			<replaceable>CHASISS</replaceable> and <replaceable>SWITCH</replaceable>.
+			<replaceable>CHASISS</replaceable> and <replaceable>NETDEV</replaceable>.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--interface <replaceable>IFACE</replaceable></option>
 		</term>
 		<listitem>
@@ -90,7 +101,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--fqdn <replaceable>FQDN</replaceable></option>
 		</term>
 		<listitem>
@@ -111,11 +122,25 @@
 		    <para>
 			If <option>--fqdn</option> is not specified, then the value is generated from the local part of the primary name of the
 			hardware and the name of the interface separated by a dash, in the same DNS domain as the primary name of the hardware.
+			Alternatively, if <replaceable>IFACE</replaceable> is a management interface, then the value is generated by
+			appending the letter "r" to the relative hostname, using the same DNS domain as the primary name.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--shortname <replaceable>NAME</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Short (relative) name Name to assign to the IP address in DNS. The DNS domain
+			will either be the same as the primary name of the device if it already has one, or the default DNS domain
+			assigned to the location of the device.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--label <replaceable>LABEL</replaceable></option>
 		</term>
 		<listitem>
@@ -132,7 +157,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--network_environment <replaceable>NETENV</replaceable></option>
 		</term>
 		<listitem>
@@ -148,7 +173,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--map_to_primary</option>, <option>--nomap_to_primary</option>
 		</term>
 		<listitem>
@@ -159,8 +184,32 @@
 		    </para>
 		</listitem>
 	    </varlistentry>
+	    <varlistentry>
+	        <term>
+		    <option>--shared</option>
+		</term>
+		<listitem>
+		    <para>
+			Indicate that the address assigned to this interface can also be assinged
+			to other interfaces.  This is primary inteded for HSRP/VRRP addresses which
+			can exist on more than one network device at a time.  Specifying this option
+			requires <option>--priority</option>.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+	        <term>
+		    <option>--priority <replaceable>PRIO</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Specify the relative priority of a shared address.
+		    </para>
+		</listitem>
+	    </varlistentry>
 	</variablelist>
 	<xi:include href="../common/ip_options_desc.xml"/>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -189,9 +238,9 @@
 	    <title>Add an auxiliary address to the second interface of host foo</title>
 	    <programlisting>
 aq add interface address --machine foo.one-nyp.ms.com \
-                         --interface eth1 \
-			 --fqdn foo-e1.one-nyp.ms.com \
-			 --ip 10.10.1.10
+    --interface eth1 \
+    --fqdn foo-e1.one-nyp.ms.com \
+    --ip 10.10.1.10
 	    </programlisting>
 	</example>
 
@@ -199,19 +248,19 @@ aq add interface address --machine foo.one-nyp.ms.com \
 	    <title>Add a second auxiliary address to the same interface</title>
 	    <programlisting>
 aq add interface address --machine foo.one-nyp.ms.com \
-                         --interface eth1 \
-			 --label bar \
-			 --fqdn foo-e1-bar.one-nyp.ms.com \
-			 --ip 10.10.1.11
+    --interface eth1 \
+    --label bar \
+    --fqdn foo-e1-bar.one-nyp.ms.com \
+    --ip 10.10.1.11
 	    </programlisting>
 	</example>
 
 	<example>
 	    <title>Let the broker auto-generate the DNS entry</title>
 	    <programlisting>
-aq add interface address --switch foo.one-nyp.ms.com \
-			 --interface vlan110 \
-			 --ip 10.10.1.1
+aq add interface address --network_device foo.one-nyp.ms.com \
+    --interface vlan110 \
+    --ip 10.10.1.1
 	    </programlisting>
 	    <para>
 		The broker will add foo-vlan110.one-nyp.ms.com to the DNS using IP address 10.10.1.1.
@@ -222,11 +271,11 @@ aq add interface address --switch foo.one-nyp.ms.com \
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>add_chassis</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>add_host</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>add_switch</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>poll_switch</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>add_network_environment</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	    <citerefentry><refentrytitle>aq_add_chassis</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_add_host</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_add_network_device</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_poll_network_device</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_add_network_environment</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

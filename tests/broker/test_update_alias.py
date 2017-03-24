@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2012,2013  Contributor
+# Copyright (C) 2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 # limitations under the License.
 """Module for testing the update archetype command."""
 
-
 import unittest
 
 if __name__ == "__main__":
@@ -25,9 +24,10 @@ if __name__ == "__main__":
     utils.import_depends()
 
 from broker.brokertest import TestBrokerCommand
+from eventstest import EventsTestMixin
 
 
-class TestUpdateAlias(TestBrokerCommand):
+class TestUpdateAlias(EventsTestMixin, TestBrokerCommand):
 
     def test_100_update(self):
         command = ["update", "alias",
@@ -36,13 +36,14 @@ class TestUpdateAlias(TestBrokerCommand):
         self.noouttest(command)
 
     def test_110_update_mscom(self):
+        self.event_upd_dns('alias.ms.com')
         command = ["update", "alias", "--fqdn", "alias.ms.com",
                    "--target", "arecord14.aqd-unittest.ms.com",
-                   "--comments", "Other alias comments"]
+                   "--comments", "New alias comments"]
         self.dsdb_expect("update_host_alias "
                          "-alias alias.ms.com "
                          "-new_host arecord14.aqd-unittest.ms.com "
-                         "-new_comments Other alias comments")
+                         "-new_comments New alias comments")
         self.noouttest(command)
         self.dsdb_verify()
 
@@ -75,7 +76,7 @@ class TestUpdateAlias(TestBrokerCommand):
         command = ["search", "dns", "--fullinfo", "--fqdn", "alias.ms.com"]
         out = self.commandtest(command)
         self.matchoutput(out, "Target: arecord14.aqd-unittest.ms.com", command)
-        self.matchoutput(out, "Comments: Other alias comments", command)
+        self.matchoutput(out, "Comments: New alias comments", command)
 
     def test_320_verify_oldtarget(self):
         command = ["search", "dns", "--fullinfo",
@@ -132,6 +133,171 @@ class TestUpdateAlias(TestBrokerCommand):
         self.matchoutput(out,
                          "Aliases: restrict1.aqd-unittest.ms.com, "
                          "restrict2.aqd-unittest.ms.com",
+                         command)
+
+    def test_500_repoint2diff_environment(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias2host.aqd-unittest-ut-env.ms.com",
+                   "--dns_environment", "ut-env",
+                   "--target", "alias13.aqd-unittest.ms.com",
+                   "--target_environment", "ut-env"]
+        self.noouttest(command)
+
+    def test_505_verify_alias_repoint2diff_environment(self):
+        command = ["show", "alias",
+                   "--fqdn", "alias2host.aqd-unittest-ut-env.ms.com",
+                   "--dns_environment", "ut-env"]
+        out = self.commandtest(command)
+
+        self.matchoutput(out, "Alias: alias2host.aqd-unittest-ut-env.ms.com", command)
+        self.matchoutput(out, "Target: alias13.aqd-unittest.ms.com", command)
+        self.matchoutput(out, "DNS Environment: ut-env", command)
+
+    def test_600_update_ttl(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias2alias.aqd-unittest.ms.com",
+                   "--ttl", 120]
+        self.noouttest(command)
+
+    def test_620_verify_update_ttl(self):
+        command = ["search", "dns", "--fullinfo",
+                   "--fqdn", "alias2alias.aqd-unittest.ms.com"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Alias: alias2alias.aqd-unittest.ms.com", command)
+        self.matchoutput(out, "TTL: 120", command)
+
+    def test_700_remove_ttl(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias2alias.aqd-unittest.ms.com",
+                   "--clear_ttl"]
+        self.noouttest(command)
+
+    def test_720_verify_remove_ttl(self):
+        command = ["search", "dns", "--fullinfo",
+                   "--fqdn", "alias2alias.aqd-unittest.ms.com"]
+        out = self.commandtest(command)
+        self.matchclean(out, "TTL", command)
+
+    def test_800_update_grn(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias2host-grn.aqd-unittest.ms.com",
+                   "--grn", "grn:/ms/ei/aquilon/unittest"]
+        self.noouttest(command)
+
+    def test_805_verify_update_grn(self):
+        command = ["search", "dns", "--fullinfo",
+                   "--fqdn", "alias2host-grn.aqd-unittest.ms.com"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/unittest",
+                         command)
+
+    def test_810_update_eon_id(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias3alias.aqd-unittest.ms.com",
+                   "--eon_id", "2"]
+        self.noouttest(command)
+
+    def test_815_verify_update_eon_id(self):
+        command = ["search", "dns", "--fullinfo",
+                   "--fqdn", "alias3alias.aqd-unittest.ms.com"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/aqd",
+                         command)
+
+    def test_816_grn_conflict_with_multi_level_alias(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias2alias.aqd-unittest.ms.com",
+                   "--target", "unittest00.one-nyp.ms.com"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "Alias alias2alias.aqd-unittest.ms.com "
+                         "is assoicated with GRN grn:/ms/ei/aquilon/aqd. "
+                         "It conflicts with target "
+                         "DNS Record unittest00.one-nyp.ms.com: "
+                         "DNS Record unittest00.one-nyp.ms.com is a "
+                         "primary name. GRN should not be set but derived "
+                         "from the device.",
+                         command)
+
+    def test_820_clear_grn(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias3alias.aqd-unittest.ms.com",
+                   "--clear_grn"]
+        self.noouttest(command)
+
+    def test_825_verify_clear_grn(self):
+        command = ["search", "dns", "--fullinfo",
+                   "--fqdn", "alias3alias.aqd-unittest.ms.com"]
+        out = self.commandtest(command)
+        self.matchclean(out, "Owned by GRN:", command)
+
+    def test_830_update_grn_conflict(self):
+        command = ["add", "alias",
+                   "--fqdn", "temp-alias.aqd-unittest.ms.com",
+                   "--target", "unittest00.one-nyp.ms.com"]
+        self.noouttest(command)
+
+        command = ["update", "alias",
+                   "--fqdn", "temp-alias.aqd-unittest.ms.com",
+                   "--grn", "grn:/ms/ei/aquilon/aqd"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "Alias temp-alias.aqd-unittest.ms.com depends on "
+                         "DNS Record unittest00.one-nyp.ms.com. "
+                         "It conflicts with GRN grn:/ms/ei/aquilon/aqd: "
+                         "DNS Record unittest00.one-nyp.ms.com is a "
+                         "primary name. GRN should not be set but derived "
+                         "from the device.",
+                         command)
+
+        command = ["del", "alias",
+                   "--fqdn", "temp-alias.aqd-unittest.ms.com"]
+        self.noouttest(command)
+
+    def test_835_grn_conflict_with_primary_name(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias2host-grn.aqd-unittest.ms.com",
+                   "--target", "unittest00.one-nyp.ms.com"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "Alias alias2host-grn.aqd-unittest.ms.com "
+                         "is assoicated with GRN grn:/ms/ei/aquilon/unittest. "
+                         "It conflicts with target "
+                         "DNS Record unittest00.one-nyp.ms.com: "
+                         "DNS Record unittest00.one-nyp.ms.com is a "
+                         "primary name. GRN should not be set but derived "
+                         "from the device.",
+                         command)
+
+    def test_840_grn_conflict_with_service_address(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias2host-grn.aqd-unittest.ms.com",
+                   "--target", "zebra2.aqd-unittest.ms.com"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "Alias alias2host-grn.aqd-unittest.ms.com "
+                         "is assoicated with GRN grn:/ms/ei/aquilon/unittest. "
+                         "It conflicts with target "
+                         "DNS Record zebra2.aqd-unittest.ms.com: "
+                         "DNS Record zebra2.aqd-unittest.ms.com is a "
+                         "service address. GRN should not be set but derived "
+                         "from the device.",
+                         command)
+
+    def test_850_grn_conflict_with_interface_name(self):
+        command = ["update", "alias",
+                   "--fqdn", "alias2host-grn.aqd-unittest.ms.com",
+                   "--target", "unittest20-e1.aqd-unittest.ms.com"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "Alias alias2host-grn.aqd-unittest.ms.com "
+                         "is assoicated with GRN grn:/ms/ei/aquilon/unittest. "
+                         "It conflicts with target "
+                         "DNS Record unittest20-e1.aqd-unittest.ms.com: "
+                         "DNS Record unittest20-e1.aqd-unittest.ms.com is "
+                         "already be used by the interfaces "
+                         "unittest20.aqd-unittest.ms.com/eth1. "
+                         "GRN should not be set but derived from the device.",
                          command)
 
 

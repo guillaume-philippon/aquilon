@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2012,2013  Contributor
+# Copyright (C) 2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ from brokertest import TestBrokerCommand
 class TestDelServiceAddress(TestBrokerCommand):
 
     def testdelzebra2(self):
-        ip = self.net.unknown[13].usable[1]
+        ip = self.net["zebra_vip"].usable[1]
         self.dsdb_expect_delete(ip)
         command = ["del", "service", "address", "--name", "zebra2",
                    "--hostname", "unittest20.aqd-unittest.ms.com"]
@@ -40,8 +40,10 @@ class TestDelServiceAddress(TestBrokerCommand):
         command = ["del", "service", "address", "--name", "zebra2",
                    "--hostname", "unittest20.aqd-unittest.ms.com"]
         out = self.notfoundtest(command)
-        self.matchoutput(out, "Service Address zebra2, hostresource instance "
-                         "not found.", command)
+        self.matchoutput(out,
+                         "Service Address zebra2, host "
+                         "unittest20.aqd-unittest.ms.com not found.",
+                         command)
         self.dsdb_verify(empty=True)
 
     def testverifyzebra2(self):
@@ -51,17 +53,14 @@ class TestDelServiceAddress(TestBrokerCommand):
                          "found.", command)
 
     def testdelzebra3(self):
-        ip = self.net.unknown[13].usable[0]
-        self.dsdb_expect_delete(ip)
-        self.dsdb_expect_add("zebra3.aqd-unittest.ms.com", ip)
         command = ["del", "service", "address", "--keep_dns",
                    "--hostname", "unittest20.aqd-unittest.ms.com",
                    "--name", "zebra3"]
         self.noouttest(command)
-        self.dsdb_verify()
+        self.dsdb_verify(empty=True)
 
     def testverifyzebra3(self):
-        ip = self.net.unknown[13].usable[0]
+        ip = self.net["zebra_vip"].usable[0]
         command = ["show", "address", "--fqdn", "zebra3.aqd-unittest.ms.com"]
         out = self.commandtest(command)
         self.matchoutput(out, "DNS Record: zebra3.aqd-unittest.ms.com", command)
@@ -74,8 +73,10 @@ class TestDelServiceAddress(TestBrokerCommand):
         command = ["del", "service", "address", "--name", "zebra3",
                    "--hostname", "unittest20.aqd-unittest.ms.com"]
         out = self.notfoundtest(command)
-        self.matchoutput(out, "Service Address zebra3, hostresource instance "
-                         "not found.", command)
+        self.matchoutput(out,
+                         "Service Address zebra3, host "
+                         "unittest20.aqd-unittest.ms.com not found.",
+                         command)
         self.dsdb_verify(empty=True)
 
     def testfailhostname(self):

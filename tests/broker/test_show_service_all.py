@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,14 +33,13 @@ class TestShowServiceAll(TestBrokerCommand):
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Service: afs Instance: q.ny.ms.com", command)
         self.matchoutput(out, "Service: afs Instance: q.ln.ms.com", command)
-        self.matchoutput(out, "Service: bootserver Instance: np.test", command)
-        self.matchoutput(out, "Service: dns Instance: utdnsinstance", command)
+        self.matchoutput(out, "Service: bootserver Instance: one-nyp", command)
+        self.matchoutput(out, "Service: dns Instance: unittest", command)
         self.matchoutput(out, "Service: ntp Instance: pa.ny.na", command)
 
     def testshowserviceproto(self):
         command = "show service --all --format proto"
-        out = self.commandtest(command.split(" "))
-        self.parse_service_msg(out)
+        self.protobuftest(command.split(" "))
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestShowServiceAll)

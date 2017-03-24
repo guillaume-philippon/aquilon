@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,26 +38,19 @@ class TestVendorConstraints(TestBrokerCommand):
         out = self.commandtest(command)
         self.matchoutput(out, "Vendor: hp", command)
 
-    def testdelvendorwithcpu(self):
-        command = "del vendor --vendor amd"
-        out = self.badrequesttest(command.split(" "))
-        self.matchoutput(out, "in use by a CPU", command)
-
-    def testverifydelvendorwithcpu(self):
-        command = ["show_vendor", "--vendor=intel"]
-        out = self.commandtest(command)
-        self.matchoutput(out, "Vendor: intel", command)
-
     # TODO: better place for this test
     def testdelxeon2500(self):
-        command = "del cpu --cpu xeon_2500 --vendor intel --speed 2500"
+        command = "del model --model e5-2640 --vendor intel"
         out = self.badrequesttest(command.split(" "))
-        self.matchoutput(out,
-                         "Cpu xeon_2500 is still used by the following "
-                         "models, and cannot be deleted: hp/bl260c, "
-                         "hp/utccissmodel, hp/uttorswitch, verari/vb1205xm",
-                          command)
+        self.matchoutput(out, "Model intel/e5-2640 is still in use and "
+                         "cannot be deleted.", command)
 
+    # TODO: better place for this test
+    def testdelxeon2660(self):
+        command = "del model --model unused --vendor utvendor"
+        out = self.badrequesttest(command.split(" "))
+        self.matchoutput(out, "Model utvendor/unused is still referenced by "
+                         "machine models and cannot be deleted.", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(

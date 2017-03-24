@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,16 +29,14 @@ from brokertest import TestBrokerCommand
 class TestDelAuxiliary(TestBrokerCommand):
 
     def testdelunittest00e1(self):
-        self.dsdb_expect_delete(self.net.unknown[0].usable[3])
+        self.dsdb_expect_delete(self.net["unknown0"].usable[3])
         command = "del auxiliary --auxiliary unittest00-e1.one-nyp.ms.com"
-        (out, err) = self.successtest(command.split(" "))
-        self.assertEmptyOut(out, command)
+        self.statustest(command.split(" "))
         self.dsdb_verify()
 
     def testverifydelunittest00e1(self):
-        command = "show auxiliary --auxiliary unittest00-e1.one-nyp.ms.com"
+        command = "show address --fqdn unittest00-e1.one-nyp.ms.com"
         self.notfoundtest(command.split(" "))
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelAuxiliary)

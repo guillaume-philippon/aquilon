@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,24 +55,17 @@ class TestDelDnsDomain(TestBrokerCommand):
 
     def testverifyshowallproto(self):
         command = "show dns_domain --all --format=proto"
-        out = self.commandtest(command.split(" "))
-        dns_domains = self.parse_dns_domainlist_msg(out).dns_domains
+        dns_domains = self.protobuftest(command.split(" "))
         dns_names = [d.name for d in dns_domains]
         for domain in ['aqd-unittest.ms.com']:
-            self.failIf(domain in dns_names,
-                        "Domain %s appears in list %s" % (domain, dns_names))
+            self.assertFalse(domain in dns_names,
+                             "Domain %s appears in list %s" %
+                             (domain, dns_names))
 
-    def testdeltd1(self):
-        self.dsdb_expect("delete_dns_domain -domain_name td1.aqd-unittest.ms.com")
+    def testdelut_env(self):
+        self.dsdb_expect("delete_dns_domain -domain_name aqd-unittest-ut-env.ms.com")
         command = ["del", "dns", "domain",
-                   "--dns_domain", "td1.aqd-unittest.ms.com"]
-        self.noouttest(command)
-        self.dsdb_verify()
-
-    def testdeltd2(self):
-        self.dsdb_expect("delete_dns_domain -domain_name td2.aqd-unittest.ms.com")
-        command = ["del", "dns", "domain",
-                   "--dns_domain", "td2.aqd-unittest.ms.com"]
+                   "--dns_domain", "aqd-unittest-ut-env.ms.com"]
         self.noouttest(command)
         self.dsdb_verify()
 
@@ -88,13 +81,12 @@ class TestDelDnsDomain(TestBrokerCommand):
         errstr = "DNS domain %s doesn't exists" % test_domain
         self.dsdb_expect("delete_dns_domain -domain_name %s" % test_domain, True, errstr)
         command = ["del", "dns", "domain", "--dns_domain", test_domain]
-        out, err = self.successtest(command)
+        err = self.statustest(command)
         self.matchoutput(err,
                          "The DNS domain td3.aqd-unittest.ms.com does not "
                          "exist in DSDB, proceeding.",
                          command)
         self.dsdb_verify()
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelDnsDomain)

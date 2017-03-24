@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,67 +28,75 @@ from brokertest import TestBrokerCommand
 
 class TestOrganization(TestBrokerCommand):
 
-    def test_100_addexorg(self):
+    def test_100_add_example(self):
         command = ["add", "organization", "--organization", "example",
                    "--fullname", "Example, Inc"]
         self.noouttest(command)
 
+    def test_100_add_example2(self):
+        command = ["add", "organization", "--organization", "example2"]
+        self.noouttest(command)
+
+    def test_110_show_example(self):
         command = "show organization --organization example"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Organization: example", command)
 
-    def test_100_addexorg2(self):
-        command = ["add", "organization", "--organization", "example2"]
-        self.noouttest(command)
-
+    def test_110_show_example2(self):
         command = "show organization --organization example2"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Organization: example2", command)
 
-    def test_110_delexorg2(self):
+    def test_120_add_ms(self):
+        command = ["add_organization", "--organization", "ms",
+                   "--fullname", "Morgan Stanley"]
+        self.noouttest(command)
+
+    def test_200_add_example_net(self):
+        self.net.allocate_network(self, "example_org_net", 24, "unknown",
+                                  "organization", "example",
+                                  comments="Made-up network")
+
+    def test_201_del_example_fail(self):
+        command = "del organization --organization example"
+        err = self.badrequesttest(command.split(" "))
+        self.matchoutput(err,
+                         "Bad Request: Could not delete organization example, "
+                         "networks were found using this location.",
+                         command)
+
+    def test_202_cleanup_example_net(self):
+        self.net.dispose_network(self, "example_org_net")
+
+    def test_210_del_example(self):
+        command = "del organization --organization example"
+        self.noouttest(command.split(" "))
+
+    def test_220_del_example2(self):
         command = "del organization --organization example2"
         self.noouttest(command.split(" "))
 
-    def test_120_delexorg2again(self):
+    def test_220_del_example2_again(self):
         command = "del organization --organization example2"
         out = self.notfoundtest(command.split(" "))
         self.matchoutput(out, "Organization example2 not found.", command)
 
-    def test_130_verifydelexorg2(self):
+    def test_230_del_notexist(self):
+        command = "del organization --organization org-does-not-exist"
+        out = self.notfoundtest(command.split(" "))
+        self.matchoutput(out, "Organization org-does-not-exist not found.",
+                         command)
+
+    def test_300_verify_example2(self):
         command = "show organization --organization example2"
         out = self.notfoundtest(command.split(" "))
         self.matchoutput(out, "Organization example2 not found.", command)
 
-    def test_140_delexorginuse(self):
-        test_org = "example"
-
-        # add network to org
-        self.noouttest(["add_network", "--ip", "192.176.6.0",
-                        "--network", "test_warn_network",
-                        "--netmask", "255.255.255.0",
-                        "--organization", test_org,
-                        "--type", "unknown",
-                        "--comments", "Made-up network"])
-
-        # try delete org
-        command = "del organization --organization %s" % test_org
-        err = self.badrequesttest(command.split(" "))
-        self.matchoutput(err,
-                         "Bad Request: Could not delete organization %s, "
-                         "networks were found using this location." % test_org,
-                         command)
-
-        # delete network
-        self.noouttest(["del_network", "--ip", "192.176.6.0"])
-
-    def test_150_delexorg1(self):
-        command = "del organization --organization example"
-        self.noouttest(command.split(" "))
-
-    def test_160_add_ms(self):
-        command = ["add_organization", "--organization", "ms",
-                   "--fullname", "Morgan Stanley"]
-        self.noouttest(command)
+    def test_300_show_all(self):
+        command = ["show_organization", "--all"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ms", command)
+        self.matchclean(out, "example", command)
 
 
 if __name__ == '__main__':

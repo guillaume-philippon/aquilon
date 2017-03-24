@@ -3,21 +3,21 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="merge_network"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_merge_network"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>merge_network</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_merge_network</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>merge network</refname>
-        <refpurpose>
+	<refname>aq merge network</refname>
+	<refpurpose>
 	    Merge existing subnets to a larger network
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
@@ -27,18 +27,22 @@
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
 	    <arg choice="plain"><option>--ip <replaceable>IP</replaceable></option></arg>
 	    <group choice="req">
-	        <arg choice="plain"><option>--netmask <replaceable>NETMASK</replaceable></option></arg>
-	        <arg choice="plain"><option>--prefixlen <replaceable>LENGTH</replaceable></option></arg>
+		<arg choice="plain"><option>--netmask <replaceable>NETMASK</replaceable></option></arg>
+		<arg choice="plain"><option>--prefixlen <replaceable>LENGTH</replaceable></option></arg>
 	    </group>
-	    <arg choice="opt"><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
+	    <arg><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq merge network</command> command merges multiple existing subnets to form
 	    a larger network. Existing address assignments will be updated to point to the new network.
@@ -51,11 +55,11 @@
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--ip <replaceable>IP</replaceable></option>
 		</term>
 		<listitem>
@@ -65,7 +69,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--netmask <replaceable>NETMASK</replaceable></option>
 		</term>
 		<listitem>
@@ -77,7 +81,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--prefixlen <replaceable>LENGTH</replaceable></option>
 		</term>
 		<listitem>
@@ -89,7 +93,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--network_environment <replaceable>NETENV</replaceable></option>
 		</term>
 		<listitem>
@@ -102,6 +106,7 @@
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -118,9 +123,9 @@ aq merge network --ip 192.168.0.128 --prefixlen 24
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>add_network</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>split_network</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>add_network_environment</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	    <citerefentry><refentrytitle>aq_add_network</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_split_network</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_add_network_environment</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

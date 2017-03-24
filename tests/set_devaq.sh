@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2009,2010,2013  Contributor
+# Copyright (C) 2009,2010,2012,2013  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ if [[ "$BASH_SOURCE" == "$0" ]] ; then
 	echo
 fi
 
-SRCDIR=$(python2.6 -c 'import os, sys; print os.path.realpath(os.path.join(os.path.dirname(sys.argv[1]), ".."))' "$0")
+SRCDIR=$(python -c 'import os, sys; print os.path.realpath(os.path.join(os.path.dirname(sys.argv[1]), ".."))' "$0")
 
 if [ -z "$AQDCONF" ] ; then
 	AQDCONF="$SRCDIR/etc/aqd.conf.dev"
 else
-	AQDCONF=$(python2.6 -c 'import os, sys; print os.path.realpath(sys.argv[1])' "$AQDCONF")
+	AQDCONF=$(python -c 'import os, sys; print os.path.realpath(sys.argv[1])' "$AQDCONF")
 fi
 
 AQUSER=$($SRCDIR/bin/aqd_config.py --get broker.user)

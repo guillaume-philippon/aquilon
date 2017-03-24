@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,18 +24,19 @@ if __name__ == "__main__":
     utils.import_depends()
 
 from brokertest import TestBrokerCommand
+from machinetest import MachineTestMixin
 
 
-class TestDelStaticRoute(TestBrokerCommand):
+class TestDelStaticRoute(MachineTestMixin, TestBrokerCommand):
 
     def testdelroute1(self):
-        gw = self.net.unknown[14].usable[-1]
+        gw = self.net["routing1"].usable[-1]
         command = ["del", "static", "route", "--gateway", gw,
                    "--ip", "192.168.250.0", "--prefixlen", "23"]
-        self.noouttest(command)
+        self.statustest(command)
 
     def testdelroute1again(self):
-        gw = self.net.unknown[14].usable[-1]
+        gw = self.net["routing1"].usable[-1]
         command = ["del", "static", "route", "--gateway", gw,
                    "--ip", "192.168.250.0", "--prefixlen", "23"]
         out = self.notfoundtest(command)
@@ -44,20 +45,40 @@ class TestDelStaticRoute(TestBrokerCommand):
                          "%s not found." % gw,
                          command)
 
+    def testdelroute1_personality(self):
+        gw = self.net["routing1"].usable[-1]
+        command = ["del", "static", "route", "--gateway", gw,
+                   "--ip", "192.168.248.0", "--prefixlen", "24",
+                   "--personality", "inventory"]
+        self.statustest(command)
+
     def testdelroute2(self):
-        gw = self.net.unknown[15].usable[-1]
+        gw = self.net["routing2"].usable[-1]
         command = ["del", "static", "route", "--gateway", gw,
                    "--ip", "192.168.252.0", "--prefixlen", "23"]
         self.noouttest(command)
 
-    def testdelroute3(self):
-        gw = self.net.unknown[0].gateway
+    def testdelroute2_guess(self):
+        gw = self.net["routing2"].gateway
         command = ["del", "static", "route", "--gateway", gw,
-                   "--ip", "250.250.0.0", "--prefixlen", "16"]
+                   "--ip", "192.168.254.0", "--prefixlen", "24"]
         self.noouttest(command)
 
+    def testdelroute3(self):
+        net = self.net["routing3"]
+        gw = net[3]
+        command = ["del", "static", "route", "--gateway", gw,
+                   "--ip", "192.168.254.0", "--prefixlen", "24"]
+        self.noouttest(command)
+
+    def testdelroute4(self):
+        gw = self.net["unknown0"].gateway
+        command = ["del", "static", "route", "--gateway", gw,
+                   "--ip", "250.250.0.0", "--prefixlen", "16"]
+        self.statustest(command)
+
     def testverifynetwork(self):
-        command = ["show", "network", "--ip", self.net.unknown[14].ip]
+        command = ["show", "network", "--ip", self.net["routing1"].ip]
         out = self.commandtest(command)
         self.matchclean(out, "Static Route", command)
 
@@ -67,13 +88,12 @@ class TestDelStaticRoute(TestBrokerCommand):
         self.matchclean(out, "Static Route", command)
 
     def testverifyunittest26(self):
-        net = self.net.unknown[14]
+        net = self.net["routing1"]
         ip = net.usable[0]
-        command = ["cat", "--hostname", "unittest26.aqd-unittest.ms.com",
-                   "--data", "--generate"]
+        command = ["cat", "--hostname", "unittest26.aqd-unittest.ms.com", "--data"]
         out = self.commandtest(command)
         self.searchoutput(out,
-                          r'"eth1", nlist\(\s*'
+                          r'"system/network/interfaces/eth1" = nlist\(\s*'
                           r'"bootproto", "static",\s*'
                           r'"broadcast", "%s",\s*'
                           r'"fqdn", "unittest26-e1.aqd-unittest.ms.com",\s*'
@@ -84,6 +104,12 @@ class TestDelStaticRoute(TestBrokerCommand):
                           r'"network_type", "unknown"\s*\)' %
                           (net.broadcast, net.gateway, ip, net.netmask),
                           command)
+
+    def testdelunittest27(self):
+        eth0_ip = self.net["unknown0"].usable[37]
+        eth1_ip = self.net["routing1"].usable[1]
+        self.delete_host("unittest27.aqd-unittest.ms.com", eth0_ip, "ut3c5n9",
+                         eth1_ip=eth1_ip)
 
 
 if __name__ == '__main__':

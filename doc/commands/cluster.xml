@@ -3,39 +3,46 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="cluster"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_cluster"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>cluster</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_cluster</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>cluster</refname>
-        <refpurpose>
+	<refname>aq cluster</refname>
+	<refpurpose>
 	    Add hosts to a cluster
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
-	    <command>aq cluster </command>
-	    <arg choice="req"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
-	    <arg choice="req"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-	    <arg choice="opt"><option>--personality <replaceable>PERSONALITY</replaceable></option></arg>
+	    <command>aq cluster</command>
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
+	    <arg choice="req"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
+	    <arg choice="req"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+	    <group>
+		<arg choice="plain"><option>--personality <replaceable>PERSONALITY</replaceable></option></arg>
+		<arg><option>--personality_stage <replaceable>STAGE</replaceable></option></arg>
+	    </group>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq cluster</command> command adds a host to a cluster.
 	    The host will be removed from any current clusters it is currently
@@ -64,46 +71,43 @@
 	    lifecycle status, a cluster also has a buildstatus.
 	    Adding a host into a cluster may change the
 	    buildstatus of the host to match the cluster.
-	    If the cluster is "ready" and the host is "almostready"
-	    then the host will be immediately promoted to "ready".
-	    If the cluster is not "ready" but the host is,
-	    then the host will be immediately demoted to "almostready".
+	    If the cluster is <literal>ready</literal> and the host is <literal>almostready</literal>,
+	    then the host will be immediately promoted to <literal>ready</literal>.
+	    If the cluster is not <literal>ready</literal> but the host is,
+	    then the host will be immediately demoted to <literal>almostready</literal>.
 	    This has the effect of making the cluster buildstatus
 	    as a barrier for promoting hosts -
 	    hosts will only be promoted when the cluster
-	    as a whole is marked "ready".
-        </para>
+	    as a whole is marked <literal>ready</literal>.
+	</para>
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" role</para>
+	<title>Templates</title>
+	<para>
+	    This command will modify the templates for both the cluster
+	    itself and for the new host(s). Also, if any service bindings
+	    are changed then the service templates will be
+	    modified.
+	</para>
     </refsect1>
 
     <refsect1>
-        <title>Templates</title>
-        <para>This command will modify the templates for both the cluster
-	itself and for the new host(s). Also, if any service bindings
-	are changed then the service templates will be
-	modified.</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOSTNAME</replaceable></option>,
 		</term>
 		<listitem>
 		    <para>
-		        Specify the host which you wish to add to the cluster.
+			Specify the host which you wish to add to the cluster.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -113,19 +117,29 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--personality <replaceable>PERSONALITY</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-			The name of the personality that should be given to
-			the host.
-			If the operation fails,
-			then the previous personality will remain on the host.
+			The name of the personality that should be given to the host.
+			If the operation fails, then the previous personality will remain on the
+			host.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--personality_stage <replaceable>STAGE</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Select the stage of the personality to use. Defaults to <literal>current</literal>.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -142,7 +156,7 @@ aq cluster --hostname foo.example.com --cluster grid1
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>uncluster</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_uncluster</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

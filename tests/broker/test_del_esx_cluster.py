@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for testing the del esx cluster command."""
+"""Module for testing the del cluster command."""
 
-import os
 import unittest
 
 if __name__ == "__main__":
@@ -27,88 +26,74 @@ if __name__ == "__main__":
 from brokertest import TestBrokerCommand
 
 
+# TODO: merge this into test_del_cluster.py
 class TestDelESXCluster(TestBrokerCommand):
 
-    def testdelutecl1(self):
-        command = ["del_esx_cluster", "--cluster=utecl1"]
-        self.successtest(command)
+    def test_100_del_utecl1(self):
+        command = ["del_cluster", "--cluster=utecl1"]
+        out = self.statustest(command)
+        self.check_plenary_gone("cluster", "utecl1", "client",
+                                directory_gone=True)
+        self.verify_buildfiles("unittest", "clusters/utecl1", want_exist=False,
+                               command="del_cluster")
 
-    def testverifydelutecl1(self):
+    def test_105_verify_show_utecl1(self):
         command = ["show_esx_cluster", "--cluster=utecl1"]
         self.notfoundtest(command)
 
-    def testdelutecl2(self):
-        command = ["del_esx_cluster", "--cluster=utecl2"]
-        self.successtest(command)
+    def test_105_verify_utmc1_members(self):
+        command = ["cat", "--metacluster", "utmc1", "--data"]
+        out = self.commandtest(command)
+        self.searchoutput(out,
+                          r'"system/metacluster/members" = list\(\s*'
+                          r'"utecl2",\s*'
+                          r'"utecl3"\s*'
+                          r'\);',
+                          command)
 
-    def testverifydelutecl2(self):
-        command = ["show_esx_cluster", "--cluster=utecl2"]
-        self.notfoundtest(command)
+    def test_105_verify_service_instance(self):
+        # The instance is selected randomly, so check both
+        command = ["cat", "--service", "esx_management_server",
+                   "--instance", "ut.a", "--server"]
+        out = self.commandtest(command)
+        self.matchclean(out, '"utecl1"', command)
 
-    def testdelutecl3(self):
-        command = ["del_esx_cluster", "--cluster=utecl3"]
-        self.successtest(command)
+        command = ["cat", "--service", "esx_management_server",
+                   "--instance", "ut.b", "--server"]
+        out = self.commandtest(command)
+        self.matchclean(out, '"utecl1"', command)
 
-    def testverifydelutecl3(self):
-        command = ["show_esx_cluster", "--cluster=utecl3"]
-        self.notfoundtest(command)
+    def test_110_del_utmc1(self):
+        for i in range(2, 5):
+            self.successtest(["del_cluster", "--cluster=utecl%d" % i])
 
-    def testdelutecl4(self):
-        command = ["del_esx_cluster", "--cluster=utecl4"]
-        self.successtest(command)
-
-    def testverifydelutecl4(self):
-        command = ["show_esx_cluster", "--cluster=utecl4"]
-        self.notfoundtest(command)
-
-    def testdelutmc4(self):
+    def test_120_del_utmc4(self):
         for i in range(5, 11):
-            command = ["del_esx_cluster", "--cluster=utecl%d" % i]
+            command = ["del_cluster", "--cluster=utecl%d" % i]
             self.successtest(command)
 
-    def testdelutmc5(self):
-        self.successtest(["del_esx_cluster", "--cluster=utecl11"])
-        self.successtest(["del_esx_cluster", "--cluster=npecl11"])
+    def test_130_del_utmc7(self):
+        self.successtest(["del_cluster", "--cluster=utecl11"])
 
-    def testdelutmc6(self):
-        self.successtest(["del_esx_cluster", "--cluster=utecl12"])
-        self.successtest(["del_esx_cluster", "--cluster=npecl12"])
+    def test_140_del_sandboxmc(self):
+        self.successtest(["del_cluster", "--cluster=sandboxcl1"])
 
-    def testdelutmc7(self):
-        self.successtest(["del_esx_cluster", "--cluster=utecl13"])
+    def test_150_del_utmc8(self):
+        self.statustest(["del_cluster", "--cluster", "utecl12"])
+        self.statustest(["del_cluster", "--cluster", "utecl13"])
 
-    def testdelsandboxmc(self):
-        self.successtest(["del_esx_cluster", "--cluster=sandboxcl1"])
+    def test_155_del_utmc9(self):
+        self.statustest(["del_cluster", "--cluster", "utecl14"])
+        self.statustest(["del_cluster", "--cluster", "utecl15"])
 
-    def testverifyall(self):
-        command = ["show_esx_cluster", "--all"]
-        out = self.commandtest(command)
-        self.matchclean(out, "ESX Cluster: utecl", command)
-
-    def testdelnotfound(self):
-        command = ["del_esx_cluster", "--cluster=esx_cluster-does-not-exist"]
+    def test_200_del_nonexistent(self):
+        command = ["del_cluster", "--cluster=esx_cluster-does-not-exist"]
         self.notfoundtest(command)
 
-    def verifyplenaryclusterclient(self):
-        for i in range(1, 5):
-            cluster = "utecl%s" % i
-            dir = os.path.join(self.config.get("broker", "plenarydir"),
-                               "cluster", cluster)
-            self.failIf(os.path.exists(dir),
-                        "Plenary directory '%s' still exists" % dir)
-            plenary = self.build_profile_name("clusters", cluster,
-                                              domain="unittest")
-            self.failIf(os.path.exists(plenary),
-                        "Plenary file '%s' still exists" % plenary)
-
-    def verifyprofileclusterclient(self):
-        profilesdir = self.config.get("broker", "profilesdir")
-        for i in range(1, 5):
-            cluster = "utecl%s" % i
-            profile = os.path.join(profilesdir, "clusters", cluster + ".xml")
-            self.failIf(os.path.exists(profile),
-                        "Profile file '%s' still exists" % profile)
-
+    def test_300_verify_all(self):
+        command = ["search_cluster", "--cluster_type", "esx"]
+        out = self.commandtest(command)
+        self.matchclean(out, "utecl", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelESXCluster)

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,15 +24,15 @@ if __name__ == '__main__':
     utils.import_depends()
 
 from brokertest import TestBrokerCommand
-from test_add_ns_record import NAME, DOMAIN, NET_OFFSET
+from test_add_ns_record import NAME, DOMAIN
 
 
 class TestDelNSRecord(TestBrokerCommand):
 
     def setUp(self, *args, **kwargs):
         super(TestDelNSRecord, self).setUp(*args, **kwargs)
-        self.NETWORK = self.net.unknown[NET_OFFSET]
-        self.IP = str(self.net.unknown[NET_OFFSET].usable[0])
+        self.NETWORK = self.net["ut9_chassis"]
+        self.IP = str(self.net["ut9_chassis"].usable[0])
 
     def test_100_delete_ns_record(self):
         cmd = "del ns_record --fqdn %s --dns_domain %s" % (NAME, DOMAIN)

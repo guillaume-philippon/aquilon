@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2010,2011,2012,2013  Contributor
+# Copyright (C) 2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -130,7 +130,7 @@ class TestSearchESXCluster(TestBrokerCommand):
                          command)
 
     def testpersonalityavailable(self):
-        command = "search esx cluster --personality vulcan-1g-desktop-prod"
+        command = "search esx cluster --personality vulcan-10g-server-prod"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "utecl1", command)
         self.matchoutput(out, "utecl2", command)
@@ -139,7 +139,7 @@ class TestSearchESXCluster(TestBrokerCommand):
 
     def testpersonalityavailable2(self):
         command = ["search_esx_cluster", "--archetype=esx_cluster",
-                   "--personality=vulcan-1g-desktop-prod"]
+                   "--personality=vulcan-10g-server-prod"]
         out = self.commandtest(command)
         self.matchoutput(out, "utecl1", command)
         self.matchoutput(out, "utecl2", command)
@@ -147,7 +147,6 @@ class TestSearchESXCluster(TestBrokerCommand):
         self.matchoutput(out, "utecl4", command)
 
     def testpersonalityunavailable(self):
-        # Will only get this error if archetype is specified
         command = ["search_esx_cluster", "--archetype=vmhost",
                    "--personality=personality-does-not-exist"]
         out = self.notfoundtest(command)
@@ -155,29 +154,10 @@ class TestSearchESXCluster(TestBrokerCommand):
                          "archetype vmhost not found.", command)
 
     def testpersonalityunavailable2(self):
-        # Will only get an error if archetype is specified
         command = "search esx cluster --personality personality-does-not-exist"
-        self.noouttest(command.split(" "))
-
-    def testall(self):
-        command = "search esx cluster --all"
-        out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "utecl1", command)
-        self.matchoutput(out, "utecl2", command)
-        self.matchoutput(out, "utecl3", command)
-        self.matchoutput(out, "utecl4", command)
-
-    def testallfull(self):
-        command = "search esx cluster --all --fullinfo"
-        out = self.commandtest(command.split(" "))
-        # This is a good sampling, but not the full output
-        self.matchoutput(out, "ESX Cluster: utecl1", command)
-        self.matchoutput(out, "ESX Cluster: utecl2", command)
-        self.matchoutput(out, "ESX Cluster: utecl3", command)
-        self.matchoutput(out, "ESX Cluster: utecl4", command)
-        self.matchoutput(out, "Metacluster: utmc1", command)
-        self.matchoutput(out, "Metacluster: utmc2", command)
-        self.matchoutput(out, "Building: ut", command)
+        out = self.notfoundtest(command.split(" "))
+        self.matchoutput(out, "Personality personality-does-not-exist "
+                         "not found.", command)
 
     def testserviceavailable(self):
         command = "search esx cluster --service esx_management_server"

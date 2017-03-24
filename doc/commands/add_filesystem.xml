@@ -3,53 +3,58 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_filesystem"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_filesystem"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_filesystem</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_filesystem</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add filesystem</refname>
-        <refpurpose>
-	    Add a filesystem resource onto a host or cluster
-        </refpurpose>
+	<refname>aq add filesystem</refname>
+	<refpurpose>
+	    Add a filesystem resource
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
-	    <command>aq add filesystem </command>
-	    <group>
-	      <arg choice="req"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
-	      <arg choice="req"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-	      <arg choice="req"><option>--resourcegroup <replaceable>RESOURCEGROUP</replaceable></option></arg>
-            </group>
-	    <arg choice="req"><option>--filesystem <replaceable>NAME</replaceable></option></arg>
-	    <arg choice="req"><option>--type <replaceable>TYPE</replaceable></option></arg>
-	    <arg choice="req"><option>--mountpoint <replaceable>PATHNAME</replaceable></option></arg>
-	    <arg choice="req"><option>--blockdevice <replaceable>PATHNAME</replaceable></option></arg>
-	    <group choice="req">
-	      <arg choice="plain"><option>--bootmount</option></arg>
-	      <arg choice="plain"><option>--nobootmount</option></arg>
-	    </group>
-	    <arg choice="opt"><option>--dumpfreq <replaceable>DUMPFREQ</replaceable></option></arg>
-	    <arg choice="opt"><option>--fsckpass <replaceable>PASSNO</replaceable></option></arg>
-	    <arg choice="opt"><option>--options <replaceable>OPTIONS</replaceable></option></arg>
-	    <arg choice="opt"><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <command>aq add filesystem</command>
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
+	    <group choice="req">
+		<arg choice="plain"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--metacluster <replaceable>METACLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--resourcegroup <replaceable>RESOURCEGROUP</replaceable></option></arg>
+	    </group>
+	    <arg choice="plain"><option>--filesystem <replaceable>NAME</replaceable></option></arg>
+	    <arg choice="plain"><option>--type <replaceable>TYPE</replaceable></option></arg>
+	    <arg choice="plain"><option>--mountpoint <replaceable>PATHNAME</replaceable></option></arg>
+	    <arg choice="plain"><option>--blockdevice <replaceable>PATHNAME</replaceable></option></arg>
+	    <group choice="req">
+		<arg choice="plain"><option>--bootmount</option></arg>
+		<arg choice="plain"><option>--nobootmount</option></arg>
+	    </group>
+	    <arg><option>--dumpfreq <replaceable>DUMPFREQ</replaceable></option></arg>
+	    <arg><option>--fsckpass <replaceable>PASSNO</replaceable></option></arg>
+	    <arg><option>--options <replaceable>OPTIONS</replaceable></option></arg>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add_filesystem</command> command adds a
 	    filesystem resource onto a host or a cluster.
@@ -66,34 +71,30 @@
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" role</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Templates</title>
-        <para>This command will modify the templates for the host or
-	cluster (depending on which option was given) and the resource
-	template for the filesystem itself.
+	<title>Templates</title>
+	<para>
+	    This command will modify the templates for the host or
+	    cluster (depending on which option was given) and the resource
+	    template for the filesystem itself.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOSTNAME</replaceable></option>,
 		</term>
 		<listitem>
 		    <para>
-		        Specify the target host for the filesystem.
+			Specify the target host for the filesystem.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -103,7 +104,17 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--metacluster <replaceable>METACLUSTER</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			The name of the target metacluster for the filesystem.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--resourcegroup <replaceable>RESOURCEGROUP</replaceable></option>
 		</term>
 		<listitem>
@@ -113,7 +124,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--filesystem <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -126,7 +137,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--type <replaceable>TYPE</replaceable></option>
 		</term>
 		<listitem>
@@ -137,7 +148,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--mountpoint <replaceable>MOUNTPOINT</replaceable></option>
 		</term>
 		<listitem>
@@ -148,7 +159,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--blockdevice <replaceable>DEVICEPATH</replaceable></option>
 		</term>
 		<listitem>
@@ -159,7 +170,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--bootmount</option>
 		    <option>--nobootmount</option>
 		</term>
@@ -170,44 +181,44 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--dumpfreq <replaceable>FREQ</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
 			The value for dump frequency, as per
-	    <citerefentry><refentrytitle>fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
+	    <citerefentry><refentrytitle>aq_fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
 			This defaults to 0.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--fsckpass <replaceable>PASSNO</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
 			The value for fsck pass, as per
-	    <citerefentry><refentrytitle>fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
+	    <citerefentry><refentrytitle>aq_fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
 			This defaults to 2.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--options <replaceable>OPTIONS</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
 			The value for mount options, as per
-	    <citerefentry><refentrytitle>fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
+	    <citerefentry><refentrytitle>aq_fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
 			For
 			example, "rw,nosuid".
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--comments <replaceable>COMMENTS</replaceable></option>
 		</term>
 		<listitem>
@@ -217,6 +228,7 @@
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -226,11 +238,11 @@
 	    <title>Adding a filesystem to a host</title>
 	    <programlisting>
 aq add_filesystem --hostname foo.example.com --filesystem d1 \
-                  --type ext3 --bootmount --mountpoint /d/d1 \
-                  --blockdevice /dev/vx/dg.0/vol.0 \
+    --type ext3 --bootmount --mountpoint /d/d1 \
+    --blockdevice /dev/vx/dg.0/vol.0 \
 	    </programlisting>
 	    <para>
-	    Which results in the following configuration on the host:
+		Which results in the following configuration on the host:
 	    </para>
 	    <programlisting>
 "/system/resources/filesystem/0/name" = "d1";
@@ -247,10 +259,10 @@ aq add_filesystem --hostname foo.example.com --filesystem d1 \
 	    <title>Adding a filesystem to a cluster</title>
 	    <programlisting>
 aq add_filesystem --filesystem d1 --cluster grid1 --type ext3 \
-  --nobootmount --mountpoint /d/d1 --blockdevice /dev/vx/dg.0/vol.0 \
+    --nobootmount --mountpoint /d/d1 --blockdevice /dev/vx/dg.0/vol.0 \
 	    </programlisting>
 	    <para>
-	    Which results in the following configuration on the cluster:
+		Which results in the following configuration on the cluster:
 	    </para>
 	    <programlisting>
 "/system/resources/filesystem/0/name" = "d1";
@@ -268,7 +280,8 @@ aq add_filesystem --filesystem d1 --cluster grid1 --type ext3 \
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_filesystem</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_del_filesystem</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_filesystem</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

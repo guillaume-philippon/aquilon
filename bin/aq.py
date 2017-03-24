@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,35 +23,43 @@ connect directly.
 
 '''
 
+from __future__ import print_function
 
 import sys
 import os
-import urllib
 import re
 import subprocess
 import socket
-import httplib
 import csv
 from time import sleep
-from threading import Thread
+from threading import Thread, Condition
 
+# -- begin path_setup --
 BINDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-SRCDIR = os.path.join(BINDIR, "..")
-LIBDIR = os.path.join(SRCDIR, "lib", "python2.6")
-MANDIR = os.path.join(SRCDIR, "doc", "man")
+LIBDIR = os.path.join(BINDIR, "..", "lib")
 
-sys.path.append(LIBDIR)
+if LIBDIR not in sys.path:
+    sys.path.append(LIBDIR)
+# -- end path_setup --
 
+from aquilon.client import depends  # pylint: disable=W0611
+from aquilon.config import lookup_file_path, get_username
 from aquilon.exceptions_ import AquilonError
-from aquilon.client import depends
 from aquilon.client.knchttp import KNCHTTPConnection
 from aquilon.client.chunked import ChunkedHTTPConnection
 from aquilon.client.optparser import OptParser, ParsingError
 from aquilon.python_patches import load_uuid_quickly
 
+from six.moves.urllib_parse import urlencode, quote  # pylint: disable=F0401
+from six.moves.configparser import SafeConfigParser  # pylint: disable=F0401
+import six.moves.http_client as httplib  # pylint: disable=F0401
+from six import iteritems
+
 # Stolen from aquilon.worker.formats.fomatters
 csv.register_dialect('aquilon', delimiter=',', quoting=csv.QUOTE_MINIMAL,
                      doublequote=True, lineterminator='\n')
+
+STATUS_RETRY = 5
 
 
 class RESTResource(object):
@@ -63,7 +71,7 @@ class RESTResource(object):
         return self._sendRequest('GET')
 
     def post(self, **kwargs):
-        postData = urllib.urlencode(kwargs)
+        postData = urlencode(kwargs)
         mimeType = 'application/x-www-form-urlencoded'
         return self._sendRequest('POST', postData, mimeType)
 
@@ -98,7 +106,7 @@ class CustomAction(object):
         m = getattr(self, action, None)
         if not m:
             raise AquilonError("Internal Error: Unknown action '%s' attempted"
-                    % action)
+                               % action)
         self.run = m
 
         # Propagate some options to subprocesses
@@ -117,12 +125,11 @@ class CustomAction(object):
         p = Popen(("git", "status", "--porcelain"), stdout=PIPE, stderr=2)
         (out, err) = p.communicate()
         if p.returncode:
-            print >>sys.stderr, \
-                    "\nError running git status --porcelain, returncode %d" \
-                    % p.returncode
+            print("\nError running git status --porcelain, returncode %d" %
+                  p.returncode, file=sys.stderr)
             sys.exit(1)
         if out:
-            print >>sys.stderr, "Not ready to publish, found:\n%s" % out
+            print("Not ready to publish, found:\n%s" % out, file=sys.stderr)
             sys.exit(1)
 
         # Locate the top of the sandbox for the purposes of executing the
@@ -131,20 +138,21 @@ class CustomAction(object):
         (sandbox_dir, err) = p.communicate()
         sandbox_dir = sandbox_dir.strip()
         if p.returncode != 0:
-            print >>sys.stderr, "Failed to find toplevel of sandbox, aborting"
+            print("Failed to find toplevel of sandbox, aborting", file=sys.stderr)
             sys.exit(1)
         # Prevent the branch being published unless the unit tests pass
         testdir = os.path.join(sandbox_dir, 't')
         if os.path.exists(os.path.join(testdir, 'Makefile')):
             p = Popen(['/usr/bin/make', '-C', testdir, 'test',
                        'AQCMD=%s' % os.path.realpath(sys.argv[0]),
-                       'AQBUILDXML=%s' % os.path.join(SRCDIR, "etc",
-                                                      "build.xml")
-                      ], cwd=testdir, env=self.env)
+                       'AQBUILDXML=%s' % lookup_file_path("build.xml")],
+                      cwd=testdir, env=self.env)
             p.wait()
             if p.returncode != 0:
-                print >>sys.stderr, "\nUnit tests failed, publish prohibited.",
-                print >>sys.stderr, '(Do you need to run a "make clean test"?)'
+                print("\nUnit tests failed, publish prohibited.", end=' ',
+                      file=sys.stderr)
+                print('(Do you need to run a "make clean test"?)',
+                      file=sys.stderr)
                 sys.exit(1)
 
         if "sandbox" in commandOptions:
@@ -156,26 +164,26 @@ class CustomAction(object):
         (out, err) = p.communicate()
 
         if out:
-            print >>sys.stdout, \
-                "\nThe following changes will be included in this push:\n"
-            print >>sys.stdout, "------------------------"
-            print >>sys.stdout, str(out)
-            print >>sys.stdout, "------------------------"
+            print("\nThe following changes will be included in this push:\n",
+                  file=sys.stdout)
+            print("------------------------", file=sys.stdout)
+            print(str(out), file=sys.stdout)
+            print("------------------------", file=sys.stdout)
         else:
-            print >>sys.stdout, \
-                "\nYou haven't made any changes on this branch\n"
+            print("\nYou haven't made any changes on this branch\n",
+                  file=sys.stdout)
             sys.exit(0)
 
         (handle, filename) = mkstemp()
         try:
             rc = Popen(("git", "bundle", "create", filename, revlist),
-                        stdout=1, stderr=2).wait()
+                       stdout=1, stderr=2).wait()
             if rc:
-                print >>sys.stderr, \
-                        "Error running git bundle create, returncode %d" % rc
+                print("Error running git bundle create, returncode %d" % rc,
+                      file=sys.stderr)
                 sys.exit(1)
 
-            commandOptions["bundle"] = b64encode(file(filename).read())
+            commandOptions["bundle"] = b64encode(open(filename).read())
         finally:
             os.unlink(filename)
 
@@ -191,32 +199,33 @@ def create_sandbox(pageData, noexec=False):
         (template_king_url, sandbox_name, user_base) = row[0:3]
         break
     if not os.path.exists(user_base):
-        print >>sys.stderr, "Cannot access user directory '%s'.  " \
-                "Is the share mounted and visible?" % user_base
+        print("Cannot access user directory '%s'.  Is the share mounted and "
+              "visible?" % user_base, file=sys.stderr)
         return 1
     sandbox_dir = os.path.join(user_base, sandbox_name)
     if os.path.exists(sandbox_dir):
         # This check is done broker-side as well.  This code should be
         # exercised rarely (and probably never).
-        print >>sys.stderr, "Sandbox directory '%s' already exists.  " \
-                "Use `git fetch` to update it or remove the directory " \
-                "and run `aq get`." % sandbox_dir
+        print("Sandbox directory '%s' already exists.  Use `git fetch` to "
+              "update it or remove the directory and run `aq get`." %
+              sandbox_dir, file=sys.stderr)
         return 1
+    os.umask(0o022)
     cmd = ("git", "clone", "--branch", sandbox_name,
            template_king_url, sandbox_name)
     if noexec:
-        print "cd '%s'" % user_base
-        print " ".join(["'%s'" % c for c in cmd])
+        print("cd '%s'" % user_base)
+        print(" ".join("'%s'" % c for c in cmd))
         return 0
     try:
         p = subprocess.Popen(cmd, cwd=user_base, stdin=None,
                              stdout=1, stderr=2)
-    except OSError, e:
-        print >>sys.stderr, "Could not execute %s: %s" % (cmd, e)
+    except OSError as e:
+        print("Could not execute %s: %s" % (cmd, e), file=sys.stderr)
         return 1
     exit_status = p.wait()
     if exit_status == 0:
-        print "Created sandbox: %s" % sandbox_dir
+        print("Created sandbox: %s" % sandbox_dir)
     return exit_status
 
 
@@ -231,9 +240,10 @@ class StatusThread(Thread):
         self.finished = False
         self.debug = debug
         self.response_status = None
-        self.retry = 5
+        self.retry = STATUS_RETRY
         self.outstream = outstream
         self.waiting_for_request = True
+        self.condition = Condition()
         Thread.__init__(self)
 
     def run(self):
@@ -247,9 +257,12 @@ class StatusThread(Thread):
         # Delay before attempting to retrieve status messages.
         # We want to give the main thread a chance to compose and send the
         # original request before we send the status request.
+        self.condition.acquire()
         while self.waiting_for_request:
-            sleep(.1)
-        #print >>sys.stderr, "Attempting status connection..."
+            # print("Status thread sleeping...", file=sys.stderr)
+            self.condition.wait(1.0)
+        self.condition.release()
+        # print("Attempting status connection...", file=sys.stderr)
         # Ideally we would always make a noauth connection here, but we
         # only know the port that's been specified for this command -
         # so it's either the auth port or it's not.
@@ -260,6 +273,7 @@ class StatusThread(Thread):
         parameters = ""
         if self.debug:
             parameters = "?debug=True"
+            sconn.set_debuglevel(10)
         if self.auditid:
             uri = "/status/auditid/%s%s" % (self.auditid, parameters)
         else:
@@ -273,16 +287,16 @@ class StatusThread(Thread):
             sconn.close()
             self.retry -= 1
             # Maybe the command has not gotten to the server yet... retry.
-            sleep(.1)
+            sleep(.2 * (STATUS_RETRY - self.retry))
             return self.show_request()
 
         if res.status != httplib.OK:
             if self.debug:
-                print >>sys.stderr, "%s: %s" % (httplib.responses[res.status],
-                                                res.read())
+                print("%s: %s" % (httplib.responses[res.status], res.read()),
+                      file=sys.stderr)
             if self.retry <= 0:
-                print >>sys.stderr, \
-                        "Client status messages disabled, retries exceeded."
+                print("Client status messages disabled, retries exceeded.",
+                      file=sys.stderr)
             sconn.close()
             return
 
@@ -293,67 +307,106 @@ class StatusThread(Thread):
         sconn.close()
         return
 
+    def wakeup(self):
+        # print("Waking up status thread", file=sys.stderr)
+        self.condition.acquire()
+        self.waiting_for_request = False
+        self.condition.notify()
+        self.condition.release()
+
 
 def quoteOptions(options):
-    return "&".join([urllib.quote(k) + "=" + urllib.quote(v)
-                     for k, v in options.iteritems()])
+    return "&".join(quote(k) + "=" + quote(v) for k, v in iteritems(options))
+
+
+def get_default_opts(auth_option, conf_file=None):
+
+    config = SafeConfigParser()
+
+    if not conf_file:
+        conf_file = lookup_file_path("aq.conf")
+
+    if conf_file:
+        config.read(conf_file)
+        config_options = {}
+        if not auth_option and config.has_section("readonly"):
+            config_options = dict(config.items("readonly"))
+        if not config_options and config.has_section("defaults"):
+            config_options = dict(config.items("defaults"))
+        return config_options
 
 
 if __name__ == "__main__":
     # Set up the search path for man pages. "man" does not like ".." in the
     # path, so we have to normalize it
-    os.environ["MANPATH"] = os.path.realpath(MANDIR)
+    BINDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
+    MANDIR = os.path.realpath(os.path.join(BINDIR, "..", "doc", "man"))
+    if os.path.exists(MANDIR):
+        if "MANPATH" in os.environ:
+            os.environ["MANPATH"] = MANDIR + ":" + os.environ["MANPATH"]
+        else:
+            os.environ["MANPATH"] = MANDIR
 
-    parser = OptParser(os.path.join(BINDIR, '..', 'etc', 'input.xml'))
+    parser = OptParser(lookup_file_path('input.xml'))
     try:
         (command, transport, commandOptions, globalOptions) = \
-                parser.parse(sys.argv[1:])
-    except ParsingError, e:
-        print >>sys.stderr, '%s: %s' % (sys.argv[0], e.error)
-        print >>sys.stderr, '%s: Try --help for usage details.' % (sys.argv[0])
+            parser.parse(sys.argv[1:])
+    except ParsingError as e:
+        print('%s: %s' % (sys.argv[0], e.error), file=sys.stderr)
+        print('%s: Try --help for usage details.' % (sys.argv[0]),
+              file=sys.stderr)
         sys.exit(1)
 
-    # Setting this as a global default.  It might make sense to set
-    # the default to the current running user when running out of a
-    # shadow, though.
-    default_aqservice = "cdb"
+    # if a client config file is specified on command line
+    # that should overide  env or default options.
+    if globalOptions.get('aqconf'):
+        globalOptions.update(get_default_opts(globalOptions.get('auth'),
+                                              globalOptions.get('aqconf')))
+    else:
+        defaultOpts = get_default_opts(globalOptions.get('auth'))
 
     # Default for /ms/dist
     if re.match(r"/ms(/.(global|local)/[^/]+)?/dist/", BINDIR):
-        default_aqhost = "nyaqd1"
+        default_aqhost = defaultOpts.get('aqhost') or 'nyaqd1'
+        default_aqservice = 'cdb'
     # Default for /ms/dev
     elif re.match(r"/ms(/.(global|local)/[^/]+)?/dev/", BINDIR):
-        default_aqhost = "nyaqd1"
+        default_aqhost = defaultOpts.get('aqhost') or 'nyaqd1'
+        default_aqservice = 'cdb'
     else:
         default_aqhost = socket.gethostname()
-
-    if globalOptions.get('auth') == False:
-        default_aqport = 6901
-    else:
-        default_aqport = 6900
+        default_aqservice = get_username()
 
     host = globalOptions.get('aqhost') or os.environ.get('AQHOST', None) or \
-            default_aqhost
+        default_aqhost
+
     port = globalOptions.get('aqport') or os.environ.get('AQPORT', None) or \
-            default_aqport
+        defaultOpts.get('aqport')
+
+    if globalOptions.get('auth'):
+        port = port or 6900
+    else:
+        port = port or 6901
+
     if globalOptions.get('aqservice'):
         aqservice = globalOptions.get('aqservice')
     elif os.environ.get('AQSERVICE', None):
         aqservice = os.environ['AQSERVICE']
     elif globalOptions.get('aquser'):
-        print >>sys.stderr, "WARNING: --aquser is deprecated, " \
-                            "please use --aqservice"
+        print("WARNING: --aquser is deprecated, please use --aqservice",
+              file=sys.stderr)
         aqservice = globalOptions.get('aquser')
     elif os.environ.get('AQUSER', None):
-        print >>sys.stderr, "WARNING: AQUSER environment variable is " \
-                            "deprecated, please use AQSERVICE"
+        print("WARNING: AQUSER environment variable is deprecated, please use "
+              "AQSERVICE", file=sys.stderr)
         aqservice = os.environ['AQUSER']
     else:
-        aqservice = default_aqservice
+        aqservice = defaultOpts.get('aqservice') or default_aqservice or get_username()
+
     if 'AQSLOWSTATUS' in os.environ and not globalOptions.get('slowstatus'):
         serial = str(os.environ['AQSLOWSTATUS']).strip().lower()
         false_values = ['false', 'f', 'no', 'n', '0', '']
-        globalOptions['slowstatus'] = not serial in false_values
+        globalOptions['slowstatus'] = serial not in false_values
 
     # Save these in case there are errors...
     globalOptions["aqhost"] = host
@@ -361,12 +414,12 @@ if __name__ == "__main__":
     globalOptions["aqservice"] = aqservice
 
     if transport is None:
-        print >>sys.stderr, "Unimplemented command ", command
+        print("Unimplemented command ", command, file=sys.stderr)
         exit(1)
 
     # Convert unicode options to strings
     newOptions = {}
-    for k, v in commandOptions.iteritems():
+    for k, v in iteritems(commandOptions):
         newOptions[str(k)] = str(v)
     commandOptions = newOptions
     # Should maybe have an input.xml flag on which global options
@@ -375,15 +428,15 @@ if __name__ == "__main__":
         commandOptions["debug"] = str(globalOptions["debug"])
     if command != "show_request" and globalOptions.get("verbose"):
         uuid = load_uuid_quickly()
-        commandOptions["requestid"] = str(uuid.uuid1())
+        commandOptions["requestid"] = str(uuid.uuid4())
 
     # Quote options so that they can be safely included in the URI
     cleanOptions = {}
-    for k, v in commandOptions.iteritems():
+    for k, v in iteritems(commandOptions):
         # urllib.quote() does not escape '/' by default. We have to turn off
         # this behavior because otherwise a parameter containing '/' would
         # confuse the URL parsing logic on the server side.
-        cleanOptions[k] = urllib.quote(v, safe='')
+        cleanOptions[k] = quote(v, safe='')
 
     # Decent amount of magic here...
     # Even though the server connection might be tunneled through
@@ -400,7 +453,7 @@ if __name__ == "__main__":
     # tacking on (for example) .html to the uri.
     # Do not apply any formatting for commands (transport.expect == 'command').
     if 'format' in globalOptions and not transport.expect:
-        extension = '.' + urllib.quote(globalOptions["format"])
+        extension = '.' + quote(globalOptions["format"])
 
         query_index = uri.find('?')
         if query_index > -1:
@@ -427,20 +480,20 @@ if __name__ == "__main__":
     # Kick off a thread to (potentially) get status...
     # Spare a second connection to the server for read-only commands that use
     # the "GET" method
-    if command == "show_request" or (transport.method != "get" and \
+    if command == "show_request" or (transport.method != "get" and
                                      globalOptions.get("verbose")):
         status_thread = StatusThread(host, port, authuser, **commandOptions)
 
     if command == "show_request":
         status_thread.outstream = sys.stdout
-        status_thread.waiting_for_request = False
         status_thread.start()
+        status_thread.wakeup()
         status_thread.join()
         if not status_thread.response_status or \
            status_thread.response_status == httplib.OK:
             sys.exit(0)
         else:
-            sys.exit(status_thread.response_status / 100)
+            sys.exit(status_thread.response_status // 100)
 
     # Normally the status thread will start right away.  We should delay
     # starting it on request - generally because the broker is running
@@ -477,7 +530,7 @@ if __name__ == "__main__":
         elif transport.method == 'put':
             # FIXME: This will need to be more complicated.
             # In some cases, we may even need to call code here.
-            putData = urllib.urlencode(commandOptions)
+            putData = urlencode(commandOptions)
             mimeType = 'application/x-www-form-urlencoded'
             RESTResource(conn, uri).put(putData, mimeType)
 
@@ -485,31 +538,32 @@ if __name__ == "__main__":
             RESTResource(conn, uri).post(**commandOptions)
 
         else:
-            print >>sys.stderr, "Unhandled transport method ", transport.method
+            print("Unhandled transport method ", transport.method,
+                  file=sys.stderr)
             sys.exit(1)
 
         # handle failed requests
         if status_thread:
-            status_thread.waiting_for_request = False
+            status_thread.wakeup()
         res = conn.getresponse()
 
-    except (httplib.HTTPException, socket.error), e:
+    except (httplib.HTTPException, socket.error) as e:
         # noauth connections
         if not hasattr(conn, "getError"):
-            print >>sys.stderr, "Error: %s" % e
+            print("Error: %s" % e, file=sys.stderr)
             sys.exit(1)
         # KNC connections
         msg = conn.getError()
         host_failed = "Failed to connect to %s" % host
         port_failed = "%s port %s" % (host_failed, port)
         if msg.find('Connection refused') >= 0:
-            print >>sys.stderr, "%s: Connection refused." % port_failed
+            print("%s: Connection refused." % port_failed, file=sys.stderr)
         elif msg.find('Connection timed out') >= 0:
-            print >>sys.stderr, "%s: Connection timed out." % port_failed
+            print("%s: Connection timed out." % port_failed, file=sys.stderr)
         elif msg.find('Unknown host') >= 0:
-            print >>sys.stderr, "%s: Unknown host." % host_failed
+            print("%s: Unknown host." % host_failed, file=sys.stderr)
         else:
-            print >>sys.stderr, "Error: %s: %s" % (repr(e), msg)
+            print("Error: %s: %s" % (repr(e), msg), file=sys.stderr)
         sys.exit(1)
 
     if status_thread:
@@ -523,24 +577,24 @@ if __name__ == "__main__":
     pageData = res.read()
 
     if res.status != httplib.OK:
-        print >>sys.stderr, "%s: %s" % (
-            httplib.responses.get(res.status, res.status), pageData)
+        print("%s: %s" % (httplib.responses.get(res.status, res.status),
+                          pageData), file=sys.stderr)
         if res.status == httplib.MULTI_STATUS and \
            globalOptions.get('partialok'):
             sys.exit(0)
-        sys.exit(res.status / 100)
+        sys.exit(res.status // 100)
 
     exit_status = 0
 
     if transport.expect == 'command':
         if not globalOptions.get('exec'):
-            print pageData
+            print(pageData)
         else:
             try:
                 proc = subprocess.Popen(pageData, shell=True, stdin=sys.stdin,
                                         stdout=sys.stdout, stderr=sys.stderr)
-            except OSError, e:
-                print >>sys.stderr, e
+            except OSError as e:
+                print(e, file=sys.stderr)
                 sys.exit(1)
 
             exit_status = proc.wait()
@@ -552,6 +606,6 @@ if __name__ == "__main__":
         if format == "proto" or format == "csv":
             sys.stdout.write(pageData)
         elif pageData:
-            print pageData
+            print(pageData)
 
     sys.exit(exit_status)

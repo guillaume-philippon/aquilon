@@ -3,21 +3,21 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_address"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_address"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_address</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_address</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add address</refname>
-        <refpurpose>
+	<refname>aq add address</refname>
+	<refpurpose>
 	    Add an IP address to the DNS
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
@@ -27,34 +27,43 @@
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
 	    <arg choice="plain"><option>--fqdn <replaceable>ADDRESS</replaceable></option></arg>
 	    <group choice="req">
-		<arg choice="opt"><option>--ip <replaceable>IPADDR</replaceable></option></arg>
-		<arg choice="opt"><option>--ipfromip <replaceable>NETWORK</replaceable></option></arg>
-		<arg choice="opt"><option>--ipfromsystem <replaceable>FQDN</replaceable></option></arg>
-		<arg choice="opt"><option>--ipalgorithm <replaceable>ALGO</replaceable></option></arg>
+		<arg choice="plain"><option>--ip <replaceable>IPADDR</replaceable></option></arg>
+		<arg choice="plain"><option>--ipfromip <replaceable>NETWORK</replaceable></option></arg>
+		<arg choice="plain"><option>--ipfromsystem <replaceable>FQDN</replaceable></option></arg>
+		<arg choice="plain"><option>--ipalgorithm <replaceable>ALGO</replaceable></option></arg>
 	    </group>
-	    <arg choice="opt"><option>--dns_environment <replaceable>DNSENV</replaceable></option></arg>
-	    <arg choice="opt"><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
-	    <arg choice="opt"><option>--reverse_ptr <replaceable>FQDN</replaceable></option></arg>
-	    <arg choice="opt"><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <arg><option>--dns_environment <replaceable>DNSENV</replaceable></option></arg>
+	    <arg><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
+	    <arg><option>--reverse_ptr <replaceable>FQDN</replaceable></option></arg>
+	    <arg><option>--ttl <replaceable>TTL</replaceable></option></arg>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <group>
+		<arg choice="plain"><option>--grn <replaceable>GRN</replaceable></option></arg>
+		<arg choice="plain"><option>--eon_id <replaceable>EONID</replaceable></option></arg>
+	    </group>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add address</command> command registers an IP address (A record) in the DNS.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--fqdn <replaceable>ADDRESS</replaceable></option>
 		</term>
 		<listitem>
@@ -64,7 +73,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--reverse_ptr <replaceable>FQDN</replaceable></option>
 		</term>
 		<listitem>
@@ -75,7 +84,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--network_environment <replaceable>NETENV</replaceable></option>
 		</term>
 		<listitem>
@@ -87,7 +96,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--dns_environment <replaceable>DNSENV</replaceable></option>
 		</term>
 		<listitem>
@@ -99,12 +108,35 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--ttl <replaceable>TTL</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			The TTL of the record in number of seconds.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--comments <replaceable>COMMENTS</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
 			Short description of the purpose of the address.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--grn <replaceable>GRN</replaceable></option>,
+		    <option>--eon_id <replaceable>EON_ID</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			The owner GRN of the personality to be created. Scripts should use the
+			numeric <replaceable>EON_ID</replaceable>, the textual <replaceable>GRN</replaceable> is
+			more suitable for humans.
 		    </para>
 		</listitem>
 	    </varlistentry>
@@ -184,17 +216,18 @@
 	    </listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_address</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>update_address</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>show_fqdn</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>add_dns_environment</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>search_dns</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	    <citerefentry><refentrytitle>aq_del_address</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_update_address</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_fqdn</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_add_dns_environment</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_search_dns</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

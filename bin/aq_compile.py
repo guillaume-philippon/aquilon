@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2013  Contributor
+# Copyright (C) 2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,48 +18,55 @@
 """
 Compile templates outside of the broker
 
-This script is inteded to be used primarily by the template unit test. It could
+This script is intended to be used primarily by the template unit test. It could
 be extended later if that turns out to be useful.
 """
 
+from __future__ import print_function
+
+import argparse
 import sys
 import os
 from subprocess import call
 
-import ms.version
-ms.version.addpkg('argparse', '1.1')
+try:
+    import ms.version
+except ImportError:
+    pass
+else:
+    ms.version.addpkg('six', '1.7.3')
 
-import argparse
-
+# -- begin path_setup --
 BINDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-SRCDIR = os.path.join(BINDIR, "..")
-LIBDIR = os.path.join(SRCDIR, "lib", "python2.6")
+LIBDIR = os.path.join(BINDIR, "..", "lib")
 
-sys.path.append(LIBDIR)
+if LIBDIR not in sys.path:
+    sys.path.append(LIBDIR)
+# -- end path_setup --
 
-from aquilon.config import Config
+from aquilon.config import Config, lookup_file_path
 
 
 def run_domain_compile(options, config):
     panc_env = os.environ.copy()
 
-    if config.has_option("broker", "ant_home"):
-        ant_home = config.get("broker", "ant_home")
+    if config.has_option("tool_locations", "ant_home"):
+        ant_home = config.get("tool_locations", "ant_home")
         panc_env["PATH"] = "%s/bin:%s" % (ant_home, panc_env.get("PATH", ""))
         # The ant wrapper is silly and it may pick up the wrong set of .jars if
         # ANT_HOME is not set
         panc_env["ANT_HOME"] = ant_home
 
-    if config.has_option("broker", "java_home"):
-        java_home = config.get("broker", "java_home")
+    if config.has_option("tool_locations", "java_home"):
+        java_home = config.get("tool_locations", "java_home")
         panc_env["PATH"] = "%s/bin:%s" % (java_home, panc_env.get("PATH", ""))
         panc_env["JAVA_HOME"] = java_home
 
     if config.has_option("broker", "ant_options"):
         panc_env["ANT_OPTS"] = config.get("broker", "ant_options")
 
-    args = ["ant", "--noconfig", "-f"]
-    args.append(os.path.join(SRCDIR, "etc", "build.xml"))
+    args = [config.lookup_tool("ant"), "--noconfig", "-f"]
+    args.append(lookup_file_path("build.xml"))
     args.append("-Dbasedir=%s" % options.basedir)
 
     if options.swrep:
@@ -71,18 +78,55 @@ def run_domain_compile(options, config):
         panc = config.get("panc", "pan_compiler")
     args.append("-Dpanc.jar=%s" % panc)
 
-    args.append("-Dpanc.formatter=%s" % config.get("panc", "formatter"))
+    if options.compress_output:
+        compress_suffix = ".gz"
+    else:
+        compress_suffix = ""
+
+    formats = []
+    suffixes = []
+
+    if options.xml_output is None:
+        options.xml_output = config.getboolean("panc", "xml_profiles")
+    if options.json_output is None:
+        options.json_output = config.getboolean("panc", "json_profiles")
+
+    if options.xml_output:
+        formats.append("pan" + compress_suffix)
+        suffixes.append(".xml" + compress_suffix)
+    if options.json_output:
+        formats.append("json" + compress_suffix)
+        suffixes.append(".json" + compress_suffix)
+
+    args.append("-Dpanc.formats=%s" % ",".join(formats))
+    args.append("-Dprofile.suffixes=%s" % ",".join(suffixes))
     args.append("-Dpanc.template_extension=%s" %
                 config.get("panc", "template_extension"))
     args.append("-Ddomain.templates=%s" % options.templates)
     args.append("-Ddomain=%s" % options.domain)
-    args.append("-Dpanc.batch.size=%s" % config.get("panc", "batch_size"))
-    args.append("-Dgzip.output=%s" % options.compress_output)
 
     if options.batch_size:
         args.append("-Dpanc.batch.size=%d" % options.batch_size)
+    else:
+        args.append("-Dpanc.batch.size=%s" % config.get("panc", "batch_size"))
 
-    print "Running %s" % " ".join(args)
+    if options.cleandeps:
+        args.append("-Dclean.dep.files=%s" % options.cleandeps)
+
+    pancinclude = options.panc_include
+    pancexclude = options.panc_exclude
+
+    if options.pancdebug:
+        pancinclude = r'.*'
+        pancexclude = r'components/spma/functions.*'
+
+    if pancinclude:
+        args.append("-Dpanc.debug.include=%s" % pancinclude)
+
+    if pancexclude:
+        args.append("-Dpanc.debug.exclude=%s" % pancexclude)
+
+    print("Running %s" % " ".join(args))
     return call(args, env=panc_env, cwd=options.basedir)
 
 
@@ -90,13 +134,23 @@ def main():
     parser = argparse.ArgumentParser(description="Compile templates")
     parser.add_argument("-c", "--config", dest="config", action="store",
                         help="location of the config file",
-                        default=os.path.join(SRCDIR, "etc", "aqd.conf.defaults"))
+                        default=lookup_file_path("aqd.conf.defaults"))
     parser.add_argument("--basedir", action="store", required=True,
                         help="base directory")
     parser.add_argument("--domain", action="store", required=True,
                         help="domain name to compile")
     parser.add_argument("--compress_output", action="store_true",
                         help="compress the generated profiles")
+    parser.add_argument("--xml_output", action="store_true", default=None,
+                        help="generate XML profiles")
+    parser.add_argument("--no_xml_output", dest="xml_output",
+                        action="store_false", default=None,
+                        help="suppress XML profiles")
+    parser.add_argument("--json_output", action="store_true", default=None,
+                        help="generate JSON profiles")
+    parser.add_argument("--no_json_output", dest="json_output",
+                        action="store_false", default=None,
+                        help="suppress JSON profiles")
     parser.add_argument("--panc_jar", action="store",
                         help="location of panc.jar")
     parser.add_argument("--templates", action="store", required=True,
@@ -105,6 +159,18 @@ def main():
                         help="location of the swrep templates")
     parser.add_argument("--batch_size", action="store", type=int,
                         help="compiler batch size")
+    parser.add_argument("--panc_include", action="store",
+                        help="Regex for templates to include in debug " +
+                        "output (None included by default)")
+    parser.add_argument("--panc_exclude", action="store",
+                        help="Regex for templates to exclude in debug " +
+                        "output (only useful if pancinclude has " +
+                        "been given)")
+    parser.add_argument("--pancdebug", action="store_true", default=None,
+                        help="Alias for pancinclude=.* and " +
+                        "pancexclude=components/spma/functions.*")
+    parser.add_argument("--cleandeps", action="store_true", default=None,
+                        help="Remove pan dependency files before compiling")
 
     options = parser.parse_args()
     config = Config(configfile=options.config)

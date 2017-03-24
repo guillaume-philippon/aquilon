@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2013  Contributor
+# Copyright (C) 2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,20 +19,28 @@
 Parse AQD configuration
 """
 
-import sys
-import os
-from ConfigParser import NoSectionError, NoOptionError
-
-import ms.version
-ms.version.addpkg('argparse', '1.1')
+from __future__ import print_function
 
 import argparse
+import sys
+import os
 
+try:
+    import ms.version
+except ImportError:
+    pass
+else:
+    ms.version.addpkg('six', '1.7.3')
+
+# -- begin path_setup --
 BINDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-SRCDIR = os.path.join(BINDIR, "..")
-LIBDIR = os.path.join(SRCDIR, "lib", "python2.6")
+LIBDIR = os.path.join(BINDIR, "..", "lib")
 
-sys.path.append(LIBDIR)
+if LIBDIR not in sys.path:
+    sys.path.append(LIBDIR)
+# -- end path_setup --
+
+from six.moves.configparser import NoSectionError, NoOptionError  # pylint: disable=F0401
 
 from aquilon.config import Config
 
@@ -42,9 +50,9 @@ def list_all(config):
     for name, value in config.items("DEFAULT"):
         defaults[name] = value
 
-    for name in sorted(defaults.keys()):
+    for name in sorted(defaults):
         value = config.get("DEFAULT", name)
-        print "DEFAULT.%s=%s" % (name, value)
+        print("DEFAULT.%s=%s" % (name, value))
 
     for section in sorted(config.sections()):
         for name in sorted(config.options(section)):
@@ -59,7 +67,7 @@ def list_all(config):
             if name == "%s_section" % section:
                 continue
 
-            print "%s.%s=%s" % (section, name, value)
+            print("%s.%s=%s" % (section, name, value))
 
 
 def get_option(config, key):
@@ -67,7 +75,7 @@ def get_option(config, key):
         raise SystemExit("The key must have the syntax SECTION.OPTION.")
     section, name = key.split('.', 1)
     try:
-        print config.get(section, name)
+        print(config.get(section, name))
     except NoSectionError:
         raise SystemExit("No such section: %s" % section)
     except NoOptionError:

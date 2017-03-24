@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2012,2013  Contributor
+# Copyright (C) 2009,2010,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for testing constraints in commands involving domain."""
+"""Module for testing constraints in commands involving services."""
 
 import unittest
 
@@ -28,54 +28,82 @@ from brokertest import TestBrokerCommand
 
 class TestServiceConstraints(TestBrokerCommand):
 
-    def testdelrequiredservicepersonalitymissing(self):
+    def test_100_del_required_service_personality_missing(self):
         command = ["del_required_service", "--service=ntp",
-                   "--archetype=windows", "--personality=desktop"]
+                   "--archetype=aquilon", "--personality=utpers-dev"]
         out = self.notfoundtest(command)
-        self.matchoutput(out, "Service ntp required for archetype windows, "
-                         "personality desktop not found.", command)
+        self.matchoutput(out, "Service ntp is not required for personality "
+                         "aquilon/utpers-dev@next.", command)
 
-    def testdelservicewithinstances(self):
+    def test_110_del_service_with_instances(self):
         command = "del service --service unmapped"
         out = self.badrequesttest(command.split(" "))
         self.matchoutput(out, "Service unmapped still has instances defined "
                          "and cannot be deleted.", command)
 
-    def testdelarchetyperequiredservice(self):
+    def test_115_verify_service_with_instances(self):
+        command = "show service --service aqd"
+        out = self.commandtest(command.split(" "))
+        self.matchoutput(out, "Service: aqd", command)
+
+    def test_120_del_archetype_required_service(self):
         command = "del service --service aqd"
         out = self.badrequesttest(command.split(" "))
         self.matchoutput(out, "Service aqd is still required by the following "
                          "archetypes: aquilon.", command)
 
-    def testdelpersonalityrequiredservice(self):
+    def test_130_del_personality_required_service(self):
         command = "del service --service chooser1"
         out = self.badrequesttest(command.split(" "))
         self.matchoutput(out, "Service chooser1 is still required by the "
-                         "following personalities: unixeng-test (aquilon).",
-                         command)
+                         "following personalities: ", command)
 
-    def testverifydelservicewithinstances(self):
-        command = "show service --service aqd"
-        out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Service: aqd", command)
-
-    def testdelserviceinstancewithservers(self):
-        command = "del service --service aqd --instance ny-prod"
-        out = self.badrequesttest(command.split(" "))
-        self.matchoutput(out, "Service aqd, instance ny-prod is still being "
-                         "provided by servers", command)
-
-    def testverifydelserviceinstancewithservers(self):
+    def test_145_verify_del_service_instance_with_servers(self):
         command = "show service --service aqd --instance ny-prod"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Service: aqd Instance: ny-prod", command)
 
-    def testdelserviceinstancewithclients(self):
+    def test_150_del_service_instance_with_clients(self):
         command = "del service --service utsvc --instance utsi1"
         out = self.badrequesttest(command.split(" "))
         self.matchoutput(out, "Service utsvc, instance utsi1 still has "
                          "clients and cannot be deleted", command)
 
+    def test_160_add_required_service_no_justification(self):
+        command = "add required service --service utsvc --archetype aquilon"
+        out = self.unauthorizedtest(command.split(" "), auth=True,
+                                    msgcheck=False)
+        self.matchoutput(out,
+                         "The operation has production impact, "
+                         "--justification is required.",
+                         command)
+
+    def test_165_del_required_afs_no_justification(self):
+        command = "del required service --service afs --archetype aquilon"
+        out = self.unauthorizedtest(command.split(" "), auth=True,
+                                    msgcheck=False)
+        self.matchoutput(out,
+                         "The operation has production impact, "
+                         "--justification is required.",
+                         command)
+
+    def test_170_bind_server(self):
+        command = ['bind_server', '--service', 'dns', '--instance', 'unittest',
+                   '--hostname', 'unittest20.aqd-unittest.ms.com']
+        out = self.unauthorizedtest(command, auth=True, msgcheck=False)
+        self.matchoutput(out,
+                         "The operation has production impact, "
+                         "--justification is required.",
+                         command)
+
+    def test_175_unbind_server(self):
+        command = ['unbind_server', '--service', 'dns',
+                   '--instance', 'unittest', '--position', 1]
+        out = self.unauthorizedtest(command, auth=True, msgcheck=False)
+        self.matchoutput(out,
+                         "The operation has production impact, "
+                         "--justification is required.",
+                         command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestServiceConstraints)

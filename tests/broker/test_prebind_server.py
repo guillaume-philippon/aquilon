@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ This is needed to make sure that a server is bound to the aqd service
-    before make aquilon runs."""
+    before make/reconfigure runs."""
 
+from collections import defaultdict
+import re
 
-import socket
 import unittest
 
 if __name__ == "__main__":
@@ -28,90 +29,111 @@ if __name__ == "__main__":
 
 from brokertest import TestBrokerCommand
 
+instance_servers = {
+    "aqd": {
+        "ny-prod": ["nyaqd1.ms.com"],
+    },
+    "bootserver": {
+        "unittest": ["infra1.aqd-unittest.ms.com"],
+        "one-nyp": ["infra1.one-nyp.ms.com"],
+    },
+    "chooser1": {
+        "ut.a": ["server1.aqd-unittest.ms.com"],
+        "ut.b": ["server2.aqd-unittest.ms.com"],
+        "ut.c": ["server3.aqd-unittest.ms.com"],
+    },
+    "chooser2": {
+        "ut.a": ["server1.aqd-unittest.ms.com"],
+        "ut.c": ["server3.aqd-unittest.ms.com"],
+    },
+    "chooser3": {
+        "ut.a": ["server1.aqd-unittest.ms.com"],
+        "ut.b": ["server2.aqd-unittest.ms.com"],
+    },
+    "dns": {
+        "unittest": ["infra1.aqd-unittest.ms.com", "nyaqd1.ms.com"],
+        "one-nyp": ["infra1.one-nyp.ms.com"],
+    },
+    "ips": {
+        "northamerica": ["infra1.aqd-unittest.ms.com"],
+    },
+    "lemon": {
+        "ny-prod": ["nyaqd1.ms.com"],
+    },
+    "ntp": {
+        "pa.ny.na": ["nyaqd1.ms.com"],
+    },
+    "syslogng": {
+        "ny-prod": ["nyaqd1.ms.com"],
+    },
+}
+
 
 class TestPrebindServer(TestBrokerCommand):
 
-    def testbindntpserver(self):
-        self.noouttest(["bind", "server",
-            "--hostname", "nyaqd1.ms.com",
-            "--service", "ntp", "--instance", "pa.ny.na"])
+    def test_100_bind_servers(self):
+        server_provides = defaultdict(lambda: defaultdict(list))
+        for service, instances in instance_servers.items():
+            for instance, servers in instances.items():
+                for server in servers:
+                    command = ["bind_server", "--hostname", server,
+                               "--service", service, "--instance", instance]
+                    out = self.statustest(command)
+                    # This test runs early when none of the servers are
+                    # configured yet, so bind_server will complain - but only if
+                    # the server is of a compileable archetype.
+                    if re.match(r"[^.]+\.ms\.com$", server):
+                        self.assertEmptyErr(out, command)
+                    else:
+                        self.matchoutput(out, "Warning: Host %s is missing the "
+                                         "following required services" % server,
+                                         command)
 
-    def testverifybindntp(self):
-        command = "show service --service ntp --instance pa.ny.na"
-        out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Server: nyaqd1.ms.com", command)
+                    server_provides[server][service].append(instance)
 
-    def testbindaqdserver(self):
-        self.noouttest(["bind", "server",
-            "--hostname", "nyaqd1.ms.com",
-            "--service", "aqd", "--instance", "ny-prod"])
+                command = ["show_service", "--service", service,
+                           "--instance", instance]
+                out = self.commandtest(command)
+                for server in servers:
+                    self.matchoutput(out, "Server Binding: %s" % server, command)
 
-    def testverifybindaqd(self):
-        command = "show service --service aqd --instance ny-prod"
-        out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Server: nyaqd1.ms.com", command)
+                command = ["cat", "--service", service, "--instance", instance]
+                out = self.commandtest(command)
+                self.searchoutput(out,
+                                  r'"servers" = list\(\s*' +
+                                  r',\s*'.join('"%s"' % server for server in
+                                               servers) +
+                                  r'\s*\);',
+                                  command)
 
-    def testbindlemonserver(self):
-        self.noouttest(["bind", "server", "--hostname", "nyaqd1.ms.com",
-                        "--service", "lemon", "--instance", "ny-prod"])
+        for server, services in server_provides.items():
+            command = ["show_host", "--hostname", server]
+            out = self.commandtest(command)
+            for service, instances in services.items():
+                for instance in instances:
+                    self.matchoutput(out, "Provides Service: %s Instance: %s" %
+                                     (service, instance),
+                                     command)
 
-    def testverifybindlemon(self):
-        command = "show service --service lemon --instance ny-prod"
-        out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Server: nyaqd1.ms.com", command)
-
-    def testbindsyslogngserver(self):
-        self.noouttest(["bind", "server", "--hostname", "nyaqd1.ms.com",
-                        "--service", "syslogng", "--instance", "ny-prod"])
-
-    def testverifybindsyslogng(self):
-        command = "show service --service syslogng --instance ny-prod"
-        out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Server: nyaqd1.ms.com", command)
-
-    def testbindbootserver(self):
-        self.noouttest(["bind_server",
-                        "--hostname=server9.aqd-unittest.ms.com",
-                        "--service=bootserver", "--instance=np.test"])
-
-    def testverifybindbootserver(self):
-        command = "show service --service bootserver --instance np.test"
-        out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Server: server9.aqd-unittest.ms.com", command)
-
-    def testbindchooser(self):
-        for service in ["chooser1", "chooser2", "chooser3"]:
-            for (s, n) in [(1, 'a'), (2, 'b'), (3, 'c')]:
-                if service == 'chooser2' and n == 'b':
-                    continue
-                if service == 'chooser3' and n == 'c':
-                    continue
-                server = "server%d.aqd-unittest.ms.com" % s
-                instance = "ut.%s" % n
-                self.noouttest(["bind", "server", "--hostname", server,
-                                "--service", service, "--instance", instance])
-
-    def testbinddns(self):
-        self.noouttest(["bind", "server",
-                        "--hostname", "unittest02.one-nyp.ms.com",
-                        "--service", "dns", "--instance", "utdnsinstance"])
-        self.noouttest(["bind", "server",
-                        "--hostname", "nyaqd1.ms.com",
-                        "--service", "dns", "--instance", "utdnsinstance"])
-
-    def testcatdns(self):
-        command = "cat --service dns --instance utdnsinstance"
+    def test_200_cat_dns(self):
+        command = "cat --service dns --instance unittest"
         out = self.commandtest(command.split(" "))
         self.searchoutput(out,
-                          r'"servers" = list\(\s*"nyaqd1.ms.com",\s*'
-                          r'"unittest02.one-nyp.ms.com"\s*\);',
+                          r'"servers" = list\(\s*"infra1\.aqd-unittest\.ms\.com",\s*'
+                          r'"nyaqd1\.ms\.com"\s*\);',
                           command)
-        # The IP address comes from fakebin/dsdb.d, not from the real DNS.
         self.searchoutput(out,
-                          '"server_ips" = list\(\s*"10.184.155.249",\s*"%s"\s*\);' %
-                          self.net.unknown[0].usable[0],
+                          r'"server_ips" = list\(\s*"%s",\s*"%s"\s*\);' %
+                          (self.net["zebra_vip"].usable[3],
+                           self.net["aurora2"].usable[244]),
                           command)
 
+    # This test needs to go before clients are added
+    def test_300_early_constraint(self):
+        command = "del service --service aqd --instance ny-prod"
+        out = self.badrequesttest(command.split(" "))
+        self.matchoutput(out, "Service aqd, instance ny-prod is still being "
+                         "provided by servers", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPrebindServer)

@@ -3,56 +3,61 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_hostlink"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_hostlink"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_hostlink</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_hostlink</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
     <!--Tried to use this fix the warnings, but it just created another set!
     <info>
       <author>
-        <personname><firstname>Nathan</firstname>
-        <surname>Dimmock</surname></personname>
+	<personname><firstname>Nathan</firstname>
+	<surname>Dimmock</surname></personname>
       </author>
       <author><orgname>Morgan Stanley</orgname></author>
     </info>-->
     <refnamediv>
-        <refname>add hostlink</refname>
-        <refpurpose>
-          Add a hostlink resource onto a host or cluster
-        </refpurpose>
+	<refname>aq add hostlink</refname>
+	<refpurpose>
+	    Add a hostlink resource onto a host, cluster or metacluster
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
-	    <command>aq add hostlink </command>
-	    <group>
-	      <arg choice="req"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
-	      <arg choice="req"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-	      <arg choice="req"><option>--resourcegroup <replaceable>RESOURCEGROUP</replaceable></option></arg>
-        </group>
-	    <arg choice="req"><option>--hostlink <replaceable>NAME</replaceable></option></arg>
-	    <arg choice="req"><option>--target <replaceable>PATH</replaceable></option></arg>
-	    <arg choice="req"><option>--owner <replaceable>USER</replaceable></option></arg>
-	    <arg choice="opt"><option>--group <replaceable>GROUP</replaceable></option></arg>
-	    <arg choice="opt"><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <command>aq add hostlink</command>
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
+	    <group choice="req">
+		<arg choice="plain"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--metacluster <replaceable>METACLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--resourcegroup <replaceable>RESOURCEGROUP</replaceable></option></arg>
+	    </group>
+	    <arg choice="plain"><option>--hostlink <replaceable>NAME</replaceable></option></arg>
+	    <arg choice="plain"><option>--target <replaceable>PATH</replaceable></option></arg>
+	    <arg choice="plain"><option>--owner <replaceable>USER</replaceable></option></arg>
+	    <arg><option>--group <replaceable>GROUP</replaceable></option></arg>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add_hostlink</command> command adds a hostlink
-	    resource onto a host or a cluster. A hostlink allows the
+	    resource onto a host, cluster or metacluster. A hostlink allows the
 	    creation of host or cluster specific symlinks under
 	    /var/hostlinks which may point to arbitrary locations. If the
 	    location does not exist then it will be created and given the
@@ -61,35 +66,30 @@
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" role</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Templates</title>
-        <para>
-      This command will modify the templates for the host or
-      cluster (depending on which option was given) and the resource
-      template for the hostlink itself.
+	<title>Templates</title>
+	<para>
+	    This command will modify the templates for the host, cluster or
+	    metacluster (depending on which option was given) and the resource
+	    template for the hostlink itself.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOSTNAME</replaceable></option>,
 		</term>
 		<listitem>
 		    <para>
-		        Specify the target host for the hostlink.
+			Specify the target host for the hostlink.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -99,7 +99,17 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--metacluster <replaceable>METACLUSTER</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			The name of the target metacluster for the hostlink.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--resourcegroup
 		    <replaceable>RESOURCEGROUP</replaceable></option>
 		</term>
@@ -110,19 +120,19 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--group <replaceable>GROUP</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-              The group owner of the target directory. If not
-              specified then the owner user's default group will be
-              used.
+			The group owner of the target directory. If not
+			specified then the owner user's default group will be
+			used.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostlink <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -134,27 +144,27 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--owner <replaceable>USER</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-              The username of the owner of the target directory.
+			The username of the owner of the target directory.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--target <replaceable>PATH</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-              The target path for the symlink.
+			The target path for the symlink.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--comments <replaceable>COMMENTS</replaceable></option>
 		</term>
 		<listitem>
@@ -164,6 +174,7 @@
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -173,17 +184,17 @@
 	    <title>Adding a hostlink to a host</title>
 	    <programlisting>
 aq add hostlink --hostname foo.example.com \
-	--hostlink ftp \
-	--target /d/d1/esliprod \
+    --hostlink ftp \
+    --target /d/d1/esliprod \
     --owner esliprod
 	    </programlisting>
-    </example>
-    <example>
+	</example>
+	<example>
 	    <title>Specifying the group owner</title>
 	    <programlisting>
 aq add hostlink --cluster ny01vv \
-	--hostlink nyqsanless1  \
-	--target /var/spool/hostlinks/nyqsanless1 \
+    --hostlink nyqsanless1  \
+    --target /var/spool/hostlinks/nyqsanless1 \
     --owner zeti --group fwpbatch
 	    </programlisting>
 	</example>
@@ -192,7 +203,8 @@ aq add hostlink --cluster ny01vv \
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_hostlink</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_del_hostlink</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_hostlink</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

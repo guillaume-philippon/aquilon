@@ -3,47 +3,55 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_application"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_application"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_application</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_application</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add application</refname>
-        <refpurpose>
-	    Add an application resource onto a host or cluster
-        </refpurpose>
+	<refname>aq add application</refname>
+	<refpurpose>
+	    Add an application resource onto a host, cluster or metacluster
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
-	    <command>aq add application </command>
-	    <group>
-	      <arg choice="req"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
-	      <arg choice="req"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-	      <arg choice="req"><option>--resourcegroup <replaceable>RESOURCEGROUP</replaceable></option></arg>
-        </group>
-	    <arg choice="req"><option>--application <replaceable>NAME</replaceable></option></arg>
-	    <arg choice="req"><option>--eonid <replaceable>EONID</replaceable></option></arg>
-	    <arg choice="opt"><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <command>aq add application</command>
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
+	    <group choice="req">
+		<arg choice="plain"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--metacluster <replaceable>METACLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--resourcegroup <replaceable>RESOURCEGROUP</replaceable></option></arg>
+	    </group>
+	    <arg choice="plain"><option>--application <replaceable>NAME</replaceable></option></arg>
+	    <group choice="req">
+		<arg choice="plain"><option>--eon_id <replaceable>EONID</replaceable></option></arg>
+		<arg choice="plain"><option>--grn <replaceable>GRN</replaceable></option></arg>
+	    </group>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add_application</command> command adds an
-	    application resource onto a host or a cluster. An
+	    application resource onto a host, cluster or metacluster. An
 	    application is a personality specific resource - all
 	    interpretation of this resource is entirely down to the
 	    personality templates.
@@ -51,35 +59,30 @@
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" role</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Templates</title>
-        <para>
-      This command will modify the templates for the host or
-      cluster (depending on which option was given) and the resource
-      template for the application itself.
+	<title>Templates</title>
+	<para>
+	    This command will modify the templates for the host, cluster or
+	    metacluster (depending on which option was given) and the resource
+	    template for the application itself.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOSTNAME</replaceable></option>,
 		</term>
 		<listitem>
 		    <para>
-		        Specify the target host for the application.
+			Specify the target host for the application.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -89,7 +92,17 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--metacluster <replaceable>METACLUSTER</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			The name of the target metacluster for the application.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--resourcegroup
 		    <replaceable>RESOURCEGROUP</replaceable></option>
 		</term>
@@ -101,17 +114,18 @@
 	    </varlistentry>
 
 	    <varlistentry>
-	        <term>
-		    <option>--eonid <replaceable>EONID</replaceable></option>
+		<term>
+		    <option>--eon_id <replaceable>EONID</replaceable></option>,
+		    <option>--grn <replaceable>GRN</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-The EON reference ID of the application.
+			The EON reference ID of the application.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--application <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -123,7 +137,7 @@ The EON reference ID of the application.
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--comments <replaceable>COMMENTS</replaceable></option>
 		</term>
 		<listitem>
@@ -133,6 +147,7 @@ The EON reference ID of the application.
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -142,8 +157,8 @@ The EON reference ID of the application.
 	    <title>Adding an application to a host</title>
 	    <programlisting>
 aq add application --hostname foo.example.com \
-	--application lndb01 \
-	--eonid 42
+    --application lndb01 \
+    --eonid 42
 	    </programlisting>
 	    <para>
 	    Which results in the following configuration on the host:
@@ -158,7 +173,7 @@ aq add application --hostname foo.example.com \
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_application</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_del_application</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
 	</para>
     </refsect1>
 </refentry>

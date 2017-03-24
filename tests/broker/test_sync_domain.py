@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016,2017  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,17 +29,20 @@ from brokertest import TestBrokerCommand
 class TestSyncDomain(TestBrokerCommand):
 
     def testsyncdomain(self):
-        self.successtest(["sync", "--domain", "ut-prod"])
+        command = ["sync", "--domain", "ut-prod"]
+        out = self.statustest(command)
+        self.matchoutput(out, "Updating the checked out copy of domain "
+                         "ut-prod...", command)
         template = self.find_template("aquilon", "archetype", "base",
                                       domain="ut-prod")
         with open(template) as f:
             contents = f.readlines()
-        self.failUnlessEqual(contents[-1], "#Added by unittest\n")
+        self.assertEqual(contents[-1], "#Added by unittest\n")
 
     def testverifygitlog(self):
         kingdir = self.config.get("broker", "kingdir")
-        command = ["log", "--no-color", "-n", "1", "ut-prod"]
-        (out, err) = self.gitcommand(command, cwd=kingdir)
+        command = ["show", "--no-patch", "--format=%B", "ut-prod"]
+        out, _ = self.gitcommand(command, cwd=kingdir)
         self.matchoutput(out, "Justification: tcm=12345678", command)
 
 

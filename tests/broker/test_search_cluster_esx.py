@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2010,2011,2012,2013  Contributor
+# Copyright (C) 2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,8 +41,16 @@ class TestSearchClusterESX(TestBrokerCommand):
                    '--cluster', 'cluster-does-not-exist']
         self.notfoundtest(command)
 
-    def testmetaclusteravailable(self):
+    def testmetaclusteravailabledeprecated(self):
         command = "search cluster --cluster_type esx --esx_metacluster utmc1"
+        out = self.commandtest(command.split(" "))
+        self.matchoutput(out, "utecl1", command)
+        self.matchoutput(out, "utecl2", command)
+        self.matchoutput(out, "utecl3", command)
+        self.matchclean(out, "utecl4", command)
+
+    def testmetaclusteravailable(self):
+        command = "search cluster --cluster_type esx --metacluster utmc1"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "utecl1", command)
         self.matchoutput(out, "utecl2", command)
@@ -141,7 +149,7 @@ class TestSearchClusterESX(TestBrokerCommand):
 
     # TODO we have similar test
     def testpersonalityavailable(self):
-        command = "search cluster --cluster_type esx --personality vulcan-1g-desktop-prod"
+        command = "search cluster --cluster_type esx --personality vulcan-10g-server-prod"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "utecl1", command)
         self.matchoutput(out, "utecl2", command)
@@ -151,7 +159,7 @@ class TestSearchClusterESX(TestBrokerCommand):
     # TODO we have similar test
     def testpersonalityavailable2(self):
         command = ["search_cluster", "--cluster_type=esx",
-                   "--archetype=esx_cluster", "--personality=vulcan-1g-desktop-prod"]
+                   "--archetype=esx_cluster", "--personality=vulcan-10g-server-prod"]
         out = self.commandtest(command)
         self.matchoutput(out, "utecl1", command)
         self.matchoutput(out, "utecl2", command)
@@ -174,7 +182,7 @@ class TestSearchClusterESX(TestBrokerCommand):
 #        self.noouttest(command)
 
     def testall(self):
-        command = "search cluster --cluster_type esx --all"
+        command = "search cluster --cluster_type esx"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "utecl1", command)
         self.matchoutput(out, "utecl2", command)
@@ -182,7 +190,7 @@ class TestSearchClusterESX(TestBrokerCommand):
         self.matchoutput(out, "utecl4", command)
 
     def testallfull(self):
-        command = "search cluster --cluster_type esx --all --fullinfo"
+        command = "search cluster --cluster_type esx --fullinfo"
         out = self.commandtest(command.split(" "))
         # This is a good sampling, but not the full output
         self.matchoutput(out, "ESX Cluster: utecl1", command)

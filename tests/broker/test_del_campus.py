@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ class TestDelCampus(TestBrokerCommand):
         self.notfoundtest(command.split(" "))
 
     def testdelbunotindsdb(self):
-        ## add campus
+        # add campus
 
         test_campus = "bz"
         self.dsdb_expect_add_campus(test_campus)
@@ -50,10 +50,8 @@ class TestDelCampus(TestBrokerCommand):
         errstr = "campus %s doesn't exist" % test_campus
         self.dsdb_expect_del_campus(test_campus, fail=True, errstr=errstr)
         command = "del campus --campus %s" % test_campus
-        (out, err) = self.successtest(command.split(" "))
-        self.assertEmptyOut(out, command)
+        self.statustest(command.split(" "))
         self.dsdb_verify()
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelCampus)

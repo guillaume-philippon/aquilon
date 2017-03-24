@@ -3,77 +3,78 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_resourcegroup"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_resourcegroup"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_resourcegroup</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_resourcegroup</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add resourcegroup</refname>
-        <refpurpose>
-	    Add a resourcegroup onto a host or cluster
-        </refpurpose>
+	<refname>aq add resourcegroup</refname>
+	<refpurpose>
+	    Add a resourcegroup onto a host, cluster or metacluster
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
 	    <command>aq add resourcegroup</command>
-	    <group choice="req">
-		<arg choice="plain"><option>--hostname <replaceable>HOST</replaceable></option></arg>
-		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-	    </group>
-	    <arg choice="req"><option>--resourcegroup <replaceable>NAME</replaceable></option></arg>
-	    <arg choice="opt"><option>--required_type <replaceable>TYPE</replaceable></option></arg>
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
+	    <group choice="req">
+		<arg choice="plain"><option>--hostname <replaceable>HOST</replaceable></option></arg>
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--metacluster <replaceable>METACLUSTER</replaceable></option></arg>
+	    </group>
+	    <arg choice="plain"><option>--resourcegroup <replaceable>NAME</replaceable></option></arg>
+	    <arg><option>--required_type <replaceable>TYPE</replaceable></option></arg>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
-	    The <command>aq add_resourcegroup</command> command adds a resourcegroup onto a host or
-	    a cluster. A resourcegroup is a collection or bundle of resources which work together. 
+	    The <command>aq add resourcegroup</command> command adds a resourcegroup onto a host,
+	    cluster or metacluster. A resourcegroup is a collection or bundle of resources which work together.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" role</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Templates</title>
-        <para>
-	    This command will modify the templates for the host or cluster (depending on which
+	<title>Templates</title>
+	<para>
+	    This command will modify the templates for the host, cluster or metacluster (depending on which
 	    option was given).
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOST</replaceable></option>,
 		</term>
 		<listitem>
 		    <para>
-		        The name of the host which will hold this resourcegroup.
+			The name of the host which will hold this resourcegroup.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -83,7 +84,17 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--metacluster <replaceable>METACLUSTER</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			The name of the target metacluster which will hold this resourcegroup.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--resourcegroup <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -95,7 +106,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--required_type <replaceable>TYPE</replaceable></option>
 		</term>
 		<listitem>
@@ -105,14 +116,27 @@
 		    </para>
 		</listitem>
 	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--comments <replaceable>COMMENTS</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Comments for this resourcegroup.
+		    </para>
+		</listitem>
+	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_resourcegroup</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_del_resourcegroup</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_update_resourcegroup</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_resourcegroup</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2012,2013  Contributor
+# Copyright (C) 2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,8 +52,8 @@ class TestSearchCluster(TestBrokerCommand):
 
     def testbuildstatusunavailable(self):
         command = "search cluster --buildstatus status-does-not-exist"
-        out = self.notfoundtest(command.split(" "))
-        self.matchoutput(out, "state status-does-not-exist not found",
+        out = self.badrequesttest(command.split(" "))
+        self.matchoutput(out, "Unknown cluster lifecycle 'status-does-not-exist'",
                          command)
 
     def testclustertype(self):
@@ -83,7 +83,6 @@ class TestSearchCluster(TestBrokerCommand):
         self.matchclean(out, "utgrid1", command)
 
     def testpersonalityunavailable(self):
-        # Will only get this error if archetype is specified
         command = ['search', 'cluster', '--archetype', 'storagecluster',
                    '--personality', 'personality-does-not-exist']
         out = self.notfoundtest(command)
@@ -91,13 +90,13 @@ class TestSearchCluster(TestBrokerCommand):
                          "archetype storagecluster not found.", command)
 
     def testpersonalityunavailable2(self):
-        # Will only get an error if archetype is specified
         command = "search cluster --personality personality-does-not-exist"
-        self.noouttest(command.split(" "))
+        out = self.notfoundtest(command.split(" "))
+        self.matchoutput(out, "Personality personality-does-not-exist "
+                         "not found.", command)
 
     def testsandboxavailable(self):
-        user = self.config.get("unittest", "user")
-        command = ["search_cluster", "--sandbox=%s/utsandbox" % user]
+        command = ["search_cluster", "--sandbox=%s/utsandbox" % self.user]
         out = self.commandtest(command)
         self.matchoutput(out, "utstorages2", command)
         self.matchclean(out, "utstorage2", command)
@@ -112,10 +111,10 @@ class TestSearchCluster(TestBrokerCommand):
         self.matchclean(out, "utstorages2", command)
 
     def testdomainunavailable(self):
-        command = ["search_cluster", "--domain=domaind-does-not-exist"]
+        command = ["search_cluster", "--domain=domain-does-not-exist"]
         out = self.notfoundtest(command)
         self.matchoutput(out,
-                         "Domain domaind-does-not-exist not found.", command)
+                         "Domain domain-does-not-exist not found.", command)
 
     def testclusterlocationavailable(self):
         command = "search cluster --cluster_building ut"
@@ -134,7 +133,7 @@ class TestSearchCluster(TestBrokerCommand):
                          command)
 
     def testallowedpersonalityavailable(self):
-        command = "search cluster --allowed_personality vulcan-1g-desktop-prod"
+        command = "search cluster --allowed_personality vulcan-10g-server-prod"
         out = self.commandtest(command.split(" "))
 
         self.matchoutput(out, "utecl1", command)
@@ -166,6 +165,7 @@ class TestSearchCluster(TestBrokerCommand):
         self.matchoutput(out, "utecl3", command)  # 2
         self.matchclean(out, "utecl2", command)  # 1
         self.matchclean(out, "utgrid1", command)  # 5%
+        self.matchclean(out, "utstorage1", command)  # 1
 
     def testdownhoststhresholdpercent(self):
         command = "search cluster --down_hosts_threshold 5%"
@@ -179,9 +179,9 @@ class TestSearchCluster(TestBrokerCommand):
         command = "search cluster --down_maint_threshold 1"
         out = self.commandtest(command.split(" "))
 
+        self.matchoutput(out, "utstorage1", command)  # 1
+        self.matchclean(out, "utvcs1", command)  # None
         self.matchclean(out, "utgrid1", command)  # 0
-        self.matchoutput(out, "utvcs1", command)  # 1
-        self.matchclean(out, "utstorage1", command)  # None
 
     def testmaxmembers(self):
         command = "search cluster --max_members 2"
@@ -195,7 +195,7 @@ class TestSearchCluster(TestBrokerCommand):
         command = "search cluster --member_archetype vmhost"
         out = self.commandtest(command.split(" "))
 
-        self.matchoutput(out, "utecl11", command)
+        self.matchoutput(out, "utecl1", command)
         self.matchclean(out, "utgrid1", command)
         self.matchclean(out, "utstorage1", command)
 
@@ -208,17 +208,17 @@ class TestSearchCluster(TestBrokerCommand):
 
     def testmemberpersonalityandarchetypeunavailable(self):
         command = ['search', 'cluster', '--member_archetype', 'filer',
-                   '--member_personality', 'vulcan-1g-desktop-prod']
+                   '--member_personality', 'vulcan-10g-server-prod']
         out = self.notfoundtest(command)
         self.matchoutput(out,
-                         "Personality vulcan-1g-desktop-prod, archetype filer not found.",
+                         "Personality vulcan-10g-server-prod, archetype filer not found.",
                          command)
 
     def testmemberpersonality(self):
-        command = "search cluster --member_personality vulcan-1g-desktop-prod"
+        command = "search cluster --member_personality vulcan-10g-server-prod"
         out = self.commandtest(command.split(" "))
 
-        self.matchoutput(out, "utecl11", command)
+        self.matchoutput(out, "utecl1", command)
         self.matchclean(out, "utgrid1", command)
         self.matchclean(out, "utstorage1", command)
 
@@ -237,6 +237,22 @@ class TestSearchCluster(TestBrokerCommand):
         self.matchclean(out, "utecl3", command)
         self.matchclean(out, "utecl4", command)
 
+    def testmemberlocationlist(self):
+        command = ["search_cluster", "--member_building", "utb1,utb3"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "utbvcs4a", command)
+        self.matchoutput(out, "utbvcs4b", command)
+        self.matchoutput(out, "utbvcs5c", command)
+        self.matchclean(out, "utbvcs1", command)
+        self.matchclean(out, "utbvcs2", command)
+        self.matchclean(out, "utecl1", command)
+        self.matchclean(out, "utgrid1", command)
+        self.matchclean(out, "utstorage1", command)
+
+    def testmemberlocationlistempty(self):
+        command = ["search_cluster", "--member_building", "ut,np"]
+        self.noouttest(command)
+
     def testshareavailable(self):
         command = "search cluster --share test_share_2"
         out = self.commandtest(command.split(" "))
@@ -251,6 +267,8 @@ class TestSearchCluster(TestBrokerCommand):
         self.matchoutput(out,
                          "Share share-does-not-exist not found.", command)
 
+    def testsearchmetaclustershare(self):
+        self.noouttest(["search_cluster", "--share", "test_v2_share"])
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSearchCluster)

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,13 @@ class TestAddDnsDomain(TestBrokerCommand):
                         "--comments", "Some DNS domain comments"])
         self.dsdb_verify()
 
+    def testaddaqdunittest_ut_env_domain(self):
+        self.dsdb_expect("add_dns_domain -domain_name aqd-unittest-ut-env.ms.com "
+                         "-comments Some DNS domain comments")
+        self.noouttest(["add", "dns_domain", "--dns_domain", "aqd-unittest-ut-env.ms.com",
+                        "--comments", "Some DNS domain comments"])
+        self.dsdb_verify()
+
     def testaddcardsdomain(self):
         self.dsdb_expect("add_dns_domain -domain_name cards.example.com "
                          "-comments A pack of lies")
@@ -53,9 +60,11 @@ class TestAddDnsDomain(TestBrokerCommand):
     def testverifyaddaqdunittestdomain(self):
         command = "show dns_domain --dns_domain aqd-unittest.ms.com"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "DNS Domain: aqd-unittest.ms.com", command)
-        self.matchoutput(out, "Restricted: False", command)
-        self.matchoutput(out, "Comments: Some DNS domain comments", command)
+        self.output_equals(out, """
+            DNS Domain: aqd-unittest.ms.com
+              Restricted: False
+              Comments: Some DNS domain comments
+            """, command)
 
     def testverifyaddaqdunittestdomaincsv(self):
         command = "show dns_domain --dns_domain aqd-unittest.ms.com --format=csv"
@@ -66,21 +75,32 @@ class TestAddDnsDomain(TestBrokerCommand):
     def testverifyaddrestricteddomain(self):
         command = "show dns_domain --dns_domain restrict.aqd-unittest.ms.com"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "DNS Domain: restrict.aqd-unittest.ms.com", command)
-        self.matchoutput(out, "Restricted: True", command)
+        self.output_equals(out, """
+            DNS Domain: restrict.aqd-unittest.ms.com
+              Restricted: True
+            """, command)
+
+    def testverifyaddrestricteddomainproto(self):
+        command = ["show_dns_domain",
+                   "--dns_domain", "restrict.aqd-unittest.ms.com",
+                   "--format", "proto"]
+        domain = self.protobuftest(command, expect=1)[0]
+        self.assertEqual(domain.name, "restrict.aqd-unittest.ms.com")
+        self.assertEqual(domain.restricted, True)
 
     def testverifyaddaqdunittestdomainproto(self):
         command = ["show", "dns_domain", "--dns_domain=aqd-unittest.ms.com",
                    "--format=proto"]
-        out = self.commandtest(command)
-        domain = self.parse_dns_domainlist_msg(out, expect=1).dns_domains[0]
-        self.failUnlessEqual(domain.name, 'aqd-unittest.ms.com')
+        msgs = self.protobuftest(command, expect=1)
+        domain = msgs[0]
+        self.assertEqual(domain.name, 'aqd-unittest.ms.com')
+        self.assertEqual(domain.restricted, False)
 
     def testaddtoolongdomain(self):
         command = ['add', 'dns_domain', '--dns_domain',
-            #          1         2         3         4         5         6
-            's234567890123456789012345678901234567890123456789012345678901234' +
-            '.ms.com']
+                   #         1         2         3         4         5         6
+                   's234567890123456789012345678901234567890123456789012345678901234' +
+                   '.ms.com']
         out = self.badrequesttest(command)
         self.matchoutput(out, "DNS name components must have a length between "
                          "1 and 63.", command)
@@ -99,30 +119,14 @@ class TestAddDnsDomain(TestBrokerCommand):
         command = "show dns_domain --all"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "DNS Domain: aqd-unittest.ms.com", command)
+        self.matchoutput(out, "DNS Domain: aqd-unittest-ut-env.ms.com", command)
 
     def testverifyshowallproto(self):
         command = "show dns_domain --all --format=proto"
-        out = self.commandtest(command.split(" "))
-        dns_domains = self.parse_dns_domainlist_msg(out).dns_domains
+        dns_domains = self.protobuftest(command.split(" "))
         dns_names = [d.name for d in dns_domains]
-        for domain in ['ms.com', 'aqd-unittest.ms.com']:
-            self.failUnless(domain in dns_names,
-                            "Domain %s not in list %s" % (domain, dns_names))
-
-    def testaddtd1(self):
-        self.dsdb_expect("add_dns_domain -domain_name td1.aqd-unittest.ms.com "
-                         "-comments ")
-        command = ["add", "dns", "domain",
-                   "--dns_domain", "td1.aqd-unittest.ms.com"]
-        self.noouttest(command)
-        self.dsdb_verify()
-
-    def testaddtd2(self):
-        self.dsdb_expect("add_dns_domain -domain_name td2.aqd-unittest.ms.com "
-                         "-comments ")
-        command = ["add", "dns", "domain",
-                   "--dns_domain", "td2.aqd-unittest.ms.com"]
-        self.noouttest(command)
+        for domain in ['ms.com', 'aqd-unittest.ms.com', 'aqd-unittest-ut-env.ms.com']:
+            self.assertIn(domain, dns_names)
 
     def testaddcolodomains(self):
         self.dsdb_expect("add_dns_domain -domain_name excx.aqd-unittest.ms.com "
@@ -141,16 +145,15 @@ class TestAddDnsDomain(TestBrokerCommand):
 
     def testaddlocaldomain(self):
         hostname = self.config.get('unittest', 'hostname')
-        (name, dot, domain) = hostname.partition('.')
+        _, _, domain = hostname.partition('.')
         # If the local host is under .ms.com, then we don't want to add it again
-        (p, out, err) = self.runcommand(["show", "dns", "domain",
-                                         "--dns_domain", domain])
+        p, _, _ = self.runcommand(["show", "dns", "domain",
+                                   "--dns_domain", domain])
         if domain and p.returncode == 4:
             self.dsdb_expect("add_dns_domain -domain_name %s -comments " % domain)
             command = ["add", "dns", "domain", "--dns_domain", domain]
             self.noouttest(command)
             self.dsdb_verify()
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAddDnsDomain)

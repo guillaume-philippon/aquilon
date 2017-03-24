@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2017  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,23 +17,25 @@
 # limitations under the License.
 """This sets up and runs the broker unit tests."""
 
+from __future__ import print_function
 
 import os
 import re
 import sys
-import unittest
-from subprocess import Popen
+from shutil import rmtree
+from subprocess import call
 
 import depends  # pylint: disable=W0611
+import unittest
 
 import argparse
 
 BINDIR = os.path.dirname(os.path.realpath(__file__))
 SRCDIR = os.path.join(BINDIR, "..")
-sys.path.append(os.path.join(SRCDIR, "lib", "python2.6"))
+sys.path.append(os.path.join(SRCDIR, "lib"))
 
 from aquilon.config import Config
-from aquilon.utils  import kill_from_pid_file
+from aquilon.utils import kill_from_pid_file
 from verbose_text_test import VerboseTextTestRunner
 
 from broker.orderedsuite import BrokerTestSuite
@@ -55,13 +57,13 @@ epilog = """
 
 
 def force_yes(msg):
-    print >> sys.stderr, msg
-    print >> sys.stderr, """
+    print(msg, file=sys.stderr)
+    print("""
         Please confirm by typing yes (three letters) and pressing enter.
-        """
+        """, file=sys.stderr)
     answer = sys.stdin.readline()
     if not answer.startswith("yes"):
-        print >> sys.stderr, """Aborting."""
+        print("""Aborting.""", file=sys.stderr)
         sys.exit(1)
 
 parser = argparse.ArgumentParser(description="Run the broker test suite.",
@@ -87,11 +89,11 @@ parser.add_argument('-m', '--mirror', action='store_true',
 opts = parser.parse_args()
 
 if not os.path.exists(opts.config):
-    print >> sys.stderr, "configfile %s does not exist" % opts.config
+    print("configfile %s does not exist" % opts.config, file=sys.stderr)
     sys.exit(1)
 
-if os.environ.get("AQDCONF") and (os.path.realpath(opts.config)
-        != os.path.realpath(os.environ["AQDCONF"])):
+if os.environ.get("AQDCONF") and \
+   os.path.realpath(opts.config) != os.path.realpath(os.environ["AQDCONF"]):
     force_yes("""Will ignore AQDCONF variable value:
 %s
 and use
@@ -110,11 +112,11 @@ if opts.profile:
 
 hostname = config.get("unittest", "hostname")
 if hostname.find(".") < 0:
-    print >> sys.stderr, """
+    print("""
 Some regression tests depend on the config value for hostname to be
 fully qualified.  Please set the config value manually since the default
 on this system (%s) is a short name.
-""" % hostname
+""" % hostname, file=sys.stderr)
     sys.exit(1)
 
 if opts.mirror:
@@ -126,13 +128,14 @@ if opts.mirror:
     mirrordir = config.get('unittest', 'mirrordir')
     if not os.path.exists(mirrordir):
         os.makedirs(mirrordir)
-    p = Popen(['rsync', '-avP', '-e', 'ssh -q -o StrictHostKeyChecking=no " \
-              + "-o UserKnownHostsFile=/dev/null -o BatchMode=yes',
-              '--delete', srcdir + '/', mirrordir],
-              stdout=1, stderr=2)
-    p.communicate()
-    if p.returncode != 0:
-        print >> sys.stderr, "Rsync failed!"
+    ssh_args = [config.lookup_tool("ssh"), "-q",
+                "-o", "StrictHostKeyChecking=no",
+                "-o", "UserKnownHostsFile=/dev/null",
+                "-o", "BatchMode=yes"]
+    rc = call(['rsync', '-avP', '-e', " ".join(ssh_args),
+               '--delete', srcdir + '/', mirrordir])
+    if rc != 0:
+        print("Rsync failed!", file=sys.stderr)
         sys.exit(1)
     args = [sys.executable, os.path.join(mirrordir, 'tests', 'runtests.py')]
     args.extend(sys.argv[1:])
@@ -146,7 +149,7 @@ makefile = os.path.join(SRCDIR, "Makefile")
 prod_python = None
 with open(makefile) as f:
     prod_python_re = re.compile(r'^PYTHON_SERVER_PROD\s*=\s*(\S+)(\s+|$)')
-    for line in f.readlines():
+    for line in f:
         m = prod_python_re.search(line)
         if m:
             prod_python = m.group(1)
@@ -155,27 +158,26 @@ with open(makefile) as f:
 # -c 'import platform; print platform.python_version()' and then compare
 # with the current running python_version.
 if prod_python and sys.executable.find(prod_python) < 0:
-    print "\n"
+    print("\n")
     force_yes("Running with %s but prod is %s" % (sys.executable, prod_python))
 
-production_database = "NYPO_AQUILON"
-if (config.get("database", "dsn").startswith("oracle") and
-        config.get("database", "server") == production_database):
-    force_yes("About to run against the production database %s" %
-            production_database)
-
 # Execute this every run... the man page says that it should do the right
-# thing in terms of not contacting the kdc very often.
-p = Popen(config.get("kerberos", "krb5_keytab"), stdout=1, stderr=2)
-rc = p.wait()
+# thing in terms of not contacting the kdc very often. Don't abort the tests if
+# this fails, the keytab may be there.
+try:
+    call(config.lookup_tool("krb5_keytab"))
+except OSError:
+    pass
 
 pid_file = os.path.join(config.get('broker', 'rundir'), 'aqd.pid')
 kill_from_pid_file(pid_file)
 
 # FIXME: Need to be careful about attempting to nuke templatesdir...
-dirs = [config.get("database", "dbdir"), config.get("unittest", "scratchdir")]
+dirs = [config.get("unittest", "scratchdir")]
+if config.has_option("database", "dbfile"):
+    dirs.append(os.path.dirname(config.get("database", "dbfile")))
 for label in ["quattordir", "templatesdir", "domainsdir", "rundir", "logdir",
-              "profilesdir", "plenarydir", "builddir", "kingdir", "swrepdir"]:
+              "profilesdir", "plenarydir", "cfgdir", "kingdir"]:
     dirs.append(config.get("broker", label))
 
 existing_dirs = [d for d in dirs if os.path.exists(d)]
@@ -185,22 +187,20 @@ if existing_dirs:
               "\n\t".join(existing_dirs))
 
 for dirname in existing_dirs:
-    print "Removing %s" % dirname
-    p = Popen(("/bin/rm", "-rf", dirname), stdout=1, stderr=2)
-    rc = p.wait()
-    # FIXME: check rc
+    if os.path.exists(dirname):
+        print("Removing %s" % dirname)
+        rmtree(dirname, ignore_errors=True)
 
 for dirname in dirs:
     try:
         if not os.path.exists(dirname):
             os.makedirs(dirname)
-    except OSError, e:
-        print >> sys.stderr, "Could not create %s: %s" % (dirname, e)
+    except OSError as e:
+        print("Could not create %s: %s" % (dirname, e), file=sys.stderr)
 
-# Create DSDB coverage directory
+# Set up DSDB coverage directory
 dsdb_coverage_dir = os.path.join(config.get("unittest", "scratchdir"),
                                  "dsdb_coverage")
-os.makedirs(dsdb_coverage_dir)
 os.environ["AQTEST_DSDB_COVERAGE_DIR"] = dsdb_coverage_dir
 
 suite = unittest.TestSuite()

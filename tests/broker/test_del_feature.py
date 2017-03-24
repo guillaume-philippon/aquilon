@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2013  Contributor
+# Copyright (C) 2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 # limitations under the License.
 """Module for testing the del feature command."""
 
-
 import unittest
 
 if __name__ == "__main__":
@@ -26,31 +25,16 @@ if __name__ == "__main__":
 
 from brokertest import TestBrokerCommand
 
+from .test_add_feature import default_features
+
 
 class TestDelFeature(TestBrokerCommand):
 
-    def test_100_del_host_pre(self):
-        command = ["del", "feature", "--feature", "pre_host", "--type", "host"]
-        self.noouttest(command)
-
-    def test_100_del_host_post(self):
-        command = ["del", "feature", "--feature", "post_host", "--type", "host"]
-        self.noouttest(command)
-
-    def test_100_del_hw(self):
-        command = ["del", "feature", "--feature", "bios_setup",
-                   "--type", "hardware"]
-        self.noouttest(command)
-
-    def test_100_del_hw2(self):
-        command = ["del", "feature", "--feature", "disable_ht",
-                   "--type", "hardware"]
-        self.noouttest(command)
-
-    def test_100_del_iface(self):
-        command = ["del", "feature", "--feature", "src_route",
-                   "--type", "interface"]
-        self.noouttest(command)
+    def test_100_del_features(self):
+        for feature_type, features in default_features.items():
+            for name in features:
+                self.noouttest(["del_feature", "--feature", name,
+                                "--type", feature_type])
 
     def test_110_verify_pre(self):
         command = ["show", "feature", "--feature", "pre_host", "--type", "host"]
@@ -96,7 +80,6 @@ class TestDelFeature(TestBrokerCommand):
         self.matchoutput(out, "Unknown feature type 'no-such-type'. The "
                          "valid values are: hardware, host, interface.",
                          command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelFeature)

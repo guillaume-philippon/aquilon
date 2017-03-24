@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,15 +24,29 @@ if __name__ == "__main__":
     utils.import_depends()
 
 from brokertest import TestBrokerCommand
+from eventstest import EventsTestMixin
 
 
-class TestAddDisk(TestBrokerCommand):
+class TestAddDisk(EventsTestMixin, TestBrokerCommand):
 
-    def testaddut3c5n10disk(self):
+    def test_100_add_ut3c5n10_disk(self):
+        self.event_upd_hardware('ut3c5n10')
         self.noouttest(["add", "disk", "--machine", "ut3c5n10",
-            "--disk", "sdb", "--controller", "scsi", "--size", "34"])
+                        "--disk", "sdb", "--controller", "scsi",
+                        "--address", "0:0:1:0",
+                        "--size", "34", "--comments", "Some disk comments"])
+        self.events_verify()
 
-    def testfailaddut3c5n10disk(self):
+    def test_110_add_ut3c1n3_disk(self):
+        self.event_upd_hardware('ut3c1n3')
+        command = ["add", "disk", "--machine", "ut3c1n3", "--disk", "c0d0",
+                   "--controller", "cciss", "--size", "34",
+                   "--wwn", "600508b112233445566778899aabbccd",
+                   "--bus_address", "pci:0000:01:00.0"]
+        self.noouttest(command)
+        self.events_verify()
+
+    def test_200_bad_controller(self):
         command = ["add_disk", "--machine=ut3c5n10", "--disk=sdc",
                    "--controller=controller-does-not-exist", "--size=34"]
         out = self.badrequesttest(command)
@@ -41,69 +55,86 @@ class TestAddDisk(TestBrokerCommand):
                          "controller type",
                          command)
 
-    def testfailduplicatedisk(self):
+    def test_200_duplicate_disk(self):
         command = ["add", "disk", "--machine", "ut3c5n10", "--disk", "sdb",
                    "--controller", "scsi", "--size", "34"]
         out = self.badrequesttest(command)
         self.matchoutput(out, "Machine ut3c5n10 already has a disk named sdb.",
                          command)
 
-    def testfailextrabootdisk(self):
+    def test_200_extra_boot_disk(self):
         command = ["add", "disk", "--machine", "ut3c5n10", "--disk", "sdc",
                    "--controller", "scsi", "--size", "34", "--boot"]
         out = self.badrequesttest(command)
         self.matchoutput(out, "Machine ut3c5n10 already has a boot disk.",
                          command)
 
-    def testverifyaddut3c5n10disk(self):
+    def test_200_bad_address(self):
+        command = ["add_disk", "--machine=ut3c5n10", "--disk=sdc",
+                   "--controller=scsi", "--size=34",
+                   "--address", "bad-address"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         r"Disk address 'bad-address' is not valid, it must "
+                         r"match (?:\d+:){3}\d+$.",
+                         command)
+
+    def test_300_show_ut3c5n10(self):
         command = "show machine --machine ut3c5n10"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Disk: sda 68 GB scsi (local) [boot]", command)
-        self.searchoutput(out, r"Disk: sdb 34 GB scsi \(local\)$", command)
+        self.searchoutput(out,
+                          r"Disk: sdb 34 GB scsi \(local\)\s*"
+                          r"Address: 0:0:1:0\s*"
+                          r"Comments: Some disk comments",
+                          command)
 
-    def testverifycatut3c5n10disk(self):
+    def test_300_cat_ut3c5n10(self):
         command = "cat --machine ut3c5n10"
         out = self.commandtest(command.split(" "))
         self.searchoutput(out,
-                          r'"harddisks" = nlist\(\s*"sda", '
+                          r'"harddisks/{sda}" = '
                           r'create\("hardware/harddisk/generic/scsi",\s*'
                           r'"boot", true,\s*'
                           r'"capacity", 68\*GB,\s*'
-                          r'"interface", "scsi"\s*\),\s*'
-                          r'"sdb", create\("hardware/harddisk/generic/scsi",\s*'
+                          r'"interface", "scsi"\s*\);',
+                          command)
+        self.searchoutput(out,
+                          r'"harddisks/{sdb}" = '
+                          r'create\("hardware/harddisk/generic/scsi",\s*'
+                          r'"address", "0:0:1:0",\s*'
                           r'"capacity", 34\*GB,\s*'
-                          r'"interface", "scsi"\s*\)\s*\);',
+                          r'"interface", "scsi"\s*\);',
                           command)
 
-    def testaddut3c1n3disk(self):
-        # Use the deprecated option names here
-        command = ["add", "disk", "--machine", "ut3c1n3", "--disk", "c0d0",
-                   "--type", "cciss", "--capacity", "34"]
-        (out, err) = self.successtest(command)
-        self.assertEmptyOut(out, command)
-        self.matchoutput(err, "The --type option is deprecated.", command)
-        self.matchoutput(err, "The --capacity option is deprecated.", command)
-
-    def testverifyaddut3c1n3disk(self):
+    def test_300_show_ut3c1n3(self):
         command = "show machine --machine ut3c1n3"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Disk: sda 68 GB scsi (local) [boot]", command)
-        self.searchoutput(out, r"Disk: c0d0 34 GB cciss \(local\)$", command)
+        self.searchoutput(out,
+                          r'Disk: c0d0 34 GB cciss \(local\)$'
+                          r'\s*WWN: 600508b112233445566778899aabbccd$'
+                          r'\s*Controller Bus Address: pci:0000:01:00.0',
+                          command)
 
-    def testverifycatut3c1n3disk(self):
+    def test_300_cat_ut3c1n3(self):
         command = "cat --machine ut3c1n3"
         out = self.commandtest(command.split(" "))
         self.searchoutput(out,
-                          r'"harddisks" = nlist\(\s*escape\("cciss/c0d0"\), '
+                          r'"harddisks/{cciss/c0d0}" = '
                           r'create\("hardware/harddisk/generic/cciss",\s*'
+                          r'"bus", "pci:0000:01:00.0",\s*'
                           r'"capacity", 34\*GB,\s*'
-                          r'"interface", "cciss"\s*\),\s*'
-                          r'"sda", create\("hardware/harddisk/generic/scsi",\s*'
+                          r'"interface", "cciss",\s*'
+                          r'"wwn", "600508b112233445566778899aabbccd"\s*\);',
+                          command)
+        self.searchoutput(out,
+                          r'"harddisks/{sda}" = '
+                          r'create\("hardware/harddisk/generic/scsi",\s*'
                           r'"boot", true,\s*'
                           r'"capacity", 68\*GB,\s*'
-                          r'"interface", "scsi"\s*\)\s*\);',
+                          r'"interface", "scsi"\s*\);',
                           command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAddDisk)

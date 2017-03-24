@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
 # limitations under the License.
 """Module for testing client error handling."""
 
-import unittest
 import socket
 import re
+
+import unittest
 
 if __name__ == "__main__":
     import utils
@@ -34,10 +35,10 @@ class TestClientFailure(TestBrokerCommand):
         command = "status --aqhost=invalidhost"
         (p, out, err) = self.runcommand(command.split(" "))
         self.assertEqual(err,
-                "Failed to connect to invalidhost: Unknown host.\n")
+                         "Failed to connect to invalidhost: Unknown host.\n")
         self.assertEqual(out, "",
-                "STDOUT for %s was not empty:\n@@@\n'%s'\n@@@\n"
-                % (command, out))
+                         "STDOUT for %s was not empty:\n@@@\n'%s'\n@@@\n"
+                         % (command, out))
         self.assertEqual(p.returncode, 1)
 
     def testnotrunningaqhost(self):
@@ -54,42 +55,32 @@ class TestClientFailure(TestBrokerCommand):
         # This might be either 'Connection refused.' or 'Connection timed out.'.
         # There may also be variations in the output, like using the short or
         # full hostname.
-        pattern = "Failed to connect to %s(\.%s)? port %d: " % (short, domain, port)
+        pattern = r"Failed to connect to %s(\.%s)? port %d: " % (short, domain, port)
         self.assertTrue(re.match(pattern, err),
                         "Expected '%s' to start with '%s'" % (err, pattern))
         self.assertEqual(out, "",
-                "STDOUT for %s was not empty:\n@@@\n'%s'\n@@@\n"
-                % (command, out))
+                         "STDOUT for %s was not empty:\n@@@\n'%s'\n@@@\n"
+                         % (command, out))
         self.assertEqual(p.returncode, 1)
 
     def testconflictingoptions(self):
         command = "add interface --mac 02:02:02:02:02:02 --interface eth0 " \
-                  "--machine does-not-exist --switch does-not-exist-either"
-        (p, out, err) = self.runcommand(command.split(" "))
-        s = "error: Option or option group switch conflicts with machine"
-        self.assert_(err.find(s) >= 0,
-                "STDERR for %s did not include '%s':\n@@@\n'%s'\n@@@\n"
-                % (command, s, err))
-        self.assertEqual(out, "",
-                "STDOUT for %s was not empty:\n@@@\n'%s'\n@@@\n"
-                % (command, out))
-        self.assertEqual(p.returncode, 2)
+                  "--machine does-not-exist --network_device does-not-exist-either"
+        err = self.badoptiontest(command.split(" "))
+        self.matchoutput(err,
+                         "Please provide exactly one of the required options!",
+                         command)
 
     def testextraargs(self):
-        command = "show cpu --speed 2000 foo"
-        (p, out, err) = self.runcommand(command.split(" "))
-        s = "Extra arguments on the command line"
-        self.assert_(err.find(s) >= 0,
-                "STDERR for %s did not include '%s':\n@@@\n'%s'\n@@@\n"
-                % (command, s, err))
+        command = "show cpu --cpu 2000 foo"
+        err = self.badoptiontest(command.split(" "), exit_code=1)
+        self.matchoutput(err, "Extra arguments on the command line", command)
 
     def testinvalidinteger(self):
-        command = "show cpu --speed foo"
-        (p, out, err) = self.runcommand(command.split(" "))
-        s = "option --speed: invalid integer value: 'foo'"
-        self.assert_(err.find(s) >= 0,
-                "STDERR for %s did not include '%s':\n@@@\n'%s'\n@@@\n"
-                % (command, s, err))
+        command = "search machine --cpucount foo"
+        err = self.badoptiontest(command.split(" "))
+        self.matchoutput(err, "option --cpucount: invalid integer value: 'foo'",
+                         command)
 
     def testhelp(self):
         command = "help"
@@ -103,13 +94,21 @@ class TestClientFailure(TestBrokerCommand):
         self.matchoutput(err, "Command command-does-not-exist is not known!",
                          command)
         self.assertEqual(p.returncode, 2,
-                "Return code for %s was %d instead of %d, STDOUT:\n@@@\n'%s'\n"
-                % (command, p.returncode, 2, out))
+                         "Return code for %s was %d instead of %d, "
+                         "STDOUT:\n@@@\n'%s'\n"
+                         % (command, p.returncode, 2, out))
+
+    def testrequires(self):
+        command = ["compile", "--domain", "prod", "--archetype", "aquilon"]
+        err = self.badoptiontest(command)
+        self.matchoutput(err,
+                         "Option or option group archetype can only be used "
+                         "together with one of: personality.",
+                         command)
 
     def testunauthorized(self):
-        command = "flush"
-        out = self.unauthorizedtest(command)
-
+        command = ["flush", "--all"]
+        self.unauthorizedtest(command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestClientFailure)

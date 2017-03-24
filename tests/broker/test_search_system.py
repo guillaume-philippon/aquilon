@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ class TestSearchSystem(TestBrokerCommand):
 
     def testfqdnavailable(self):
         command = "search system --fqdn unittest00.one-nyp.ms.com"
-        out = self.commandtest(command.split(" "))
+        self.commandtest(command.split(" "))
 
     def testfqdnunavailablerealdomain(self):
         command = "search system --fqdn does-not-exist.one-nyp.ms.com"
@@ -83,7 +83,7 @@ class TestSearchSystem(TestBrokerCommand):
 #       self.matchclean(out, "unittest02.one-nyp.ms.com", command)
 
     def testipavailable(self):
-        command = "search system --ip %s" % self.net.unknown[0].usable[2]
+        command = "search system --ip %s" % self.net["unknown0"].usable[2]
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "unittest00.one-nyp.ms.com", command)
 
@@ -92,7 +92,7 @@ class TestSearchSystem(TestBrokerCommand):
         self.noouttest(command.split(" "))
 
     def testnetworkipavailable(self):
-        command = "search system --networkip %s" % self.net.unknown[0].ip
+        command = "search system --networkip %s" % self.net["unknown0"].ip
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "ut3c5.aqd-unittest.ms.com", command)
         self.matchoutput(out, "unittest00.one-nyp.ms.com", command)
@@ -109,53 +109,13 @@ class TestSearchSystem(TestBrokerCommand):
                          command)
 
 #   def testmacavailable(self):
-#       command = "search system --mac %s" % self.net.unknown[0].usable[2].mac
+#       command = "search system --mac %s" % self.net["unknown0"].usable[2].mac
 #       out = self.commandtest(command.split(" "))
 #       self.matchoutput(out, "unittest00.one-nyp.ms.com", command)
 
 #   def testmacunavailable(self):
 #       command = "search system --mac 02:02:c7:62:10:04"
 #       self.noouttest(command.split(" "))
-
-    def testall(self):
-        command = "search system --all"
-        out = self.commandtest(command.split(" "))
-        # This is a good sampling, but not the full output
-        self.matchoutput(out, "unittest00.one-nyp.ms.com", command)
-        self.matchoutput(out, "unittest00r.one-nyp.ms.com", command)
-        self.matchoutput(out, "unittest00-e1.one-nyp.ms.com", command)
-        self.matchoutput(out, "unittest01.one-nyp.ms.com", command)
-        self.matchoutput(out, "unittest02.one-nyp.ms.com", command)
-        self.matchoutput(out, "unittest02rsa.one-nyp.ms.com", command)
-        self.matchoutput(out, self.aurora_with_node, command)
-        self.matchoutput(out, self.aurora_without_node, command)
-        self.matchoutput(out, "ut3gd1r01.aqd-unittest.ms.com", command)
-        self.matchoutput(out, "ut3c1.aqd-unittest.ms.com", command)
-
-#    def testallfull(self):
-#        command = "search system --all --fullinfo"
-#        out = self.commandtest(command.split(" "))
-#        # This is a good sampling, but not the full output
-#        self.matchoutput(out, "Blade: ut3c1n3", command)
-#        self.matchoutput(out, "Primary Name: unittest00.one-nyp.ms.com", command)
-#        self.matchoutput(out, "unittest00r.one-nyp.ms.com", command)
-#        self.matchoutput(out, "unittest00-e1.one-nyp.ms.com", command)
-#        self.matchoutput(out, "Blade: ut3c1n4", command)
-#        self.matchoutput(out, "Primary Name: unittest01.one-nyp.ms.com", command)
-#        self.matchoutput(out, "Blade: ut3c5n10", command)
-#        self.matchoutput(out, "Primary Name: unittest02.one-nyp.ms.com", command)
-#        self.matchoutput(out, "unittest02rsa.one-nyp.ms.com", command)
-#        self.matchoutput(out, "Aurora_node: %s" % self.aurora_with_node,
-#                         command)
-#        self.matchoutput(out, "Primary Name: %s.ms.com" % self.aurora_with_node,
-#                         command)
-#        self.matchoutput(out, "Aurora_node: %s" % self.aurora_without_node,
-#                         command)
-#        self.matchoutput(out, "Primary Name: %s.ms.com" % self.aurora_without_node,
-#                         command)
-#        self.matchoutput(out, "Switch: ut3gd1r01", command)
-#        self.matchoutput(out, "Chassis: ut3c1", command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSearchSystem)

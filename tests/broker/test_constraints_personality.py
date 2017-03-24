@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2013  Contributor
+# Copyright (C) 2009,2010,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ class TestPersonalityConstraints(TestBrokerCommand):
         self.matchoutput(out, "is still in use and cannot be deleted", command)
 
     def testdelpersonalitywithcluster(self):
-        command = ["del_personality", "--personality", "vulcan-1g-desktop-prod",
+        command = ["del_personality", "--personality", "vulcan-10g-server-prod",
                    "--archetype", "esx_cluster"]
         out = self.badrequesttest(command)
         self.matchoutput(out, "is still in use and cannot be deleted", command)

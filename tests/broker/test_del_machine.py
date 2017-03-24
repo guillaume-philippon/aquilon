@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,199 +17,129 @@
 # limitations under the License.
 """Module for testing the del machine command."""
 
-import unittest
 import os.path
+
+import unittest
 
 if __name__ == "__main__":
     import utils
     utils.import_depends()
 
 from brokertest import TestBrokerCommand
+from eventstest import EventsTestMixin
 
 
-class TestDelMachine(TestBrokerCommand):
+class TestDelMachine(EventsTestMixin, TestBrokerCommand):
 
     def testdelut3c5n10(self):
+        self.check_plenary_exists("machine", "americas", "ut", "ut3",
+                                  "ut3c5n10")
+        self.event_del_hardware('ut3c5n10')
         command = "del machine --machine ut3c5n10"
         self.noouttest(command.split(" "))
+        self.events_verify()
+        self.check_plenary_gone("machine", "americas", "ut", "ut3", "ut3c5n10")
 
     def testverifydelut3c5n10(self):
         command = "show machine --machine ut3c5n10"
         self.notfoundtest(command.split(" "))
 
-    # Copy of ut3c5n10, for network based service mappings
-    def testdelut3c5n11(self):
-        command = "del machine --machine ut3c5n11"
+    def testdelut3c5n16(self):
+        self.check_plenary_exists("machine", "americas", "ut", "ut3",
+                                  "ut3c5n16")
+        self.event_del_hardware('ut3c5n16')
+        command = "del machine --machine ut3c5n16"
         self.noouttest(command.split(" "))
-
-    def testverifydelut3c5n11(self):
-        command = "show machine --machine ut3c5n11"
-        self.notfoundtest(command.split(" "))
-
-    # Copy of ut3c5n10, for network / pers based service mappings
-    def testdelut3c5n12(self):
-        command = "del machine --machine ut3c5n12"
-        self.noouttest(command.split(" "))
-
-    def testverifydelut3c5n12(self):
-        command = "show machine --machine ut3c5n12"
-        self.notfoundtest(command.split(" "))
+        self.events_verify()
+        self.check_plenary_gone("machine", "americas", "ut", "ut3", "ut3c5n16")
 
     def testdelut3c1n3(self):
+        self.event_del_hardware('ut3c1n3')
         command = "del machine --machine ut3c1n3"
         self.noouttest(command.split(" "))
+        self.events_verify()
 
     def testverifydelut3c1n3(self):
         command = "show machine --machine ut3c1n3"
         self.notfoundtest(command.split(" "))
 
     def testdelut3c1n4(self):
+        self.event_del_hardware('ut3c1n4')
         command = "del machine --machine ut3c1n4"
         self.noouttest(command.split(" "))
+        self.events_verify()
 
     def testverifydelut3c1n4(self):
         command = "show machine --machine ut3c1n4"
         self.notfoundtest(command.split(" "))
 
-    def testdelut3c1n8(self):
-        command = "del machine --machine ut3c1n8"
-        self.noouttest(command.split(" "))
-
     def testdelut3c1n9(self):
+        self.event_del_hardware('ut3c1n9')
         command = "del machine --machine ut3c1n9"
         self.noouttest(command.split(" "))
+        self.events_verify()
 
-    def testdelut3s01p1(self):
-        command = "del machine --machine ut3s01p1"
-        self.noouttest(command.split(" "))
-
-    def testverifydelut3s01p1(self):
-        command = "show machine --machine ut3s01p1"
-        self.notfoundtest(command.split(" "))
-
-    def testdelut8s02p1(self):
-        command = "del machine --machine ut8s02p1"
-        self.noouttest(command.split(" "))
-
-    def testverifydelut8s02p1(self):
-        command = "show machine --machine ut8s02p1"
-        self.notfoundtest(command.split(" "))
-
-    def testdelut8s02p2(self):
-        command = "del machine --machine ut8s02p2"
-        self.noouttest(command.split(" "))
-
-    def testverifydelut8s02p2(self):
-        command = "show machine --machine ut8s02p2"
-        self.notfoundtest(command.split(" "))
-
-    def testdelut8s02p3(self):
-        command = "del machine --machine ut8s02p3"
-        self.noouttest(command.split(" "))
-
-    def testverifydelut8s02p3(self):
-        command = "show machine --machine ut8s02p3"
-        self.notfoundtest(command.split(" "))
-
-    def testdelut8s02p4(self):
-        command = "del machine --machine ut8s02p4"
-        self.noouttest(command.split(" "))
-
-    def testverifydelut8s02p4(self):
-        command = "show machine --machine ut8s02p4"
-        self.notfoundtest(command.split(" "))
-
-    def testdelut8s02p5(self):
-        command = "del machine --machine ut8s02p5"
-        self.noouttest(command.split(" "))
-
-    def testverifydelut8s02p5(self):
-        command = "show machine --machine ut8s02p5"
-        self.notfoundtest(command.split(" "))
-
-    def testdelhprack(self):
-        for i in range(51, 100):
-            port = i - 50
-            command = "del machine --machine ut9s03p%d" % port
-            self.noouttest(command.split(" "))
-
-    def testverifydelhprack(self):
-        for i in range(51, 100):
-            port = i - 50
-            command = "show machine --machine ut9s03p%d" % port
-            self.notfoundtest(command.split(" "))
-
-    def testdelverarirack(self):
-        for i in range(101, 150):
-            port = i - 100
-            command = "del machine --machine ut10s04p%d" % port
-            self.noouttest(command.split(" "))
-
-    def testverifydelverarirack(self):
-        for i in range(101, 150):
-            port = i - 100
-            command = "show machine --machine ut10s04p%d" % port
-            self.notfoundtest(command.split(" "))
-
-    def testdel10gigracks(self):
-        for port in range(1, 13):
-            command = "del machine --machine ut11s01p%d" % port
-            self.noouttest(command.split(" "))
-            command = "del machine --machine ut12s02p%d" % port
-            self.noouttest(command.split(" "))
-
-    def testdelharacks(self):
-        # Machines for metacluster high availability testing
-        for port in range(1, 25):
-            for rack in ["ut13", "np13"]:
-                machine = "%ss03p%d" % (rack, port)
-                self.noouttest(["del_machine", "--machine", machine])
+    def testdelut8(self):
+        # The first 3 are deleted in test_del_host
+        for port in range(4, 6):
+            machine = "ut8s02p%d" % port
+            self.event_del_hardware(machine)
+            self.noouttest(["del_machine", "--machine", machine])
+            self.notfoundtest(["show_machine", "--machine", machine])
+            self.events_verify()
 
     # FIXME: Add a test for deleting a machine with only auxiliaries.
 
-    def testdelut3c5n2(self):
-        self.noouttest(["del", "machine", "--machine", "ut3c5n2"])
-
-    def testdelut3c5n3(self):
-        self.noouttest(["del", "machine", "--machine", "ut3c5n3"])
-
-    def testdelut3c5n4(self):
-        self.noouttest(["del", "machine", "--machine", "ut3c5n4"])
-
-    def testdelut3c5n5(self):
-        self.noouttest(["del", "machine", "--machine", "ut3c5n5"])
-
-    def testdelnp3c5n5(self):
-        self.noouttest(["del", "machine", "--machine", "np3c5n5"])
-
     def testdeljack(self):
+        self.event_del_hardware('jack')
         self.noouttest(["del", "machine", "--machine", "jack"])
+        self.events_verify()
 
     def testverifyjackplenary(self):
         # This was the only machine in the building, so the plenary directory
         # should be gone
         dir = os.path.join(self.config.get("broker", "plenarydir"),
                            "machine", "americas", "cards")
-        self.failIf(os.path.exists(dir),
-                    "Plenary directory '%s' still exists" % dir)
+        self.assertFalse(os.path.exists(dir),
+                         "Plenary directory '%s' still exists" % dir)
 
     def testdelut3c5n6(self):
+        self.event_del_hardware('ut3c5n6')
         self.noouttest(["del", "machine", "--machine", "ut3c5n6"])
-
-    def testdelut3c5n7(self):
-        self.noouttest(["del", "machine", "--machine", "ut3c5n7"])
-
-    def testdelut3c5n8(self):
-        self.noouttest(["del", "machine", "--machine", "ut3c5n8"])
-
-    def testdelfiler(self):
-        self.noouttest(["del", "machine", "--machine", "filer1"])
-
-    def testdelf5test(self):
-        self.noouttest(["del", "machine", "--machine", "f5test"])
+        self.events_verify()
 
     def testdelutnorack(self):
+        self.event_del_hardware('utnorack')
         self.noouttest(["del", "machine", "--machine", "utnorack"])
+        self.events_verify()
+
+    def testdelnyaqd1(self):
+        self.event_del_hardware('ny00l4as01')
+        self.noouttest(["del_machine", "--machine", "ny00l4as01"])
+        self.events_verify()
+
+    def testdelaurorawithnode(self):
+        self.event_del_hardware(self.aurora_with_node)
+        self.noouttest(["del_machine", "--machine", self.aurora_with_node])
+        self.events_verify()
+
+    def testdelaurorawithoutnode(self):
+        self.event_del_hardware(self.aurora_without_node)
+        self.noouttest(["del_machine", "--machine", self.aurora_without_node])
+        self.events_verify()
+
+    def testdelaurorawithoutrack(self):
+        self.event_del_hardware(self.aurora_without_rack)
+        self.noouttest(["del_machine", "--machine", self.aurora_without_rack])
+        self.events_verify()
+
+    def testaddut3s01p2(self):
+        self.event_del_hardware('ut3s01p2')
+        self.noouttest(["del", "machine", "--machine", "ut3s01p2"])
+        self.events_verify()
+
+    def testverifyall(self):
+        self.noouttest(["show_machine", "--all"])
 
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -61,11 +61,82 @@ class TestDelSrvRecord(TestBrokerCommand):
                    "--protocol", "tcp", "--dns_domain", "aqd-unittest.ms.com"]
         self.noouttest(command)
 
-    def test_150_verify_allgone(self):
+    def test_145_del_restricted_target(self):
+        command = ["del", "srv", "record", "--service", "ldap-restrict",
+                   "--protocol", "tcp", "--dns_domain", "aqd-unittest.ms.com"]
+        self.noouttest(command)
+
+    def test_146_verify_target_gone(self):
+        command = ["search", "dns", "--fullinfo",
+                   "--fqdn", "ldap.restrict.aqd-unittest.ms.com"]
+        self.notfoundtest(command)
+
+    def test_147_del_reserved_target(self):
+        command = ["del", "srv", "record", "--service", "ldap-reserved",
+                   "--protocol", "udp", "--dns_domain", "aqd-unittest.ms.com"]
+        self.noouttest(command)
+
+    def test_148_del_alias_target(self):
+        command = ["del", "srv", "record", "--service", "ldap-alias",
+                   "--protocol", "tcp", "--dns_domain", "aqd-unittest.ms.com"]
+        self.noouttest(command)
+
+    def test_149_del_addr_alias_target(self):
+        command = ["del", "srv", "record", "--service", "http",
+                   "--protocol", "tcp", "--dns_domain", "aqd-unittest.ms.com"]
+        self.noouttest(command)
+
+    def test_300_del_record_with_grn(self):
+        command = ["del", "srv", "record", "--service", "sip",
+                   "--protocol", "tcp", "--dns_domain", "aqd-unittest.ms.com"]
+        self.noouttest(command)
+
+    def test_305_verify_del_record_with_grn(self):
+        command = ["show", "srv", "record", "--service", "sip",
+                   "--protocol", "tcp", "--dns_domain", "aqd-unittest.ms.com"]
+        self.notfoundtest(command)
+
+    def test_310_del_tls_srvrec(self):
+        command = ["del", "srv", "record", "--service", "collab",
+                   "--protocol", "tls", "--dns_domain", "aqd-unittest.ms.com"]
+        self.noouttest(command)
+
+    def test_315_verify_del_tls_srvrec(self):
+        command = ["show", "srv", "record", "--service", "collab",
+                   "--protocol", "tls", "--dns_domain", "aqd-unittest.ms.com"]
+        self.notfoundtest(command)
+
+    def test_320_del_with_dns_env(self):
+        command = ["del", "srv", "record", "--service", "collab",
+                   "--protocol", "tls", "--dns_domain", "aqd-unittest.ms.com",
+                   "--dns_environment", "ut-env"]
+        self.noouttest(command)
+
+    def test_325_verify_del_with_dns_env(self):
+        command = ["show", "srv", "record", "--service", "collab",
+                   "--protocol", "tls", "--dns_domain", "aqd-unittest.ms.com",
+                   "--dns_environment", "ut-env"]
+        self.notfoundtest(command)
+
+    def test_330_del_with_diff_target_env(self):
+        command = ["del", "srv", "record", "--service", "collab2",
+                   "--protocol", "tls", "--dns_domain", "aqd-unittest.ms.com",
+                   "--dns_environment", "internal",
+                   "--target", "addralias1.aqd-unittest-ut-env.ms.com",
+                   "--target_environment", "ut-env"]
+        self.noouttest(command)
+
+    def test_335_verify_del_with_dff_target_dns_env(self):
+        command = ["show", "srv", "record", "--service", "collab2",
+                   "--protocol", "tls", "--dns_domain", "aqd-unittest.ms.com",
+                   "--dns_environment", "internal"]
+        self.notfoundtest(command)
+
+    def test_400_verify_allgone(self):
         command = ["search", "dns", "--record_type", "srv"]
         self.noouttest(command)
 
-    def test_200_del_nonexistent(self):
+    def test_410_del_nonexistent(self):
         command = ["del", "srv", "record", "--service", "kerberos",
                    "--protocol", "tcp", "--dns_domain", "aqd-unittest.ms.com"]
         out = self.notfoundtest(command)

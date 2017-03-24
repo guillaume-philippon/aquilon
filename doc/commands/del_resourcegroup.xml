@@ -3,67 +3,68 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="del_resourcegroup"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_del_resourcegroup"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>del_resourcegroup</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_del_resourcegroup</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>del resourcegroup</refname>
-        <refpurpose>
+	<refname>aq del resourcegroup</refname>
+	<refpurpose>
 	    Removes a resourcegroup.
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
-	    <command>aq del resourcegroup </command>
-	    <group choice="req">
-		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-		<arg choice="plain"><option>--hostname <replaceable>HOST</replaceable></option></arg>
-	    </group>
-	    <arg choice="req"><option>--resourcegroup <replaceable>NAME</replaceable></option></arg>
+	    <command>aq del resourcegroup</command>
 	    <group>
-                <synopfragmentref linkend="global-options">Global options</synopfragmentref>
+		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
+	    <group choice="req">
+		<arg choice="plain"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--metacluster <replaceable>METACLUSTER</replaceable></option></arg>
+	    </group>
+	    <arg choice="plain"><option>--resourcegroup <replaceable>NAME</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq del_resourcegroup</command> command deletes a
-	    resourcegroup. The resourcegroup should be empty, otherwise the
-	    command will return with an error.
+	    resourcegroup. In most cases, any resources inside the resourcegroup will be deleted
+	    as well, but there are certain resource types (e.g. service address) that need to be
+	    deleted separately before the resourcegroup can be removed.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" role</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Templates</title>
+	<title>Templates</title>
 	<para>
-	    This command will modify the templates for the host or cluster that
+	    This command will modify the templates for the host, cluster or metacluster that
 	    held this resourcegroup.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOST</replaceable></option>
 		</term>
 		<listitem>
@@ -73,7 +74,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -83,16 +84,27 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--metacluster <replaceable>METACLUSTER</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			The name of the target metacluster of the application.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--resourcegroup <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-			The name of the resourcegroup.
+			The name of the resourcegroup to delete.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -109,7 +121,10 @@ aq del_resourcegroup --cluster ny01vv --resourcegroup ny01vvas01
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_application</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	    <citerefentry><refentrytitle>aq_del_service_address</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_update_resourcegroup</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_add_resourcegroup</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_resourcegroup</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

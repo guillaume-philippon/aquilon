@@ -1,3 +1,12 @@
 *.pyc
 dropin.cache
 .coverage
+dist
+build/bdist.*
+VERSION
+MANIFEST
+# PyCharm project directory
+.idea/
+
+# Eclipse project file
+.project

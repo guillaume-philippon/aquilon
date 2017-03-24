@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,35 @@ from brokertest import TestBrokerCommand
 
 class TestUpdateNetworkEnvironment(TestBrokerCommand):
 
-    def testdelexcx(self):
+    def test_100_update_location(self):
+        command = ["update", "network", "environment",
+                   "--network_environment", "utcolo",
+                   "--building", "ut"]
+        self.noouttest(command)
+
+    def test_105_verify_utcolo(self):
+        command = ["show", "network", "environment",
+                   "--network_environment", "utcolo"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Network Environment: utcolo", command)
+        self.matchoutput(out, "Building: ut", command)
+        self.matchoutput(out, "Comments: Some other netenv comments", command)
+
+    def test_110_clear_location(self):
+        command = ["update", "network", "environment",
+                   "--network_environment", "excx",
+                   "--clear_location"]
+        self.noouttest(command)
+
+    def test_115_verify_excx(self):
+        command = ["show", "network", "environment",
+                   "--network_environment", "excx"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Network Environment: excx", command)
+        self.matchclean(out, "Building:", command)
+        self.matchoutput(out, "Comments: Some netenv comments", command)
+
+    def test_200_del_excx(self):
         command = ["del", "network", "environment",
                    "--network_environment", "excx"]
         out = self.badrequesttest(command)
@@ -37,42 +65,13 @@ class TestUpdateNetworkEnvironment(TestBrokerCommand):
                          "delete them first.",
                          command)
 
-    def testupdatelocation(self):
-        command = ["update", "network", "environment",
-                   "--network_environment", "utcolo",
-                   "--building", "ut"]
-        self.noouttest(command)
-
-    def testclearlocation(self):
-        command = ["update", "network", "environment",
-                   "--network_environment", "excx",
-                   "--clear_location"]
-        self.noouttest(command)
-
-    def testverifyexcx(self):
-        command = ["show", "network", "environment",
-                   "--network_environment", "excx"]
-        out = self.commandtest(command)
-        self.matchoutput(out, "Network Environment: excx", command)
-        self.matchclean(out, "Building:", command)
-        self.matchoutput(out, "Comments: Exchange X", command)
-
-    def testverifyutcolo(self):
-        command = ["show", "network", "environment",
-                   "--network_environment", "utcolo"]
-        out = self.commandtest(command)
-        self.matchoutput(out, "Network Environment: utcolo", command)
-        self.matchoutput(out, "Building: ut", command)
-        self.matchoutput(out, "Comments: Unit test colo environment", command)
-
-    def testverifysearch(self):
+    def test_300_verify_search(self):
         command = ["search", "network", "environment",
                    "--building", "ut"]
         out = self.commandtest(command)
-        self.matchoutput(out, "Network Environment: utcolo", command)
+        self.matchoutput(out, "utcolo", command)
         self.matchclean(out, "excx", command)
         self.matchclean(out, "internal", command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUpdateNetworkEnvironment)

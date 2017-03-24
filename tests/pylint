@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,22 +19,34 @@
 import os
 import sys
 
-basedir = os.path.dirname(__file__)
-srcdir = os.path.realpath(os.path.join(basedir, '..', 'lib', 'python2.6'))
-sys.path.append(srcdir)
+BINDIR = os.path.dirname(__file__)
+LIBDIR = os.path.realpath(os.path.join(BINDIR, '..', 'lib'))
+
+if LIBDIR not in sys.path:
+    sys.path.append(LIBDIR)
 
 import aquilon.aqdb.depends
 import aquilon.worker.depends
 import aquilon.client.depends
+import depends
 # Any other packages?
 
 # Any of the above may override the default location for ms.version...
-import ms.version
-ms.version.addpkg("pylint", "0.26.0")
-ms.version.addpkg("logilab.astng", "0.24.1")
-ms.version.addpkg("logilab.common", "0.58.3")
+try:
+    import ms.version
+except ImportError:
+    pass
+else:
+    ms.version.addpkg("pylint", "1.5.2")
+    ms.version.addpkg('six', '1.7.3')
+    ms.version.addpkg("astroid", "1.4.3")
+    ms.version.addpkg('lazy_object_proxy', '1.2.1')
+    ms.version.addpkg('wrapt', '1.10.5')
+
+    # These are not used directly, but may be used by code pylint is called for
+    ms.version.addpkg('ipython', '3.1.0')
 
 from pylint import lint
 
-pylintrc = os.path.join(basedir, "pylintrc")
+pylintrc = os.path.join(BINDIR, "pylintrc")
 lint.Run(["--rcfile", pylintrc] + sys.argv[1:])

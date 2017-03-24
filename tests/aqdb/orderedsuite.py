@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2013  Contributor
+# Copyright (C) 2008,2009,2010,2012,2013,2014,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,16 +16,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Test module for rebuilding the database."""
+
 import os
+from subprocess import Popen
+import unittest
 
 from utils import load_classpath
 load_classpath()
 
 import nose
-import unittest
 
-from subprocess import Popen
 from aquilon.config import Config
+
 
 class TestRebuild(unittest.TestCase):
     def testrebuild(self):
@@ -47,6 +49,7 @@ class TestRebuild(unittest.TestCase):
 
     def runTest(self):
         self.testrebuild()
+
 
 class DatabaseTestSuite(unittest.TestSuite):
     def __init__(self, *args, **kwargs):

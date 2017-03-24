@@ -3,21 +3,21 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="search_dns"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_search_dns"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>search_dns</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_search_dns</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>search dns</refname>
-        <refpurpose>
+	<refname>aq search dns</refname>
+	<refpurpose>
 	    Look up DNS-related information
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
@@ -27,36 +27,37 @@
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
-	    <arg choice="opt"><option>--fqdn <replaceable>FQDN</replaceable></option></arg>
-	    <arg choice="opt"><option>--shortname <replaceable>NAME</replaceable></option></arg>
-	    <arg choice="opt"><option>--dns_domain <replaceable>DOMAIN</replaceable></option></arg>
-	    <arg choice="opt"><option>--record_type <replaceable>RRTYPE</replaceable></option></arg>
-	    <arg choice="opt"><option>--ip <replaceable>IPADDR</replaceable></option></arg>
-	    <arg choice="opt"><option>--network <replaceable>NAME</replaceable></option></arg>
-	    <arg choice="opt"><option>--target <replaceable>FQDN</replaceable></option></arg>
-	    <arg choice="opt"><option>--target_domain <replaceable>DOMAIN</replaceable></option></arg>
-	    <arg choice="opt"><option>--reverse_ptr <replaceable>FQDN</replaceable></option></arg>
-	    <group choice="opt">
+	    <arg><option>--fqdn <replaceable>FQDN</replaceable></option></arg>
+	    <arg><option>--shortname <replaceable>NAME</replaceable></option></arg>
+	    <arg><option>--dns_domain <replaceable>DOMAIN</replaceable></option></arg>
+	    <arg><option>--record_type <replaceable>RRTYPE</replaceable></option></arg>
+	    <arg><option>--ip <replaceable>IPADDR</replaceable></option></arg>
+	    <arg><option>--network <replaceable>NAME</replaceable></option></arg>
+	    <arg><option>--target <replaceable>FQDN</replaceable></option></arg>
+	    <arg><option>--target_domain <replaceable>DOMAIN</replaceable></option></arg>
+	    <arg><option>--reverse_ptr <replaceable>FQDN</replaceable></option></arg>
+	    <group>
 		<arg choice="plain"><option>--primary_name</option></arg>
 		<arg choice="plain"><option>--noprimary_name</option></arg>
 	    </group>
-	    <group choice="opt">
+	    <group>
 		<arg choice="plain"><option>--used</option></arg>
 		<arg choice="plain"><option>--unused</option></arg>
 	    </group>
-	    <group choice="opt">
+	    <group>
 		<arg choice="plain"><option>--reverse_override</option></arg>
 		<arg choice="plain"><option>--noreverse_override</option></arg>
 	    </group>
-	    <arg choice="opt"><option>--dns_environment <replaceable>DNSENV</replaceable></option></arg>
-	    <arg choice="opt"><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
-	    <arg choice="opt"><option>--fullinfo</option></arg>
+	    <arg><option>--dns_environment <replaceable>DNSENV</replaceable></option></arg>
+	    <arg><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
+	    <arg><option>--target_environment <replaceable>DNSENV</replaceable></option></arg>
+	    <arg><option>--fullinfo</option></arg>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq search dns</command> command allows looking up DNS records based on
 	    several criteria. By default, only the FQDNs of matching entries are returned. Specifying
@@ -66,11 +67,11 @@
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--fqdn <replaceable>FQDN</replaceable></option>
 		</term>
 		<listitem>
@@ -82,7 +83,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--shortname <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -92,7 +93,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--dns_domain <replaceable>DOMAIN</replaceable></option>
 		</term>
 		<listitem>
@@ -102,7 +103,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--record_type <replaceable>RRTYPE</replaceable></option>
 		</term>
 		<listitem>
@@ -114,7 +115,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--ip <replaceable>IPADDR</replaceable></option>
 		</term>
 		<listitem>
@@ -124,7 +125,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--network <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -134,7 +135,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--target <replaceable>FQDN</replaceable></option>
 		</term>
 		<listitem>
@@ -144,7 +145,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--target_domain <replaceable>DOMAIN</replaceable></option>
 		</term>
 		<listitem>
@@ -154,7 +155,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--reverse_ptr <replaceable>FQDN</replaceable></option>
 		</term>
 		<listitem>
@@ -165,7 +166,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--primary_name</option>, <option>--noprimary_name</option>
 		</term>
 		<listitem>
@@ -177,7 +178,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--used</option>, <option>--unused</option>
 		</term>
 		<listitem>
@@ -190,7 +191,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--reverse_override</option>, <option>--noreverse_override</option>
 		</term>
 		<listitem>
@@ -202,7 +203,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--network_environment <replaceable>NETENV</replaceable></option>
 		</term>
 		<listitem>
@@ -216,7 +217,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--dns_environment <replaceable>DNSENV</replaceable></option>
 		</term>
 		<listitem>
@@ -229,7 +230,19 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
+		    <option>--target_environment <replaceable>DNSENV</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Matches targets in the given dns environment. The default value is the same
+			as the <literal>dns_environment</literal> argument. The target_environment is
+			used only if there are other search criteria based on targets.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
 		    <option>--fullinfo</option>
 		</term>
 		<listitem>
@@ -245,8 +258,8 @@
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>map_dns_domain</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>unmap_dns_domain</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	    <citerefentry><refentrytitle>aq_map_dns_domain</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_unmap_dns_domain</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

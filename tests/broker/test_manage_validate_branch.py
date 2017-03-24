@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2012,2013  Contributor
+# Copyright (C) 2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 # limitations under the License.
 """Module for testing the manage command."""
 
-
 import os
+
 import unittest
 
 if __name__ == "__main__":
@@ -39,33 +39,27 @@ class TestManageValidateBranch(TestBrokerCommand):
     def test_100_manage_for_uncommitted_change(self):
         # aquilon63.aqd-unittest.ms.com & aquilon64.aqd-unittest.ms.com are
         # sitting in "%s/utsandbox" we manage it to managetest1 to start clean.
-        user = self.config.get("unittest", "user")
-        self.noouttest(["manage", "--hostname=aquilon63.aqd-unittest.ms.com",
-                        "--sandbox=%s/managetest1" % user, "--force"])
-        self.noouttest(["manage", "--hostname=aquilon64.aqd-unittest.ms.com",
-                        "--sandbox=%s/managetest1" % user, "--force"])
+        self.successtest(["manage", "--hostname=aquilon63.aqd-unittest.ms.com",
+                          "--sandbox=%s/managetest1" % self.user, "--force"])
+        self.successtest(["manage", "--hostname=aquilon64.aqd-unittest.ms.com",
+                          "--sandbox=%s/managetest1" % self.user, "--force"])
 
     def test_101_make_uncommitted_change(self):
         sandboxdir = os.path.join(self.sandboxdir, "managetest1")
         template = self.find_template("aquilon", "archetype", "base",
                                       sandbox="managetest1")
-        f = open(template)
-        try:
+        with open(template) as f:
             contents = f.readlines()
-        finally:
-            f.close()
         contents.append("#Added by test_manage unittest %s \n" % sandboxdir)
-        f = open(template, 'w')
-        try:
+
+        with open(template, 'w') as f:
             f.writelines(contents)
-        finally:
-            f.close()
+
         self.gitcommand(["add", template], cwd=sandboxdir)
 
     def test_102_fail_uncommitted_change(self):
-        user = self.config.get("unittest", "user")
         command = ["manage", "--hostname", "aquilon63.aqd-unittest.ms.com",
-                   "--sandbox", "%s/managetest2" % user]
+                   "--sandbox", "%s/managetest2" % self.user]
         out = self.badrequesttest(command)
         self.matchoutput(out,
                          "The source sandbox managetest1 contains uncommitted"
@@ -78,12 +72,11 @@ class TestManageValidateBranch(TestBrokerCommand):
                          "added test_manage unittest comment"], cwd=sandboxdir)
 
     def test_112_fail_missing_committed_change_in_template_king(self):
-        user = self.config.get("unittest", "user")
         command = ["manage", "--hostname", "aquilon63.aqd-unittest.ms.com",
-                   "--sandbox", "%s/managetest2" % user]
+                   "--sandbox", "%s/managetest2" % self.user]
         out = self.badrequesttest(command)
         self.matchoutput(out,
-                         "The source sandbox managetest1 latest commit has "
+                         "The latest commit of sandbox managetest1 has "
                          "not been published to template-king yet.",
                          command)
 
@@ -93,9 +86,8 @@ class TestManageValidateBranch(TestBrokerCommand):
                          env=self.gitenv(), cwd=sandboxdir)
 
     def test_115_fail_missing_committed_change_in_target(self):
-        user = self.config.get("unittest", "user")
         command = ["manage", "--hostname", "aquilon63.aqd-unittest.ms.com",
-                   "--sandbox", "%s/managetest2" % user]
+                   "--sandbox", "%s/managetest2" % self.user]
         out = self.badrequesttest(command)
         self.matchoutput(out,
                          "The target sandbox managetest2 does not contain the "
@@ -104,36 +96,31 @@ class TestManageValidateBranch(TestBrokerCommand):
 
     def test_116_pull_committed_change(self):
         kingdir = self.config.get("broker", "kingdir")
-        user = self.config.get("unittest", "user")
         managetest2dir = os.path.join(self.sandboxdir, "managetest2")
         self.gitcommand(["pull", "--no-ff", kingdir, "managetest1"],
                         cwd=managetest2dir)
 
     def test_120_manage_committed(self):
-        user = self.config.get("unittest", "user")
-        self.noouttest(["manage", "--hostname=aquilon63.aqd-unittest.ms.com",
-                        "--sandbox=%s/managetest2" % user])
+        self.successtest(["manage", "--hostname=aquilon63.aqd-unittest.ms.com",
+                          "--sandbox=%s/managetest2" % self.user])
 
     def test_121_verify_manage_committed(self):
-        user = self.config.get("unittest", "user")
         command = "show host --hostname aquilon63.aqd-unittest.ms.com"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Primary Name: aquilon63.aqd-unittest.ms.com",
                          command)
-        self.matchoutput(out, "Sandbox: %s/managetest2" % user, command)
+        self.matchoutput(out, "Sandbox: %s/managetest2" % self.user, command)
 
     def test_130_force_manage_committed(self):
-        user = self.config.get("unittest", "user")
-        self.noouttest(["manage", "--hostname=aquilon64.aqd-unittest.ms.com",
-                        "--sandbox=%s/managetest2" % user, "--force"])
+        self.successtest(["manage", "--hostname=aquilon64.aqd-unittest.ms.com",
+                          "--sandbox=%s/managetest2" % self.user, "--force"])
 
     def test_131_verify_force_manage_committed(self):
-        user = self.config.get("unittest", "user")
         command = "show host --hostname aquilon64.aqd-unittest.ms.com"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Primary Name: aquilon64.aqd-unittest.ms.com",
                          command)
-        self.matchoutput(out, "Sandbox: %s/managetest2" % user, command)
+        self.matchoutput(out, "Sandbox: %s/managetest2" % self.user, command)
 
 
 if __name__ == '__main__':

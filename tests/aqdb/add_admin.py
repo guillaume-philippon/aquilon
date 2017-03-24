@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2010,2011,2012,2013  Contributor
+# Copyright (C) 2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Give anyone with write access to the database the aqd_admin role."""
-import sys
+
+import argparse
 import logging
 import re
+import sys
+from subprocess import Popen, PIPE
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('aqdb.add_admin')
@@ -27,13 +30,6 @@ import utils
 utils.load_classpath()
 
 from aquilon.config import Config
-config = Config()
-
-
-from subprocess import Popen, PIPE
-
-import argparse
-
 from aquilon.aqdb.model import Base, UserPrincipal, Role, Realm
 from aquilon.aqdb.db_factory import DbFactory
 
@@ -60,12 +56,15 @@ def parse_cli(*args, **kw):
 
     return parser.parse_args()
 
+
 def parse_klist():
     """Run klist and return a (principal, realm) tuple."""
-    klist = config.get('kerberos', 'klist')
+
+    config = Config()
+    klist = config.lookup_tool('klist')
     log.debug("Running %s", klist)
     p = Popen([klist], stdout=PIPE, stderr=2)
-    (out, err) = p.communicate()
+    out, err = p.communicate()
     m = re.search(r'^\s*(?:Default p|P)rincipal:\s*(\S.*)@(.*?)$', out, re.M)
     if not m:
         raise ValueError("Could not determine default principal from klist "
@@ -84,16 +83,15 @@ def main(*args, **kw):
     db = DbFactory(verbose=opts.verbose)
     Base.metadata.bind = db.engine
 
-    if opts.verbose:
-        db.meta.bind.echo = True
-
     session = db.Session()
 
     aqd_admin = Role.get_unique(session, "aqd_admin", compel=True)
+
     dbrealm = Realm.get_unique(session, realm)
     if not dbrealm:
-        dbrealm = Realm(name=realm)
+        dbrealm = Realm(name=realm, trusted=False)
         session.add(dbrealm)
+
     dbuser = UserPrincipal.get_unique(session, name=principal, realm=dbrealm)
     if dbuser:
         if dbuser.role == aqd_admin:

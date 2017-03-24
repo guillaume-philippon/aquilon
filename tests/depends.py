@@ -1,7 +1,7 @@
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Load testing dependencies onto sys.path via ms.version """
-import ms.version
 
-ms.version.addpkg('setuptools', '0.6c11')
-
-ms.version.addpkg('coverage', '3.4')
-
-ms.version.addpkg('argparse', '1.1')
-
-ms.version.addpkg('nose', '1.1.2')
-
-ms.version.addpkg('lxml', '2.3.2')
-
-ms.version.addpkg('ipaddr', '2.1.9')
-
-ms.version.addpkg('dateutil', '1.5')
+try:
+    import ms.version
+except ImportError:
+    pass
+else:
+    ms.version.addpkg('setuptools', '0.6c11')
+    ms.version.addpkg('coverage', '3.6')
+    ms.version.addpkg('nose', '1.3.0')
+    ms.version.addpkg('lxml', '3.2.5')
+    ms.version.addpkg('ipaddr', '2.1.9')
+    ms.version.addpkg('dateutil', '1.5')
+    ms.version.addpkg('six', '1.7.3')
+    ms.version.addpkg('jsonschema', '2.3.0')

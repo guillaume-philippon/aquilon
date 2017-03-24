@@ -3,58 +3,60 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_intervention"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_intervention"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_intervention</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_intervention</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add intervention</refname>
-        <refpurpose>
-	    Add an intervention resource onto a host or cluster
-        </refpurpose>
+	<refname>aq add intervention</refname>
+	<refpurpose>
+	    Add an intervention resource onto a host, cluster or metacluster
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
-	    <command>aq add intervention </command>
-	    <group>
-	      <arg choice="req"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
-	      <arg choice="req"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-            </group>
-	    <arg choice="req"><option>--intervention <replaceable>NAME</replaceable></option></arg>
-	    <arg choice="req"><option>--expiry <replaceable>WHEN</replaceable></option></arg>
-	    <arg choice="req"><option>--justification <replaceable>REASON</replaceable></option></arg>
-	    <arg choice="opt"><option>--allowusers <replaceable>USERS</replaceable></option></arg>
-	    <arg choice="opt"><option>--allowgroups <replaceable>GROUPS</replaceable></option></arg>
-	    <arg choice="opt"><option>--disabled_actions <replaceable>ACTIONS</replaceable></option></arg>
-	    <arg choice="opt"><option>--start_time <replaceable>WHEN</replaceable></option></arg>
-	    <arg choice="opt"><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <command>aq add intervention</command>
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group choice="req">
+		<arg choice="plain"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+		<arg choice="plain"><option>--metacluster <replaceable>METACLUSTER</replaceable></option></arg>
+	    </group>
+	    <arg choice="plain"><option>--intervention <replaceable>NAME</replaceable></option></arg>
+	    <arg choice="plain"><option>--expiry <replaceable>WHEN</replaceable></option></arg>
+	    <arg choice="plain"><option>--justification <replaceable>TOKENS</replaceable></option></arg>
+	    <arg><option>--reason <replaceable>REASON</replaceable></option></arg>
+	    <arg><option>--allowusers <replaceable>USERS</replaceable></option></arg>
+	    <arg><option>--allowgroups <replaceable>GROUPS</replaceable></option></arg>
+	    <arg><option>--disabled_actions <replaceable>ACTIONS</replaceable></option></arg>
+	    <arg><option>--start_time <replaceable>WHEN</replaceable></option></arg>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add_intervention</command> command adds an
-	    intervention resource onto a host or a cluster. An
+	    intervention resource onto a host, cluster or metacluster. An
 	    intervention is a temporary modification of host
 	    configuration. The modifications available
 	    are currently limited to only modifying host login
 	    access, or disabling actions.
 	</para>
 	<para>
-	    Adding a intervention onto a host or cluster adds a new
+	    Adding a intervention adds a new
 	    entry into the configuration profile under
 	    /system/resources/intervention.  How that resource gets
 	    used is down to the archetype and personality
@@ -67,35 +69,30 @@
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" role</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Templates</title>
-        <para>
-      This command will modify the templates for the host or
-      cluster (depending on which option was given) and the resource
-      template for the intervention itself.
+	<title>Templates</title>
+	<para>
+	    This command will modify the templates for the host, cluster or
+	    metacluster (depending on which option was given) and the resource
+	    template for the intervention itself.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOSTNAME</replaceable></option>,
 		</term>
 		<listitem>
 		    <para>
-		        Specify the target host for the intervention.
+			Specify the target host for the intervention.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -105,17 +102,17 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
-		    <option>--justification <replaceable>WHY</replaceable></option>
+		<term>
+		    <option>--metacluster <replaceable>METACLUSTER</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-	    Extra authorization tokens (e.g. change management reference ID) to with which the system can validate or correlate the request.
+			The name of the target metacluster for the intervention.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--intervention <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -127,18 +124,18 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--expiry <replaceable>WHEN</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-	    A date when the intervention should expire. The date format
-	    is anything that the python library dateutil.parser can understand.
+			A date when the intervention should expire. The date format
+			is anything that the python library dateutil.parser can understand.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--start_time <replaceable>WHEN</replaceable></option>
 		</term>
 		<listitem>
@@ -149,44 +146,44 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--allowusers <replaceable>USERS</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-	    A comma-separated list of usernames that should be allowed
-	    access to the host.
+			A comma-separated list of usernames that should be allowed
+			access to the host.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--allowgroups <replaceable>GROUPS</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-	    A comma-separated list of netgroups that should be allowed
-	    access to the host.
+			A comma-separated list of netgroups that should be allowed
+			access to the host.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--disabled_actions <replaceable>ACTIONS</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-	    A comma-separated list of action names that should be
-	    disabled. For example, if there is a named action called
-	    "start-my-app" that is configured to run at host startup,
-	    then using "--disabled_actions start-my-app" will
-	    prevent that action from triggering when the host next
-	    reboots.
+			A comma-separated list of action names that should be
+			disabled. For example, if there is a named action called
+			"start-my-app" that is configured to run at host startup,
+			then using "--disabled_actions start-my-app" will
+			prevent that action from triggering when the host next
+			reboots.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--comments <replaceable>COMMENTS</replaceable></option>
 		</term>
 		<listitem>
@@ -196,6 +193,7 @@
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -205,16 +203,16 @@
 	    <title>Allowing temporary access to a host</title>
 	    <programlisting>
 aq add intervention --hostname foo.example.com \
-	--intervention njw-fix \
-	--justification tcm=6001234 --allowusers njw --expiry 1/1/2012
+    --intervention njw-fix \
+    --justification tcm=6001234 --allowusers njw --expiry 1/1/2012
 	    </programlisting>
 	    <para>
-	    Which results in the following configuration on the host:
+		Which results in the following configuration on the host:
 	    </para>
 	    <programlisting>
 "/system/resources/intervention/0/name" = "njw-fix";
 "/system/resources/intervention/0/justification" = \
-  "tcm=6001234";
+    "tcm=6001234";
 "/system/resources/intervention/0/users" = list("njw");
 "/system/resources/intervention/0/expiry" = "2012-01-01T00:00:00";
 	    </programlisting>
@@ -223,15 +221,15 @@ aq add intervention --hostname foo.example.com \
 	    <title>Disabling an action in a cluster</title>
 	    <programlisting>
 aq add intervention --cluster grid1 --intervention njw-fix \
-	--justification tcm=6001235 --disable reboot
+    --justification tcm=6001235 --disable reboot
 	    </programlisting>
 	    <para>
-	    Which results in the following configuration on the cluster:
+		Which results in the following configuration on the cluster:
 	    </para>
 	    <programlisting>
 "/system/resources/intervention/0/name" = "njw-fix";
 "/system/resources/intervention/0/justification" = \
-  "tcm=6001235";
+    "tcm=6001235";
 "/system/resources/intervention/0/expiry" = "2012-01-01T00:00:00";
 "/system/resources/intervention/0/disable" = list("reboot");
 	    </programlisting>
@@ -241,7 +239,7 @@ aq add intervention --cluster grid1 --intervention njw-fix \
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_intervention</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_del_intervention</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
 	</para>
     </refsect1>
 </refentry>

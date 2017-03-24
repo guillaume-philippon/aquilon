@@ -7,20 +7,30 @@ cheetahVarStartToken = ~
 #end compiler-settings
 
 <%
-commands = filter(lambda c: c.attrib.has_key("name") and c.attrib["name"] != "*",
+commands = filter(lambda c: "name" in c.attrib and c.attrib["name"] != "*",
                   self.tree.getiterator("command"))
-global_command = filter(lambda c: c.attrib.has_key("name") and c.attrib["name"] == "*",
+global_command = filter(lambda c: "name" in c.attrib and c.attrib["name"] == "*",
                         self.tree.getiterator("command"))[0]
 global_options = global_command.getiterator("option")
 
 def option_has_parameter(opt):
-    return opt.attrib.has_key("type") and opt.attrib["type"] != "boolean"
+    return "type" in opt.attrib and opt.attrib["type"] != "boolean"
 
 global_options_with_params = filter(option_has_parameter, global_options)
 %>
 
-_aq_sqlite="/ms/dist/fsf/PROJ/sqlite/3.7.4/bin/sqlite3"
+_aq_sqlite="/ms/dist/fsf/PROJ/sqlite/3.8.2-1/bin/sqlite3"
 _aq_datawarehouse="/ms/dist/aquilon/PROJ/datawarehouse/dumpv3"
+
+_aq_complete_branch ()
+{
+    $_aq_sqlite $_aq_datawarehouse/hostdata.db "select distinct branch_name from hosts where branch_type = 'sandbox' and branch_name glob '$1*'"
+}
+
+_aq_complete_author_branch ()
+{
+    $_aq_sqlite $_aq_datawarehouse/hostdata.db "select distinct (branch_author || '/' || branch_name) from hosts where branch_type = 'sandbox'"
+}
 
 _aq_complete_hostname ()
 {
@@ -30,6 +40,11 @@ _aq_complete_hostname ()
 _aq_complete_cluster ()
 {
     $_aq_sqlite $_aq_datawarehouse/clusters.db "select name from cluster where name glob '$1*'"
+}
+
+_aq_complete_metacluster ()
+{
+    $_aq_sqlite $_aq_datawarehouse/clusters.db "select name from metacluster where name glob '$1*'"
 }
 
 _aq_complete_building ()
@@ -62,10 +77,14 @@ _aq_complete_service ()
     $_aq_sqlite $_aq_datawarehouse/servers.db "select distinct service from servers where service glob '$1*'"
 }
 
+_aq_complete_server_of_service () { _aq_complete_service $*; }
+
 _aq_complete_instance ()
 {
     $_aq_sqlite $_aq_datawarehouse/servers.db "select distinct instance from servers where instance glob '$1*'"
 }
+
+_aq_complete_server_of_instance () { _aq_complete_instance $*; }
 
 _aq ()
 {
@@ -101,13 +120,37 @@ _aq ()
 	    opt=${COMP_WORDS[1]\#\#*_}
 	fi
 
+	if [[ $opt == "command" ]]; then
+	    list=$cmds
+	    COMPREPLY=( $( compgen -W "$list" -- $cur ) )
+	    return 0
+	fi
+
+	if [[ $opt == "sandbox" ]]; then
+            if [[ ${COMP_WORDS[1]} == "show_sandbox" ||
+                  ${COMP_WORDS[1]} == "update_sandbox" ||
+                  ${COMP_WORDS[1]} == "add_sandbox" ||
+                  ${COMP_WORDS[1]} == "del_sandbox" ||
+                  ${COMP_WORDS[1]} == "get"
+                ]]; then
+
+                # echo running _aq_complete_branch
+                list=$( _aq_complete_branch $cur)
+            else
+                # echo running _aq_complete_author_branch
+                list=$( _aq_complete_author_branch $cur)
+            fi
+            COMPREPLY=( $( compgen -W "$list" -- $cur ) )
+            return 0
+	fi
+
 	subject=""
 	if typeset -F _aq_complete_${opt} >/dev/null 2>&1; then
 	    subject=${opt}
 	fi
 
 	if [[ -n "$subject" ]]; then
-	    list=$( _aq_complete_${opt} )
+	    list=$( _aq_complete_${opt} $cur)
 	    COMPREPLY=( $( compgen -W "$list" -- $cur ) )
 	    return 0
 	fi
@@ -118,7 +161,7 @@ _aq ()
     #for cmd in commands
 <%
 
-options = filter(lambda o: o.attrib.has_key("name"), cmd.getiterator("option"))
+options = filter(lambda o: "name" in o.attrib, cmd.getiterator("option"))
 options_with_params = filter(option_has_parameter, options) 
 
 %>

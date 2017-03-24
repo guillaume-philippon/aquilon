@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,28 +28,27 @@ from brokertest import TestBrokerCommand
 
 class TestDelDnsEnvironment(TestBrokerCommand):
 
-    def testdelutenv(self):
+    def test_100_del_utenv(self):
         command = ["del", "dns", "environment", "--dns_environment", "ut-env"]
         self.noouttest(command)
 
-    def testdelnonexistant(self):
+    def test_105_show_utenv(self):
+        command = ["show", "dns", "environment", "--dns_environment", "ut-env"]
+        out = self.notfoundtest(command)
+        self.matchoutput(out, "DNS Environment ut-env not found.", command)
+
+    def test_200_del_nonexistant(self):
         command = ["del", "dns", "environment", "--dns_environment", "no-such-env"]
         out = self.notfoundtest(command)
         self.matchoutput(out, "DNS Environment no-such-env not found.", command)
 
-    def testdelinternal(self):
+    def test_200_del_internal(self):
         command = ["del", "dns", "environment", "--dns_environment", "internal"]
         out = self.badrequesttest(command)
         self.matchoutput(out,
                          "DNS Environment internal is the default DNS "
                          "environment, therefore it cannot be deleted.",
                          command)
-
-    def testshowutenv(self):
-        command = ["show", "dns", "environment", "--dns_environment", "ut-env"]
-        out = self.notfoundtest(command)
-        self.matchoutput(out, "DNS Environment ut-env not found.", command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelDnsEnvironment)

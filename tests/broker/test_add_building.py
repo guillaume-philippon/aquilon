@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,14 +40,17 @@ class TestAddBuilding(TestBrokerCommand):
     def testverifyaddbu(self):
         command = "show building --building bu"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Building: bu", command)
-        self.matchoutput(out, "Address: 12 Cherry Lane", command)
+        self.output_equals(out, """
+            Building: bu
+              Fullname: bu
+              Address: 12 Cherry Lane
+              Location Parents: [Organization ms, Hub ny, Continent na, Country us, Campus ny, City ny]
+            """, command)
 
     def testaddbucards(self):
         self.dsdb_expect("add_building_aq -building_name cards -city ex "
                          "-building_addr Nowhere")
-        # No campus for city ex
-#        self.dsdb_expect_add_campus_building("ny", "bu")
+        self.dsdb_expect_add_campus_building("ta", "cards")
         command = ["add", "building", "--building", "cards", "--city", "ex",
                    "--address", "Nowhere"]
         self.noouttest(command)
@@ -56,15 +59,18 @@ class TestAddBuilding(TestBrokerCommand):
     def testverifyaddbucards(self):
         command = "show building --building cards"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Building: cards", command)
-        self.matchoutput(out, "Address: Nowhere", command)
+        self.output_equals(out, """
+            Building: cards
+              Fullname: cards
+              Address: Nowhere
+              Location Parents: [Organization ms, Hub ny, Continent na, Country us, Campus ta, City ex]
+            """, command)
 
     def testverifyaddbuproto(self):
         command = "show building --building bu --format proto"
-        out = self.commandtest(command.split(" "))
-        locs = self.parse_location_msg(out, 1)
-        self.matchoutput(locs.locations[0].name, "bu", command)
-        self.matchoutput(locs.locations[0].location_type, "building", command)
+        loc = self.protobuftest(command.split(" "), expect=1)[0]
+        self.matchoutput(loc.name, "bu", command)
+        self.matchoutput(loc.location_type, "building", command)
 
     def testverifybuildingall(self):
         command = ["show", "building", "--all"]
@@ -92,16 +98,6 @@ class TestAddBuilding(TestBrokerCommand):
         self.matchoutput(out, "Only ASCII characters are allowed for --address.",
                          command)
 
-    def testnonasciiaudit(self):
-        command = ["search", "audit", "--keyword", "nonascii"]
-        out = self.commandtest(command)
-        self.searchoutput(out,
-                          r"400 aq add_building .*"
-                          r"--address='<Non-ASCII value>'",
-                          command)
-        self.searchoutput(out, r"400 aq add_building .*--building='nonascii'",
-                          command)
-
     def test_addtu(self):
         self.dsdb_expect("add_building_aq -building_name tu -city ny "
                          "-building_addr 14 Test Lane")
@@ -113,7 +109,7 @@ class TestAddBuilding(TestBrokerCommand):
 
     def test_verifyaddtu(self):
         command = "show building --building tu"
-        out, err = self.successtest(command.split(" "))
+        out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Building: tu", command)
         self.matchoutput(out, "Address: 14 Test Lane", command)
 

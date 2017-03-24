@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2012,2013  Contributor
+# Copyright (C) 2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ from broker.grntest import VerifyGrnsMixin
 class TestGrns(VerifyGrnsMixin, TestBrokerCommand):
 
     def test_100_add_test1(self):
-        self.assert_("grn:/ms/test1" not in self.grns)
-        self.assert_(1 in self.eon_ids)
+        self.assertNotIn("grn:/ms/test1", self.grns)
+        self.assertIn(1, self.eon_ids)
         command = ["add", "grn", "--grn", "grn:/ms/test1", "--eon_id", "1",
                    "--disabled"]
         self.noouttest(command)
@@ -43,8 +43,14 @@ class TestGrns(VerifyGrnsMixin, TestBrokerCommand):
         self.matchoutput(out, "EON ID: 1", command)
         self.matchoutput(out, "Disabled: True", command)
 
+    def test_105_search_disabled_grn(self):
+        command = ["search_host", "--eon_id", 1]
+        # The only thing we care about here is that the command should not
+        # complain about the GRN being disabled
+        self.commandtest(command)
+
     def test_110_add_test2(self):
-        self.assert_("grn:/ms/test2" not in self.grns)
+        self.assertNotIn("grn:/ms/test2", self.grns)
         command = ["add", "grn", "--grn", "grn:/ms/test2",
                    "--eon_id", "123456789"]
         self.noouttest(command)
@@ -70,8 +76,8 @@ class TestGrns(VerifyGrnsMixin, TestBrokerCommand):
 
     def test_200_refresh(self):
         command = ["refresh", "grns"]
-        (out, err) = self.successtest(command)
-        self.matchoutput(err, "Added 7, updated 1, deleted 1 GRNs.", command)
+        err = self.statustest(command)
+        self.matchoutput(err, "Added 8, updated 1, deleted 1 GRNs.", command)
 
     def test_210_verify_test1_renamed(self):
         command = ["show", "grn", "--eon_id", "1"]
@@ -113,7 +119,7 @@ class TestGrns(VerifyGrnsMixin, TestBrokerCommand):
 
     def test_320_refresh_again(self):
         command = ["refresh", "grns"]
-        out, err = self.successtest(command)
+        err = self.statustest(command)
         self.matchoutput(err, "Added 1, updated 0, deleted 0 GRNs.", command)
 
 

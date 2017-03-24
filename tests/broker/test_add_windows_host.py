@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ from brokertest import TestBrokerCommand
 class TestAddWindowsHost(TestBrokerCommand):
 
     def testaddunittest01(self):
-        ip = self.net.unknown[0].usable[10]
-        mac = self.net.unknown[0].usable[5].mac
+        ip = self.net["unknown0"].usable[10]
+        mac = self.net["unknown0"].usable[5].mac
         self.dsdb_expect_add("unittest01.one-nyp.ms.com", ip, "eth0", mac)
         self.noouttest(["add", "windows", "host",
                         "--hostname", "unittest01.one-nyp.ms.com",
@@ -42,20 +42,21 @@ class TestAddWindowsHost(TestBrokerCommand):
         out = self.commandtest(command.split(" "))
         self.matchoutput(out,
                          "Primary Name: unittest01.one-nyp.ms.com [%s]" %
-                         self.net.unknown[0].usable[10],
+                         self.net["unknown0"].usable[10],
                          command)
-        self.matchoutput(out, "Blade: ut3c1n4", command)
+        self.matchoutput(out, "Machine: ut3c1n4", command)
+        self.matchoutput(out, "Model Type: blade", command)
         self.matchoutput(out, "Archetype: windows", command)
         self.matchoutput(out, "Personality: generic", command)
-        self.matchoutput(out, "Domain: ny-prod", command)
+        self.matchoutput(out, "Domain: ut-prod", command)
         self.matchoutput(out, "Build Status: build", command)
         self.matchoutput(out, "Advertise Status: False", command)
         self.matchoutput(out, "Operating System: windows", command)
         self.matchoutput(out, "Version: generic", command)
-        self.matchoutput(out,
-                         "Template: windows/os/windows/generic/config" +
-                         self.template_extension,
-                         command)
+        self.searchoutput(out,
+                          r'Operating System: windows\s*'
+                          r'Version: generic$',
+                          command)
 
 
 if __name__ == '__main__':

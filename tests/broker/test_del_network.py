@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,13 +29,10 @@ from brokertest import TestBrokerCommand
 class TestDelNetwork(TestBrokerCommand):
 
     def testdelnetwork(self):
-        for network in self.net.all:
+        for network in self.net:
+            if not network.autocreate:
+                continue
             command = ["del_network", "--ip=%s" % network.ip]
-            self.noouttest(command)
-
-    def testdelauroranetwork(self):
-        for ip in ["144.14.174.0", "10.184.155.0"]:
-            command = ["del_network", "--ip=%s" % ip]
             self.noouttest(command)
 
     def testdelnetworkdup(self):
@@ -43,9 +40,11 @@ class TestDelNetwork(TestBrokerCommand):
         self.noouttest(["del", "network", "--ip", ip])
 
     def testshownetworkall(self):
-        for network in self.net.all:
+        for network in self.net:
+            if not network.autocreate:
+                continue
             command = "show network --ip %s --hosts" % network.ip
-            out = self.notfoundtest(command.split(" "))
+            self.notfoundtest(command.split(" "))
 
     def testshownetwork(self):
         command = "show network --building ut"
@@ -57,8 +56,7 @@ class TestDelNetwork(TestBrokerCommand):
 
     def testshownetworkproto(self):
         command = "show network --building ut --format proto"
-        out = self.commandtest(command.split(" "))
-        self.parse_netlist_msg(out, expect=0)
+        self.protobuftest(command.split(" "), expect=0)
 
     def testdelnetworkcards(self):
         command = ["del_network", "--ip=192.168.1.0"]
@@ -92,44 +90,49 @@ class TestDelNetwork(TestBrokerCommand):
         self.noouttest(["del", "network", "--ip", "127.0.0.0"])
 
     def testdelexcx(self):
-        net = self.net.unknown[0].subnet()[0]
+        net = self.net["unknown0"].subnet()[0]
         command = ["del", "network", "--ip", net.ip,
                    "--network_environment", "excx"]
         self.noouttest(command)
 
     def testdelnetsvcmap(self):
-        net = self.net.netsvcmap
+        net = self.net["netsvcmap"]
+        command = ["del", "network", "--ip", net.ip]
+        self.noouttest(command)
+
+    def testdelnetutdmz1(self):
+        net = self.net["ut_dmz1"]
         command = ["del", "network", "--ip", net.ip]
         self.noouttest(command)
 
     def testdelnetperssvcmap(self):
-        net = self.net.netperssvcmap
+        net = self.net["netperssvcmap"]
         command = ["del", "network", "--ip", net.ip]
         self.noouttest(command)
 
     def testdelutcolo(self):
-        net = self.net.unknown[1]
+        net = self.net["unknown1"]
         command = ["del", "network", "--ip", net.ip,
                    "--network_environment", "utcolo"]
         self.noouttest(command)
 
     def testverifyexcx(self):
-        net = self.net.unknown[0].subnet()[0]
-        command = ["search", "network", "--all", "--network_environment", "excx"]
+        net = self.net["unknown0"].subnet()[0]
+        command = ["search", "network", "--network_environment", "excx"]
         out = self.commandtest(command)
         self.matchclean(out, "excx-net", command)
         self.matchclean(out, str(net.ip), command)
 
     def testverifynetsvcmap(self):
-        net = self.net.netsvcmap
-        command = ["search", "network", "--all"]
+        net = self.net["netsvcmap"]
+        command = ["show", "network", "--all"]
         out = self.commandtest(command)
         self.matchclean(out, "netsvcmap", command)
         self.matchclean(out, str(net.ip), command)
 
     def testverifyutcolo(self):
-        net = self.net.unknown[1]
-        command = ["search", "network", "--all", "--network_environment", "utcolo"]
+        net = self.net["unknown1"]
+        command = ["search", "network", "--network_environment", "utcolo"]
         out = self.commandtest(command)
         self.matchclean(out, "utcolo-net", command)
         self.matchclean(out, str(net.ip), command)

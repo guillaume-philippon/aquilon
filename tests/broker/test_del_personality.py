@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,90 +17,87 @@
 # limitations under the License.
 """Module for testing the del personality command."""
 
-import unittest
 import os.path
+
+import unittest
 
 if __name__ == "__main__":
     import utils
     utils.import_depends()
 
 from brokertest import TestBrokerCommand
+from broker.personalitytest import PersonalityTestMixin
 
 
-class TestDelPersonality(TestBrokerCommand):
+class TestDelPersonality(PersonalityTestMixin, TestBrokerCommand):
 
-    def testdelutpersonality(self):
-        command = ["del_personality", "--personality=utpersonality/dev",
-                   "--archetype=aquilon"]
-        self.noouttest(command)
-
-    def testverifyplenarydir(self):
+    def test_010_verify_precond(self):
         dir = os.path.join(self.config.get("broker", "plenarydir"),
-                           "aquilon", "personality", "utpersonality")
-        self.failIf(os.path.exists(dir),
-                    "Plenary directory '%s' still exists" % dir)
+                           "aquilon", "personality", "utunused", "dev")
+        self.assertTrue(os.path.exists(dir),
+                        "Plenary directory '%s' does not exist" % dir)
 
-    def testdeleaipersonality(self):
-        command = ["del_personality", "--personality=eaitools",
+    def test_100_del_utunused(self):
+        command = ["del_personality", "--personality=utunused/dev",
                    "--archetype=aquilon"]
         self.noouttest(command)
 
-    def testverifydelutpersonality(self):
-        command = ["show_personality", "--personality=utpersonality",
+    def test_105_verify_plenary_gone(self):
+        dir = os.path.join(self.config.get("broker", "plenarydir"),
+                           "aquilon", "personality", "utunused", "dev")
+        self.assertFalse(os.path.exists(dir),
+                         "Plenary directory '%s' still exists" % dir)
+
+    def test_105_verify_utunused(self):
+        command = ["show_personality", "--personality=utunused/dev",
                    "--archetype=aquilon"]
         self.notfoundtest(command)
 
-    def testdelwindowsdesktop(self):
+    def test_110_del_utpers_dev(self):
+        command = ["del_personality", "--personality=utpers-dev",
+                   "--archetype=aquilon"]
+        self.noouttest(command)
+
+    def test_120_del_windows_desktop(self):
         command = "del personality --personality desktop --archetype windows"
         self.noouttest(command.split(" "))
 
-    def testverifydelwindowsdesktop(self):
+    def test_125_verify_windows_desktop(self):
         command = "show personality --personality desktop --archetype windows"
         self.notfoundtest(command.split(" "))
 
-    def testdelbadaquilonpersonality(self):
+    def test_130_del_badaquilonpersonality(self):
         command = ["del_personality", "--personality=badpersonality",
                    "--archetype=aquilon"]
         self.noouttest(command)
 
-    def testverifydelbadaquilonpersonality(self):
-        command = ["show_personality", "--personality=badpersonality",
-                   "--archetype=aquilon"]
-        self.notfoundtest(command)
-
-    def testdelbadaquilonpersonality2(self):
+    def test_135_del_badaquilonpersonality2(self):
         command = ["del_personality", "--personality=badpersonality2",
                    "--archetype=aquilon"]
         self.noouttest(command)
 
-    def testverifydelbadaquilonpersonality2(self):
-        command = ["show_personality", "--personality=badpersonality2",
-                   "--archetype=aquilon"]
-        self.notfoundtest(command)
+    def test_140_del_esx(self):
+        self.drop_personality("vmhost", "esx_server")
+        self.drop_personality("vmhost", "vulcan-10g-server-prod")
+        self.drop_personality("vmhost", "vulcan-local-disk")
+        self.drop_personality("vmhost", "vulcan2-server-dev")
+        self.drop_personality("esx_cluster", "vulcan-10g-server-prod")
+        self.drop_personality("esx_cluster", "vulcan-local-disk")
+        self.drop_personality("esx_cluster", "vulcan2-server-dev")
+        self.drop_personality("esx_cluster", "nostage")
 
-    def testdelesxserver(self):
-        command = "del personality --personality esx_server --archetype vmhost"
-        self.noouttest(command.split(" "))
+    def test_145_del_metacluster(self):
+        self.drop_personality("metacluster", "metacluster")
+        self.drop_personality("metacluster", "vulcan2")
+        self.drop_personality("metacluster", "vulcan-local-disk")
 
-    def testdelv1personalities(self):
-        command = ["del_personality",
-                   "--personality=vulcan-1g-desktop-prod", "--archetype=vmhost"]
-        self.noouttest(command)
-        command = ["del_personality",
-                   "--personality=metacluster", "--archetype=metacluster"]
-        self.noouttest(command)
-
-    def testdelv2personalities(self):
-        command = ["del_personality",
-                   "--personality=vulcan2-10g-test", "--archetype=vmhost"]
-        self.noouttest(command)
-        command = ["del_personality",
-                   "--personality=vulcan2-10g-test", "--archetype=esx_cluster"]
-        self.noouttest(command)
-        command = ["del_personality",
-                   "--personality=vulcan2-test", "--archetype=metacluster"]
-        self.noouttest(command)
-
+    def test_150_del_camelcase(self):
+        self.check_plenary_exists("aquilon", "personality", "camelcase",
+                                  "config")
+        self.noouttest(["del_personality", "--personality", "CaMeLcAsE",
+                        "--archetype", "aquilon"])
+        self.check_plenary_gone("aquilon", "personality", "camelcase", "config",
+                                directory_gone=True)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelPersonality)

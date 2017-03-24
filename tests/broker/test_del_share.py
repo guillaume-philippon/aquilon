@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,20 +25,13 @@ if __name__ == "__main__":
 
 from brokertest import TestBrokerCommand
 
-# taken from test_add_service.py
+
 class TestDelShare(TestBrokerCommand):
 
     def testdel10gigshares(self):
         for i in range(5, 11):
             self.noouttest(["del_share", "--cluster=utecl%d" % i,
                             "--share=utecl%d_share" % i])
-
-    def testdelhashares(self):
-        for i in range(11, 13):
-            self.noouttest(["del_share", "--cluster=utecl%d" % i,
-                            "--share=utecl%d_share" % i])
-            self.noouttest(["del_share", "--cluster=npecl%d" % i,
-                            "--share=npecl%d_share" % i])
 
     def testdelnasshares(self):
         for i in range(1, 9):
@@ -48,6 +41,13 @@ class TestDelShare(TestBrokerCommand):
         self.noouttest(["del_share", "--cluster=utecl2",
                         "--share=test_share_1"])
 
+    def testdelutmc8shares(self):
+        command = ["del_share", "--resourcegroup=utmc8as1",
+                   "--metacluster=utmc8", "--share=test_v2_share"]
+        self.noouttest(command)
+        command = ["del_share", "--resourcegroup=utmc8as2",
+                   "--metacluster=utmc8", "--share=test_v2_share"]
+        self.noouttest(command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelShare)

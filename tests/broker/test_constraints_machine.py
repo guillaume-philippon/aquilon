@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2013  Contributor
+# Copyright (C) 2008,2009,2010,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,18 +30,16 @@ class TestMachineConstraints(TestBrokerCommand):
 
     def testdelmachinewithhost(self):
         command = "del machine --machine ut3c5n10"
-        self.badrequesttest(command.split(" "))
+        out = self.badrequesttest(command.split(" "))
+        self.matchoutput(out, "Host unittest02.one-nyp.ms.com is still using "
+                         "the machine, so the machine cannot be deleted.",
+                         command)
 
     def testverifydelmachinewithhostfailed(self):
         command = "show machine --machine ut3c5n10"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Blade: ut3c5n10", command)
-
-    # Expected to fail without the --all flag...
-    def testdelalldisks(self):
-        command = "del disk --machine ut3c5n10"
-        self.badrequesttest(command.split(" "))
-
+        self.matchoutput(out, "Machine: ut3c5n10", command)
+        self.matchoutput(out, "Model Type: blade", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestMachineConstraints)

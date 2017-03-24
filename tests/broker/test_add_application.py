@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2012,2013  Contributor
+# Copyright (C) 2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,10 +29,10 @@ from brokertest import TestBrokerCommand
 class TestAddApplication(TestBrokerCommand):
 
     def test_00_basic_application(self):
-        command = ["add_application", "--application=app1", "--eonid=42",
+        command = ["add_application", "--application=app1", "--eon_id=2",
                    "--host=server1.aqd-unittest.ms.com",
-                   "--comments=testing"]
-        self.successtest(command)
+                   "--comments=Some application comments"]
+        out = self.statustest(command)
 
         command = ["show_application", "--application=app1",
                    "--host=server1.aqd-unittest.ms.com"]
@@ -40,18 +40,26 @@ class TestAddApplication(TestBrokerCommand):
         self.matchoutput(out, "Application: app1", command)
         self.matchoutput(out, "Bound to: Host server1.aqd-unittest.ms.com",
                          command)
-        self.matchoutput(out, "EON id: 42", command)
-        self.matchoutput(out, "Comments: testing", command)
+        self.matchoutput(out, "GRN: grn:/ms/ei/aquilon/aqd", command)
+        self.matchoutput(out, "Comments: Some application comments", command)
 
     def test_10_addexisting(self):
-        command = ["add_application", "--application=app1", "--eonid=43",
+        command = ["add_application", "--application=app1", "--eon_id=2",
                    "--host=server1.aqd-unittest.ms.com"]
         out = self.badrequesttest(command)
         self.matchoutput(out, "already exists", command)
 
     def test_15_notfoundfs(self):
-        command = "show application --application app-does-not-exist"
-        self.notfoundtest(command.split(" "))
+        command = ["show_application", "--application", "app-does-not-exist",
+                   "--hostname", "server1.aqd-unittest.ms.com"]
+        self.notfoundtest(command)
+
+    def test_16_badeonid(self):
+        command = ["add_application", "--application", "app2",
+                   "--eon_id", 987654321,
+                   "--host", "server1.aqd-unittest.ms.com"]
+        out = self.notfoundtest(command)
+        self.matchoutput(out, "EON ID 987654321 not found.", command)
 
     def test_30_checkhost(self):
         command = ["show_host", "--host=server1.aqd-unittest.ms.com"]
@@ -60,22 +68,15 @@ class TestAddApplication(TestBrokerCommand):
 
         command = ["show_host", "--hostname=server1.aqd-unittest.ms.com",
                    "--format=proto"]
-        out = self.commandtest(command)
-        hostlist = self.parse_hostlist_msg(out, expect=1)
-        host = hostlist.hosts[0]
+        host = self.protobuftest(command, expect=1)[0]
         for resource in host.resources:
             if resource.name == "app1" and resource.type == "application":
-                self.assertEqual(resource.appdata.eonid, 42)
+                self.assertEqual(resource.appdata.eonid, 2)
 
         command = ["cat", "--generate",
                    "--hostname", "server1.aqd-unittest.ms.com", "--data"]
         out = self.commandtest(command)
         self.matchoutput(out, '"system/resources/application" = append(create("resource/host/server1.aqd-unittest.ms.com/application/app1/config"))', command)
-
-        command = ["del_application", "--application=app1",
-                   "--hostname=server1.aqd-unittest.ms.com"]
-        self.successtest(command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAddApplication)

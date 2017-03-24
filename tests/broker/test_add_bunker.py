@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,18 +29,18 @@ from brokertest import TestBrokerCommand
 class TestAddBunker(TestBrokerCommand):
 
     def testaddutbunker1(self):
-        command = ['add_bunker', '--bunker=utbunker1', '--building=ut',
+        command = ['add_bunker', '--bunker=bucket1.ut', '--building=ut',
                    '--fullname=UT b1']
         self.noouttest(command)
 
     def testverifyaddutbunker1(self):
-        command = "show bunker --bunker utbunker1"
+        command = "show bunker --bunker bucket1.ut"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Bunker: utbunker1", command)
+        self.matchoutput(out, "Bunker: bucket1.ut", command)
         self.matchoutput(out, "Fullname: UT b1", command)
 
     def testaddutbunker2(self):
-        command = ['add_bunker', '--bunker=utbunker2', '--room=utroom2']
+        command = ['add_bunker', '--bunker=bucket2.ut', '--room=utroom2']
         self.noouttest(command)
 
     def testaddnyb10(self):
@@ -48,16 +48,16 @@ class TestAddBunker(TestBrokerCommand):
                         "--building", "np"])
 
     def testverifyutbunker2(self):
-        command = "show bunker --bunker utbunker2"
+        command = "show bunker --bunker bucket2.ut"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Bunker: utbunker2", command)
-        self.matchoutput(out, "Fullname: utbunker2", command)
+        self.matchoutput(out, "Bunker: bucket2.ut", command)
+        self.matchoutput(out, "Fullname: bucket2.ut", command)
 
     def testverifyshowcsv(self):
         command = "show bunker --all --format=csv"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "bunker,utbunker1,building,ut", command)
-        self.matchoutput(out, "bunker,utbunker2,room,utroom2", command)
+        self.matchoutput(out, "bunker,bucket1.ut,building,ut", command)
+        self.matchoutput(out, "bunker,bucket2.ut,room,utroom2", command)
 
 
 if __name__ == '__main__':

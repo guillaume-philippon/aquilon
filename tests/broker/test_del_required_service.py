@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,87 +25,81 @@ if __name__ == "__main__":
 
 from brokertest import TestBrokerCommand
 
+archetype_required = {
+    'aquilon': ["aqd", "bootserver", "dns", "lemon", "ntp", "support-group",
+                "syslogng"],
+    'esx_cluster': ["esx_management_server"],
+    'vmhost': ["dns", "ntp", "syslogng"],
+}
+
 
 class TestDelRequiredService(TestBrokerCommand):
 
-    def testdelrequiredafs(self):
+    def test_100_del_required_afs(self):
         command = "del required service --service afs --archetype aquilon"
         command += " --justification tcm=12345678"
         self.noouttest(command.split(" "))
 
-    def testdelrequiredafsnojustification(self):
-        command = "del required service --service afs --archetype aquilon"
-        out = self.unauthorizedtest(command.split(" "), auth=True,
-                                    msgcheck=False)
-        self.matchoutput(out,
-                         "Changing the required services of an archetype "
-                         "requires --justification.",
-                         command)
+    def test_110_del_afs_personality(self):
+        self.noouttest(["del_required_service", "--service", "afs",
+                        "--archetype", "aquilon",
+                        "--personality", "unixeng-test"])
+        self.noouttest(["del_required_service", "--service", "afs",
+                        "--archetype", "aquilon",
+                        "--personality", "utpers-dev"])
 
-    def testdelrequirednetmap(self):
-        command = ["del_required_service", "--service=netmap",
-                   "--personality=eaitools", "--archetype=aquilon"]
+        command = ["show_service", "--service", "afs"]
+        out = self.commandtest(command)
+        self.searchoutput(out,
+                          r'Required for Personality: unixeng-test Archetype: aquilon\s*'
+                          r'Stage: current',
+                          command)
+        self.searchoutput(out,
+                          r'Required for Personality: utpers-dev Archetype: aquilon\s*'
+                          r'Stage: previous',
+                          command)
+        self.matchclean(out, "Stage: next", command)
+
+    def test_120_del_required_scope_test(self):
+        command = ["del_required_service", "--service=scope_test",
+                   "--personality=utpers-dev", "--archetype=aquilon"]
         self.noouttest(command)
 
-    def testdelrequiredafsagain(self):
-        command = "del required service --service afs --archetype aquilon"
-        command += " --justification tcm=12345678"
-        self.notfoundtest(command.split(" "))
+        self.noouttest(["promote", "--archetype", "aquilon",
+                        "--personality", "utpers-dev"])
 
-    def testdelrequireddns(self):
-        command = "del required service --service dns --archetype aquilon"
-        command += " --justification tcm=12345678"
-        self.noouttest(command.split(" "))
+    def test_130_del_required_all(self):
+        for archetype, services in archetype_required.items():
+            for service in services:
+                self.noouttest(["del_required_service", "--service", service,
+                                "--archetype", archetype,
+                                "--justification", "tcm=12345678"])
 
-    def testdelrequiredaqd(self):
-        command = "del required service --service aqd --archetype aquilon"
-        command += " --justification tcm=12345678"
-        self.noouttest(command.split(" "))
+            command = ["show_archetype", "--archetype", archetype]
+            out = self.commandtest(command)
+            for service in services:
+                self.matchclean(out, "Service: %s" % service, command)
 
-    def testdelrequiredlemon(self):
-        command = "del required service --service lemon --archetype aquilon"
-        command += " --justification tcm=12345678"
-        self.noouttest(command.split(" "))
-
-    def testdelrequiredntp(self):
-        command = "del required service --service ntp --archetype aquilon"
-        command += " --justification tcm=12345678"
-        self.noouttest(command.split(" "))
-
-    def testdelrequiredbootserver(self):
-        command = ["del_required_service",
-                   "--service=bootserver", "--archetype=aquilon",
-                   "--justification", "tcm=12345678"]
-        self.noouttest(command)
-
-    def testdelrequiredsupportgroup(self):
-        command = ["del_required_service",
-                   "--service=support-group", "--archetype=aquilon",
-                   "--justification", "tcm=12345678"]
-        self.noouttest(command)
-
-    def testverifydelrequiredservices(self):
-        command = "show archetype --archetype aquilon"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: afs", command)
-        self.matchclean(out, "Service: aqd", command)
-        self.matchclean(out, "Service: bootserver", command)
-        self.matchclean(out, "Service: dns", command)
-        self.matchclean(out, "Service: ntp", command)
-        self.matchclean(out, "Service: lemon", command)
-
-    def testdelrequiredpersonality(self):
+    def test_140_del_chooser(self):
         for service in ["chooser1", "chooser2", "chooser3"]:
             command = ["del_required_service", "--service", service,
                        "--archetype=aquilon", "--personality=unixeng-test"]
             self.noouttest(command)
 
-    def testdelrequiredpersonalityagain(self):
-        command = ["del", "required", "service", "--service", "chooser1",
-                   "--archetype=aquilon", "--personality=unixeng-test"]
-        self.notfoundtest(command)
+    def test_145_verify_del_required_personality_next(self):
+        command = ["show_personality", "--archetype=aquilon",
+                   "--personality=unixeng-test",
+                   "--personality_stage", "next"]
+        out = self.commandtest(command)
+        self.matchclean(out, "Service: chooser1", command)
+        self.matchclean(out, "Service: chooser2", command)
+        self.matchclean(out, "Service: chooser3", command)
 
-    def testverifydelrequiredpersonality(self):
+    def test_146_promote(self):
+        self.noouttest(["promote", "--archetype", "aquilon",
+                        "--personality", "unixeng-test"])
+
+    def test_147_verify_del_required_personality(self):
         command = ["show_personality", "--archetype=aquilon",
                    "--personality=unixeng-test"]
         out = self.commandtest(command)
@@ -113,56 +107,28 @@ class TestDelRequiredService(TestBrokerCommand):
         self.matchclean(out, "Service: chooser2", command)
         self.matchclean(out, "Service: chooser3", command)
 
-    def testdelrequiredbadpersonality(self):
+    def test_150_del_required_badpersonality(self):
         command = ["del_required_service", "--service", "badservice",
                    "--archetype=aquilon", "--personality=badpersonality2"]
         self.noouttest(command)
 
-    def testverifydelrequiredbadpersonality(self):
+    def test_155_verify_del_required_badpersonality(self):
         command = ["show_personality", "--archetype=aquilon",
                    "--personality=badpersonality2"]
         out = self.commandtest(command)
         self.matchclean(out, "Service: badservice", command)
 
-    def testdelrequiredvmhost(self):
-        command = ["del_required_service",
-                   "--service=dns", "--archetype=vmhost",
-                   "--justification=tcm=12345678"]
-        self.noouttest(command)
-        command = ["del_required_service",
-                   "--service=ntp", "--archetype=vmhost",
-                   "--justification=tcm=12345678"]
-        self.noouttest(command)
-        command = ["del_required_service",
-                   "--service=syslogng", "--archetype=vmhost",
-                   "--justification=tcm=12345678"]
-        self.noouttest(command)
-
-    def testverifydelrequiredvmhost(self):
-        command = "show archetype --archetype vmhost"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: afs", command)
-        self.matchclean(out, "Service: dns", command)
-        self.matchclean(out, "Service: ntp", command)
-        self.matchclean(out, "Service: syslogng", command)
-
-    def testdelrequiredesx(self):
+    def test_160_del_required_esx(self):
         command = ["del_required_service", "--service=esx_management_server",
-                   "--archetype=vmhost", "--personality=vulcan-1g-desktop-prod"]
-        self.noouttest(command)
-        command = ["del_required_service", "--service=esx_management_server",
-                   "--archetype=esx_cluster", "--justification", "tcm=12345678"]
-        self.noouttest(command)
-        command = ["del_required_service", "--service=esx_management_server",
-                   "--archetype=vmhost", "--personality=vulcan2-10g-test"]
+                   "--archetype=vmhost", "--personality=vulcan-10g-server-prod"]
         self.noouttest(command)
         command = ["del_required_service", "--service=vmseasoning",
-                   "--archetype=vmhost", "--personality=vulcan-1g-desktop-prod"]
+                   "--archetype=vmhost", "--personality=vulcan-10g-server-prod"]
         self.noouttest(command)
 
-    def testverifydelrequiredesx(self):
+    def test_165_verify_del_required_esx(self):
         command = ["show_personality",
-                   "--archetype=vmhost", "--personality=vulcan-1g-desktop-prod"]
+                   "--archetype=vmhost", "--personality=vulcan-10g-server-prod"]
         out = self.commandtest(command)
         self.matchclean(out, "Service: esx_management_server", command)
         self.matchclean(out, "Service: vmseasoning", command)
@@ -171,6 +137,52 @@ class TestDelRequiredService(TestBrokerCommand):
         out = self.commandtest(command)
         self.matchclean(out, "Service: esx_management_server", command)
 
+    def test_170_del_required_utsvc(self):
+        command = ["del_required_service", "--personality=compileserver",
+                   "--service=utsvc", "--archetype=aquilon"]
+        self.noouttest(command)
+
+    def test_180_del_required_os(self):
+        command = ["del_required_service", "--service", "ips",
+                   "--archetype", "aquilon", "--osname", "solaris",
+                   "--osversion", "11.1-x86_64"]
+        self.noouttest(command)
+
+    def test_200_del_required_afs_again(self):
+        command = "del required service --service afs --archetype aquilon"
+        command += " --justification tcm=12345678"
+        self.notfoundtest(command.split(" "))
+
+    def test_200_del_required_personality_again(self):
+        command = ["del", "required", "service", "--service", "chooser1",
+                   "--archetype=aquilon", "--personality=unixeng-test"]
+        self.notfoundtest(command)
+
+    def test_200_del_required_os_again(self):
+        command = ["del_required_service", "--service", "ips",
+                   "--archetype", "aquilon", "--osname", "solaris",
+                   "--osversion", "11.1-x86_64"]
+        out = self.notfoundtest(command)
+        self.matchoutput(out,
+                         "Service ips required for operating system "
+                         "aquilon/solaris-11.1-x86_64 not found.",
+                         command)
+
+    def test_300_cleanup_afs(self):
+        # The previous stages still keep the service bound - edit them directly,
+        # bypassing the staging workflow
+        self.noouttest(["del_required_service", "--service", "afs",
+                        "--archetype", "aquilon",
+                        "--personality", "unixeng-test",
+                        "--personality_stage", "previous"])
+        self.noouttest(["del_required_service", "--service", "afs",
+                        "--archetype", "aquilon",
+                        "--personality", "utpers-dev",
+                        "--personality_stage", "previous"])
+
+        command = ["show_service", "--service", "afs"]
+        out = self.commandtest(command)
+        self.matchclean(out, "Required for", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelRequiredService)

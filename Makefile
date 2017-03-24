@@ -1,12 +1,11 @@
 SHELL  = /bin/ksh
 COMMON = ../install/common
 QACOMMENT = -comment cmrs=qa
-QCELLS = q.ny,q.ln,q.hk,q.tk
 TCM_COMMENT = "-comment tcm FILL IT IN NOW"
-PYTHON_DEFAULT = /usr/bin/env python2.6
-#PYTHON = /ms/dist/python/PROJ/core/2.6.4/bin/python
-PYTHON_CLIENT_PROD = /ms/dist/python/PROJ/core/2.6.4/bin/python -E
-PYTHON_SERVER_PROD = /ms/dist/python/PROJ/core/2.6.4-64/bin/python -E
+PYTHON_DEFAULT = /usr/bin/env python
+#PYTHON = /ms/dist/python/PROJ/core/2.7.9/bin/python
+PYTHON_CLIENT_PROD = /ms/dist/python/PROJ/core/2.7.9/bin/python -E
+PYTHON_SERVER_PROD = /ms/dist/python/PROJ/core/2.7.9-64/bin/python -E
 
 MPR    := $(shell echo $(PWD) | awk -F/ '{print $$(NF-3), $$(NF-2), $$(NF-1)}')
 META   = $(word 1,$(MPR))
@@ -40,7 +39,7 @@ print-%: ; @$(error $* is $($*) ($(value $*)))
 # The goal is to be readable by someone who doesn't know make very well,
 # to make it maintainable, not to impress you with how well I know the tool
 
-BIN_FILES := $(shell find bin -type f | sed -e 's/.py$$//')
+BIN_FILES := $(shell find bin sbin -type f | sed -e 's/.py$$//')
 LIB_FILES := $(shell find lib -type f)
 ETC_FILES := $(shell find etc -type f | grep -v templates)
 PYC_FILES := $(shell find lib -name '*.py' | sed -e 's,\.py,\.pyc,')
@@ -68,7 +67,27 @@ $(COMMON)/bin/aqd_config: bin/aqd_config.py
 	sed -e '1s,^#!$(PYTHON_DEFAULT)\(.*\),#!$(PYTHON_CLIENT_PROD)\1,' <$< >$@
 	chmod $(PERMS) $@
 
-$(COMMON)/bin/twistd: bin/twistd.py
+$(COMMON)/sbin/aqd: sbin/aqd.py
+	@mkdir -p `dirname $@`
+	sed -e '1s,^#!$(PYTHON_DEFAULT)\(.*\),#!$(PYTHON_SERVER_PROD)\1,' <$< >$@
+	chmod $(PERMS) $@
+
+$(COMMON)/sbin/aq_notifyd: sbin/aq_notifyd.py
+	@mkdir -p `dirname $@`
+	sed -e '1s,^#!$(PYTHON_DEFAULT)\(.*\),#!$(PYTHON_SERVER_PROD)\1,' <$< >$@
+	chmod $(PERMS) $@
+
+$(COMMON)/sbin/aqdb_shell: sbin/aqdb_shell.py
+	@mkdir -p `dirname $@`
+	sed -e '1s,^#!$(PYTHON_DEFAULT)\(.*\),#!$(PYTHON_SERVER_PROD)\1,' <$< >$@
+	chmod $(PERMS) $@
+
+$(COMMON)/sbin/aqdb_migrate: sbin/aqdb_migrate.py
+	@mkdir -p `dirname $@`
+	sed -e '1s,^#!$(PYTHON_DEFAULT)\(.*\),#!$(PYTHON_SERVER_PROD)\1,' <$< >$@
+	chmod $(PERMS) $@
+
+$(COMMON)/sbin/aqd_consistency_check: sbin/aqd_consistency_check.py
 	@mkdir -p `dirname $@`
 	sed -e '1s,^#!$(PYTHON_DEFAULT)\(.*\),#!$(PYTHON_SERVER_PROD)\1,' <$< >$@
 	chmod $(PERMS) $@
@@ -76,7 +95,7 @@ $(COMMON)/bin/twistd: bin/twistd.py
 $(COMMON)/%.pyc: $(COMMON)/%.py
 	@echo "compiling $@"
 	@rm -f $@
-	./build/compile_for_dist.py $<
+	./tools/compile_for_dist.py $<
 
 $(COMMON)/lib/%: lib/%
 	@mkdir -p `dirname $@`
@@ -90,7 +109,7 @@ $(COMMON)/etc/rc.d/init.d/aqd: etc/rc.d/init.d/aqd
 	@mkdir -p `dirname $@`
 	install -m 0555 $< $@
 
-# Running twistd after all the files have been installed generates a
+# Running aqd after all the files have been installed generates a
 # dropin.cache file that would otherwise be missing (and that missing
 # file causes the server to complain loudly on startup).
 # The file will only be generated as needed.  The remove_stale script
@@ -101,11 +120,11 @@ $(COMMON)/etc/rc.d/init.d/aqd: etc/rc.d/init.d/aqd
 # remove the generated files anyway.
 .PHONY: install
 install: remove_stale $(INSTALLFILES) install-doc
-	ln -sf twistd "$(COMMON)/bin/aqd"
-	ln -sf twistd "$(COMMON)/bin/aqd_readonly"
-	$(COMMON)/bin/twistd --help >/dev/null
-	./build/gen_completion.py --outputdir="$(COMMON)/etc" --templatedir="./etc/templates" --all
-	./build/graph_schema.py --outputdir="$(COMMON)/doc"
+	ln -sf aqd "$(COMMON)/sbin/aqd_readonly"
+	$(COMMON)/sbin/aqd --help >/dev/null
+	./tools/gen_completion.py --outputdir="$(COMMON)/etc" --templatedir="./etc/templates" --all
+	./tools/graph_schema.py --outputdir="$(COMMON)/doc"
+	./tools/build_schema_htdocs.py --outputdir="$(COMMON)/doc/schema"
 
 .PHONY: install-doc
 install-doc:
@@ -113,7 +132,7 @@ install-doc:
 
 .PHONY: remove_stale
 remove_stale:
-	./build/remove_stale.py "$(COMMON)"
+	./tools/remove_stale.py "$(COMMON)"
 
 .PHONY: default
 default:
@@ -145,7 +164,7 @@ to_nolock:
 
 .PHONY: distqa
 distqa: to_nolock
-	vms dist ${META} ${PROJ} ${REL} -- -cells ${QCELLS} ${QACOMMENT}
+	vms dist ${META} ${PROJ} ${REL} -- -qacells ${QACOMMENT}
 
 .PHONY: distworld
 distworld: to_nolock

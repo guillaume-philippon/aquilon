@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,18 +27,40 @@ from brokertest import TestBrokerCommand
 
 
 class TestShowMachine(TestBrokerCommand):
+    def testverifymachineall(self):
+        command = ["show", "machine", "--all"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ut3c5n10", command)
+        self.matchoutput(out, "ut3c1n3", command)
+        self.matchoutput(out, "ut3c1n4", command)
+        self.matchoutput(out, "ut3s01p1", command)
+        self.matchoutput(out, "ut8s02p1", command)
+        self.matchoutput(out, "ut9s03p1", command)
+        self.matchoutput(out, "ut10s04p1", command)
+        self.matchoutput(out, "ut11s01p1", command)
+        self.matchoutput(out, "f5test", command)
+
+    def testverifymachineallproto(self):
+        command = ["show", "machine", "--all", "--format", "proto"]
+        machines = self.protobuftest(command)
+        machine_names = set(msg.name for msg in machines)
+        for machine in ("ut3c5n10", "ut3c1n3", "ut3c1n4", "ut3s01p1",
+                        "ut8s02p1", "ut9s03p1", "ut10s04p1", "ut11s01p1",
+                        "f5test"):
+            self.assertIn(machine, machine_names)
+
     def testverifyut3c1n3interfacescsv(self):
         command = "show machine --machine ut3c1n3 --format csv"
         out = self.commandtest(command.split(" "))
-        net = self.net.unknown[0]
+        net = self.net["unknown0"]
         self.matchoutput(out,
-                         "ut3c1n3,ut3,ut,ibm,hs21-8853l5u,KPDZ406,eth0,%s,%s" %
+                         "ut3c1n3,ut3,ut,ibm,hs21-8853,KPDZ406,eth0,%s,%s" %
                          (net.usable[2].mac, net.usable[2]), command)
         self.matchoutput(out,
-                         "ut3c1n3,ut3,ut,ibm,hs21-8853l5u,KPDZ406,eth1,%s,%s" %
+                         "ut3c1n3,ut3,ut,ibm,hs21-8853,KPDZ406,eth1,%s,%s" %
                          (net.usable[3].mac, net.usable[3]), command)
         self.matchoutput(out,
-                         "ut3c1n3,ut3,ut,ibm,hs21-8853l5u,KPDZ406,bmc,%s,%s" %
+                         "ut3c1n3,ut3,ut,ibm,hs21-8853,KPDZ406,bmc,%s,%s" %
                          (net.usable[4].mac, net.usable[4]), command)
 
     def testrejectfqdn(self):
@@ -46,6 +68,34 @@ class TestShowMachine(TestBrokerCommand):
         out = self.badrequesttest(command.split(" "))
         self.matchoutput(out, "Illegal hardware label", command)
 
+    def testshowproto(self):
+        command = ["show_machine", "--machine", "ut3c1n3", "--format", "proto"]
+        machine = self.protobuftest(command, expect=1)[0]
+        self.assertEqual(machine.name, "ut3c1n3")
+        self.assertEqual(machine.host, "unittest00.one-nyp.ms.com")
+        self.assertEqual(machine.location.name, "ut3")
+        self.assertEqual(machine.model.name, "hs21-8853")
+        self.assertEqual(machine.model.vendor, "ibm")
+        self.assertEqual(machine.model.model_type, "blade")
+        self.assertEqual(machine.cpu, "e5-2660")
+        self.assertEqual(machine.cpu_count, 2)
+        self.assertEqual(machine.memory, 8192)
+        self.assertEqual(machine.serial_no, "KPDZ406")
+        self.assertEqual(len(machine.interfaces), 3)
+        self.assertEqual(len(machine.disks), 2)
+        self.assertEqual(machine.disks[0].device_name, "c0d0")
+        self.assertEqual(machine.disks[0].disk_type, "cciss")
+        self.assertEqual(machine.disks[0].capacity, 34)
+        self.assertEqual(machine.disks[0].address, "")
+        self.assertEqual(machine.disks[0].bus_address, "pci:0000:01:00.0")
+        self.assertEqual(machine.disks[0].wwn,
+                         "600508b112233445566778899aabbccd")
+        self.assertEqual(machine.disks[1].device_name, "sda")
+        self.assertEqual(machine.disks[1].disk_type, "scsi")
+        self.assertEqual(machine.disks[1].capacity, 68)
+        self.assertEqual(machine.disks[1].address, "")
+        self.assertEqual(machine.disks[1].bus_address, "")
+        self.assertEqual(machine.disks[1].wwn, "")
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestShowMachine)

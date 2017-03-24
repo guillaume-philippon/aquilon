@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,14 +17,11 @@
 # limitations under the License.
 """Module for testing the uncluster command."""
 
-import os
-import sys
 import unittest
 
 if __name__ == "__main__":
-    BINDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-    SRCDIR = os.path.join(BINDIR, "..", "..")
-    sys.path.append(os.path.join(SRCDIR, "lib", "python2.6"))
+    import utils
+    utils.import_depends()
 
 from brokertest import TestBrokerCommand
 
@@ -106,7 +103,7 @@ class TestUncluster(TestBrokerCommand):
     def testunbindutmc4(self):
         for i in range(1, 25):
             host = "evh%s.aqd-unittest.ms.com" % (i + 50)
-            cluster = "utecl%d" % (5 + ((i - 1) / 4))
+            cluster = "utecl%d" % (5 + ((i - 1) // 4))
             self.noouttest(["uncluster", "--personality", "generic",
                             "--hostname", host, "--cluster", cluster])
 
@@ -116,6 +113,27 @@ class TestUncluster(TestBrokerCommand):
                    "--cluster=utstorage1"]
         self.successtest(command)
 
+    def testunbindutmc7(self):
+        host = "evh10.aqd-unittest.ms.com"
+        cluster = "utecl11"
+        self.successtest(["uncluster", "--hostname", host, "--cluster", cluster,
+                          "--personality", "generic"])
+
+    def testunbindutmc8(self):
+        self.noouttest(["uncluster", "--hostname", "evh80.aqd-unittest.ms.com",
+                        "--cluster", "utecl12",
+                        "--personality", "esx_standalone"])
+        self.noouttest(["uncluster", "--hostname", "evh81.aqd-unittest.ms.com",
+                        "--cluster", "utecl13",
+                        "--personality", "esx_standalone"])
+
+    def testunbindutmc9(self):
+        self.noouttest(["uncluster", "--hostname", "evh82.aqd-unittest.ms.com",
+                        "--cluster", "utecl14",
+                        "--personality", "esx_standalone"])
+        self.noouttest(["uncluster", "--hostname", "evh83.aqd-unittest.ms.com",
+                        "--cluster", "utecl15",
+                        "--personality", "esx_standalone"])
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUncluster)

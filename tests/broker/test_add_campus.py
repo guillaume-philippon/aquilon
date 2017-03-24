@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,55 +28,60 @@ from brokertest import TestBrokerCommand
 
 class TestAddCampus(TestBrokerCommand):
 
-    def testaddte(self):
-        self.dsdb_expect_add_campus("ta", "Test Comment")
+    def test_100_add_ta(self):
+        self.dsdb_expect_add_campus("ta", "Some campus comments")
         command = ["add", "campus", "--campus", "ta", "--country", "us",
-                   "--comments", "Test Comment", "--fullname", "Test Campus"]
+                   "--fullname", "Test Campus",
+                   "--comments", "Some campus comments"]
         self.noouttest(command)
         self.dsdb_verify()
 
-    def testverifyaddte(self):
+    def test_105_show_ta(self):
         command = "show campus --campus ta"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Campus: ta", command)
         self.matchoutput(out, "Fullname: Test Campus", command)
-        self.matchoutput(out, "Comments: Test Comment", command)
+        self.matchoutput(out, "Comments: Some campus comments", command)
 
-    def testverifyaddbuproto(self):
+    def test_105_show_ta_proto(self):
         command = "show campus --campus ta --format proto"
-        out = self.commandtest(command.split(" "))
-        locs = self.parse_location_msg(out, 1)
-        self.matchoutput(locs.locations[0].name, "ta", command)
-        self.matchoutput(locs.locations[0].location_type, "campus", command)
+        loc = self.protobuftest(command.split(" "), expect=1)[0]
+        self.matchoutput(loc.name, "ta", command)
+        self.matchoutput(loc.location_type, "campus", command)
 
-    def testverifybuildingall(self):
-        command = ["show", "campus", "--all"]
-        out = self.commandtest(command)
-        self.matchoutput(out, "Campus: ta", command)
-
-    def testverifyshowcsv(self):
+    def test_105_show_ta_csv(self):
         command = "show campus --campus ta --format=csv"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "campus,ta,country,us", command)
 
-    def testaddln(self):
+    def test_110_add_ln(self):
         self.dsdb_expect_add_campus("ln")
         self.noouttest(["add_campus", "--campus", "ln", "--country", "gb",
                         "--fullname", "London"])
         self.dsdb_verify()
 
-    def testaddny(self):
+    def test_115_add_ny(self):
         self.dsdb_expect_add_campus("ny")
         self.noouttest(["add_campus", "--campus", "ny", "--country", "us",
                         "--fullname", "New York"])
         self.dsdb_verify()
 
-    def testaddvi(self):
+    def test_120_add_vi(self):
         self.dsdb_expect_add_campus("vi")
         self.noouttest(["add_campus", "--campus", "vi", "--country", "us",
                         "--fullname", "Virginia"])
         self.dsdb_verify()
 
+    def test_300_show_all(self):
+        command = ["show", "campus", "--all"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Campus: ta", command)
+
+    def test_200_add_ta_again(self):
+        command = ["add", "campus", "--campus", "ta", "--country", "us",
+                   "--fullname", "Test Campus"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out, "Campus ta already exists.", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAddCampus)

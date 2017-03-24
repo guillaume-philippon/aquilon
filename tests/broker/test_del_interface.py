@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,20 +24,25 @@ if __name__ == "__main__":
     utils.import_depends()
 
 from brokertest import TestBrokerCommand
+from eventstest import EventsTestMixin
 
 
-class TestDelInterface(TestBrokerCommand):
+class TestDelInterface(EventsTestMixin, TestBrokerCommand):
 
     # Not testing del interface for ut3c5n10... testing that those
     # interfaces are removed automatically when the machine is removed.
 
     def testdelut3c1n3eth0(self):
+        self.event_upd_hardware('ut3c1n3')
         self.noouttest(["del", "interface", "--interface", "eth0",
-            "--machine", "ut3c1n3"])
+                        "--machine", "ut3c1n3"])
+        self.events_verify()
 
     def testdelut3c1n3eth1(self):
+        self.event_upd_hardware('ut3c1n3')
         self.noouttest(["del", "interface",
-                        "--mac", self.net.unknown[0].usable[3].mac.upper()])
+                        "--mac", self.net["unknown0"].usable[3].mac.upper()])
+        self.events_verify()
 
     def testnotamachine(self):
         command = ["del", "interface", "--interface", "xge49",
@@ -47,7 +52,7 @@ class TestDelInterface(TestBrokerCommand):
 
     def testnotaswitch(self):
         command = ["del", "interface", "--interface", "oa",
-                   "--switch", "ut3c5"]
+                   "--network_device", "ut3c5"]
         out = self.badrequesttest(command)
         self.matchoutput(out, "but is not a switch", command)
 
@@ -70,11 +75,15 @@ class TestDelInterface(TestBrokerCommand):
 
     def testdelut3gd1r04vlan220(self):
         command = ["del", "interface", "--interface", "vlan220",
-                   "--switch", "ut3gd1r04.aqd-unittest.ms.com"]
+                   "--network_device", "ut3gd1r04.aqd-unittest.ms.com"]
         self.noouttest(command)
+        self.check_plenary_contents('network_device', 'americas', 'ut', 'ut3gd1r04',
+                                    clean='vlan220')
+        self.check_plenary_contents('hostdata', 'ut3gd1r04.aqd-unittest.ms.com',
+                                    clean='vlan220')
 
     def testverifydelut3gd1r04vlan220(self):
-        command = ["show", "switch", "--switch", "ut3gd1r04.aqd-unittest.ms.com"]
+        command = ["show", "network_device", "--network_device", "ut3gd1r04.aqd-unittest.ms.com"]
         out = self.commandtest(command)
         self.matchclean(out, "vlan220", command)
 

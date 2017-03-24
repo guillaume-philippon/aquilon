@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2012,2013  Contributor
+# Copyright (C) 2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,13 +17,12 @@
 # limitations under the License.
 """Module for testing the add reboot_intervention command."""
 
+from datetime import datetime, timedelta
 import unittest
 
 if __name__ == "__main__":
     import utils
     utils.import_depends()
-
-from datetime import datetime, timedelta
 
 from brokertest import TestBrokerCommand
 
@@ -34,35 +33,25 @@ EXPIRY = EXPIRY.isoformat().replace("T", " ")
 class TestAddRebootIntervention(TestBrokerCommand):
 
     def test_00_basic_reboot_intervention(self):
-        command = ["show_reboot_schedule",
-                   "--hostname=server1.aqd-unittest.ms.com"]
-        out = self.notfoundtest(command)
-
-        command = ["add_reboot_schedule",
-                   "--week=all", "--day=Sun", "--time=08:00",
-                   "--hostname=server1.aqd-unittest.ms.com"]
-        self.successtest(command)
-
         command = ["show_reboot_intervention",
                    "--hostname=server1.aqd-unittest.ms.com"]
         out = self.notfoundtest(command)
 
         command = ["add_reboot_intervention", "--expiry", EXPIRY,
-                   "--justification=test",
+                   "--reason=test",
                    "--hostname=server1.aqd-unittest.ms.com"]
         self.successtest(command)
 
         command = ["show_reboot_intervention",
                    "--hostname=server1.aqd-unittest.ms.com"]
         out = self.commandtest(command)
-        self.matchoutput(out, "RebootIntervention: reboot_intervention",
-                         command)
+        self.searchoutput(out, "RebootIntervention$", command)
         self.matchoutput(out, "Bound to: Host server1.aqd-unittest.ms.com",
                          command)
         self.matchoutput(out, "Start: ", command)
         self.matchoutput(out, "Expiry: ", command)
 
-        command = ["cat", "--reboot_intervention=reboot_intervention",
+        command = ["cat", "--reboot_intervention",
                    "--hostname=server1.aqd-unittest.ms.com"]
         out = self.commandtest(command)
         self.matchoutput(out,
@@ -74,7 +63,7 @@ class TestAddRebootIntervention(TestBrokerCommand):
         self.matchoutput(out, "\"start\" =", command)
         self.matchoutput(out, "\"expiry\" =", command)
 
-        command = ["cat", "--reboot_intervention=reboot_intervention",
+        command = ["cat", "--reboot_intervention",
                    "--hostname=server1.aqd-unittest.ms.com",
                    "--generate"]
         newout = self.commandtest(command)
@@ -82,20 +71,27 @@ class TestAddRebootIntervention(TestBrokerCommand):
 
         command = ["show_reboot_intervention", "--all"]
         out = self.commandtest(command)
-        self.matchoutput(out, "RebootIntervention: reboot_intervention",
-                         command)
+        self.searchoutput(out, "RebootIntervention$", command)
 
     def test_11_addexisting(self):
-        # FIXME: this fails if the test is run on Sunday
-        command = ["add_reboot_intervention", "--expiry=Sun",
-                   "--justification=test",
+        EXPIRY = datetime.utcnow().replace(microsecond=0) + timedelta(days=2)
+        command = ["add_reboot_intervention", "--expiry", EXPIRY,
+                   "--reason=test",
                    "--hostname=server1.aqd-unittest.ms.com"]
         out = self.badrequesttest(command)
         self.matchoutput(out, "already exists", command)
 
+    def test_12_addbadtime(self):
+        command = ["add_reboot_intervention", "--start_time=2013/01/01",
+                   "--expiry=2013/01/14",
+                   "--reason=test",
+                   "--hostname=server2.aqd-unittest.ms.com"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out, "The start time or expiry time are in the past.", command)
+
     def test_15_notfoundri(self):
-        command = ["cat", "--reboot_intervention=ri-does-not-exist",
-                   "--hostname=server1.aqd-unittest.ms.com"]
+        command = ["cat", "--reboot_intervention",
+                   "--hostname=server3.aqd-unittest.ms.com"]
         self.notfoundtest(command)
 
     def test_30_checkthehost(self):
@@ -116,24 +112,13 @@ class TestAddRebootIntervention(TestBrokerCommand):
 
         command = ["show_host", "--hostname=server1.aqd-unittest.ms.com",
                    "--format=proto"]
-        out = self.commandtest(command)
-        hostlist = self.parse_hostlist_msg(out, expect=1)
-        host = hostlist.hosts[0]
+        host = self.protobuftest(command, expect=1)[0]
         found = False
         for resource in host.resources:
             if resource.name == "reboot_intervention" and \
                resource.type == "reboot_iv":
                 found = True
         self.assertTrue(found, "No reboot_iv found in host protobuf.")
-
-    def test_del_reboot_intervention(self):
-        command = ["del_reboot_intervention",
-                   "--hostname=server1.aqd-unittest.ms.com"]
-        self.successtest(command)
-        command = ["del_reboot_schedule",
-                   "--hostname=server1.aqd-unittest.ms.com"]
-        self.successtest(command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(

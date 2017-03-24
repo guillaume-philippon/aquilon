@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,14 +34,6 @@ class TestDnsConstraints(TestBrokerCommand):
         self.matchoutput(out, "DNS Environment ut-env is still in use by DNS "
                          "records, and cannot be deleted.", command)
 
-    def testdelmappeddomain(self):
-        command = ["del", "dns", "domain", "--dns_domain", "new-york.ms.com"]
-        out = self.badrequesttest(command)
-        self.matchoutput(out,
-                         "DNS Domain new-york.ms.com is still mapped to "
-                         "locations and cannot be deleted.",
-                         command)
-
     def testdelaliasedaddress(self):
         command = ["del", "address", "--fqdn", "arecord13.aqd-unittest.ms.com"]
         out = self.badrequesttest(command)
@@ -67,7 +59,7 @@ class TestDnsConstraints(TestBrokerCommand):
                          command)
 
     def testdelserviceaddress(self):
-        ip = self.net.unknown[13].usable[1]
+        ip = self.net["zebra_vip"].usable[1]
         command = ["del", "address", "--fqdn", "zebra2.aqd-unittest.ms.com"]
         out = self.badrequesttest(command)
         self.matchoutput(out,
@@ -76,6 +68,24 @@ class TestDnsConstraints(TestBrokerCommand):
                          "deleted." % ip,
                          command)
 
+    def testdelserveralias(self):
+        command = ["del_alias", "--fqdn", "srv-alias2.one-nyp.ms.com"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "Alias srv-alias2.one-nyp.ms.com still provides "
+                         "the following services, and cannot be deleted: "
+                         "utsvc/utsi2.",
+                         command)
+
+    def testdeldynamic(self):
+        ip = self.net["dyndhcp0"].usable[2]
+        fqdn = self.dynname(ip)
+        command = ["del_address", "--ip", ip]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "DNS Record %s [%s] is reserved for dynamic DHCP, "
+                         "use del_dynamic_range to delete it." % (fqdn, ip),
+                         command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ class TestShowFqdn(TestBrokerCommand):
 
     def testshowfqdnall(self):
         command = "show fqdn --all"
-        (out, err) = self.successtest(command.split(" "))
+        out = self.commandtest(command.split(" "))
         # The aq client does not ask for this...
-        #self.matchoutput(err, "The show_fqdn command is deprecated.", command)
+        # self.matchoutput(err, "The show_fqdn command is deprecated.", command)
 
         # Chassis
         self.matchoutput(out, "ut3c1.aqd-unittest.ms.com", command)

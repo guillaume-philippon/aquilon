@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,12 +32,29 @@ class TestAddRack(TestBrokerCommand):
         command = "add rack --rackid 3 --room utroom1 --row a --column 3"
         self.noouttest(command.split(" "))
 
+    def testaddut3again(self):
+        command = "add rack --rackid 3 --room utroom1 --row a --column 3"
+        out = self.badrequesttest(command.split(" "))
+        self.matchoutput(out, "Rack ut3 already exists.", command)
+
     def testverifyaddut3(self):
         command = "show rack --rack ut3"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Rack: ut3", command)
-        self.matchoutput(out, "Row: a", command)
-        self.matchoutput(out, "Column: 3", command)
+        self.output_equals(out, """
+            Rack: ut3
+              Fullname: ut3
+              Row: a
+              Column: 3
+              Location Parents: [Organization ms, Hub ny, Continent na, Country us, Campus ny, City ny, Building ut, Room utroom1]
+            """, command)
+
+    def testverifyaddut3proto(self):
+        command = "show rack --rack ut3 --format proto"
+        loc = self.protobuftest(command.split(" "), expect=1)[0]
+        self.assertEqual(loc.name, "ut3")
+        self.assertEqual(loc.location_type, "rack")
+        self.assertEqual(loc.row, "a")
+        self.assertEqual(loc.col, "3")
 
     def testaddcards1(self):
         command = "add rack --rackid 1 --building cards --row a --column 1"
@@ -63,7 +80,7 @@ class TestAddRack(TestBrokerCommand):
         self.noouttest(command.split(" "))
 
     def testaddut9(self):
-        command = "add rack --rackid 9 --bunker utbunker2 --row g --column 3"
+        command = "add rack --rackid 9 --bunker bucket2.ut --row g --column 3"
         self.noouttest(command.split(" "))
 
     def testverifyut9(self):
@@ -72,7 +89,7 @@ class TestAddRack(TestBrokerCommand):
         self.matchoutput(out,
                          "Location Parents: [Organization ms, Hub ny, "
                          "Continent na, Country us, Campus ny, City ny, "
-                         "Building ut, Room utroom2, Bunker utbunker2]",
+                         "Building ut, Room utroom2, Bunker bucket2.ut]",
                          command)
 
     def testaddut10(self):
@@ -109,6 +126,10 @@ class TestAddRack(TestBrokerCommand):
 
     def testaddnp13(self):
         command = "add rack --rackid 13 --building np --row k --column 3"
+        self.noouttest(command.split(" "))
+
+    def testaddut14(self):
+        command = "add rack --rackid 14 --room utroom1 --row k --column 4"
         self.noouttest(command.split(" "))
 
     def testverifyaddnp997(self):

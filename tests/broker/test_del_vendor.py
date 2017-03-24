@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2013  Contributor
+# Copyright (C) 2009,2010,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 # limitations under the License.
 """Module for testing the del vendor command."""
 
-
 import unittest
 
 if __name__ == "__main__":
@@ -29,26 +28,25 @@ from brokertest import TestBrokerCommand
 
 class TestDelVendor(TestBrokerCommand):
 
-    def testdelinvalidvendor(self):
+    def test_100_del_utvendor(self):
+        command = ["del_vendor", "--vendor=utvendor"]
+        self.noouttest(command)
+
+    def test_105_verify_utvendor(self):
+        command = ["show_vendor", "--vendor=utvendor"]
+        self.notfoundtest(command)
+
+    def test_200_del_nonexistant(self):
         command = ["del_vendor", "--vendor=vendor-does-not-exist"]
         out = self.notfoundtest(command)
         self.matchoutput(out,
                          "Vendor vendor-does-not-exist not found",
                          command)
 
-    def testdelutvendor(self):
-        command = ["del_vendor", "--vendor=utvendor"]
-        self.noouttest(command)
-
-    def testverifydelutvendor(self):
-        command = ["show_vendor", "--vendor=utvendor"]
-        self.notfoundtest(command)
-
-    def testverifyall(self):
+    def test_300_show_all(self):
         command = ["show_vendor", "--all"]
         out = self.commandtest(command)
-        self.matchclean(out, "Vendor: utvendor", command)
-
+        self.matchclean(out, "utvendor", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelVendor)

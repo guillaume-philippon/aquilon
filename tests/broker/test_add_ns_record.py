@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ from brokertest import TestBrokerCommand
 
 DOMAIN = 'aqd-unittest.ms.com'
 NAME = 'dnstest1.%s' % DOMAIN
-NET_OFFSET = 10
 DJB = '--format djb'
 CSV = '--format csv'
 
@@ -37,8 +36,8 @@ class TestAddNSRecord(TestBrokerCommand):
 
     def setUp(self, *args, **kwargs):
         super(TestAddNSRecord, self).setUp(*args, **kwargs)
-        self.NETWORK = self.net.unknown[NET_OFFSET]
-        self.IP = str(self.net.unknown[NET_OFFSET].usable[0])
+        self.NETWORK = self.net["ut9_chassis"]
+        self.IP = str(self.net["ut9_chassis"].usable[0])
 
     def test_100_add_a_record(self):
         self.dsdb_expect_add(NAME, self.IP)
@@ -71,14 +70,14 @@ class TestAddNSRecord(TestBrokerCommand):
         self.matchoutput(out, NAME, cmd)
 
     def test_402_verify_ns_record_djb(self):
-        cmd = "show ns record --dns_domain %s --fqdn %s %s" % (
-             DOMAIN, NAME, DJB)
+        cmd = "show ns record --dns_domain %s --fqdn %s %s" % (DOMAIN, NAME,
+                                                               DJB)
         out = self.commandtest(cmd.split(" "))
         self.matchoutput(out, '.%s::%s' % (DOMAIN, NAME), cmd)
 
     def test_410_verify_ns_record_csv(self):
-        cmd = "show ns record --dns_domain %s --fqdn %s %s" % (
-             DOMAIN, NAME, CSV)
+        cmd = "show ns record --dns_domain %s --fqdn %s %s" % (DOMAIN, NAME,
+                                                               CSV)
         out = self.commandtest(cmd.split(" "))
         self.matchoutput(out, '%s,%s' % (DOMAIN, NAME), cmd)
 

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2012,2013  Contributor
+# Copyright (C) 2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,31 +17,34 @@
 # limitations under the License.
 """Module for testing the add allowed_personality commands."""
 
-import os
-import sys
 import unittest
 
 if __name__ == "__main__":
-    BINDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-    SRCDIR = os.path.join(BINDIR, "..", "..")
-    sys.path.append(os.path.join(SRCDIR, "lib", "python2.6"))
+    import utils
+    utils.import_depends()
 
 from brokertest import TestBrokerCommand
+from personalitytest import PersonalityTestMixin
 
 
-class TestAddAllowedPersonality(TestBrokerCommand):
+class TestAddAllowedPersonality(PersonalityTestMixin, TestBrokerCommand):
+
+    def test_00_setup(self):
+        self.create_personality("vmhost", "allowedtest")
 
     def test_10_addbadconstraint(self):
         command = ["add_allowed_personality", "--archetype", "vmhost",
                    "--personality=generic", "--cluster=utecl1"]
         out = self.badrequesttest(command)
-        self.matchoutput(out, "The cluster member evh1.aqd-unittest.ms.com "
-                         "has a personality of vulcan-1g-desktop-prod which is "
-                         "incompatible", command)
+        self.matchoutput(out,
+                         "Member host evh1.aqd-unittest.ms.com has personality "
+                         "vmhost/vulcan-10g-server-prod, which is incompatible "
+                         "with this constraint.",
+                         command)
 
     def test_12_failmissingcluster(self):
         command = ["add_allowed_personality", "--archetype", "vmhost",
-                   "--personality=vulcan-1g-desktop-prod", "--cluster=does-not-exist"]
+                   "--personality=vulcan-10g-server-prod", "--cluster=does-not-exist"]
         out = self.notfoundtest(command)
         self.matchoutput(out,
                          "Cluster does-not-exist not found.",
@@ -57,29 +60,52 @@ class TestAddAllowedPersonality(TestBrokerCommand):
                          command)
 
     def test_15_addconstraint(self):
-        self.successtest(["add_allowed_personality",
-                          "--archetype", "vmhost",
-                          "--personality=vulcan-1g-desktop-prod",
-                          "--cluster", "utecl1"])
-        self.successtest(["add_allowed_personality",
-                          "--archetype", "vmhost",
-                          "--personality=generic",
-                          "--cluster", "utecl1"])
-        self.successtest(["add_allowed_personality",
-                          "--archetype", "metacluster",
-                          "--personality=metacluster",
-                          "--cluster", "utmc1"])
+        self.noouttest(["add_allowed_personality", "--archetype", "vmhost",
+                        "--personality=vulcan-10g-server-prod",
+                        "--cluster", "utecl1"])
+        self.noouttest(["add_allowed_personality", "--archetype", "vmhost",
+                        "--personality=generic", "--cluster", "utecl1"])
+        self.noouttest(["add_allowed_personality", "--archetype", "vmhost",
+                        "--personality=allowedtest", "--cluster", "utecl1"])
+        self.noouttest(["add_allowed_personality", "--archetype", "esx_cluster",
+                        "--personality=vulcan-10g-server-prod",
+                        "--metacluster", "utmc1"])
+
+    def test_16_cat_utecl1(self):
+        command = ["cat", "--cluster", "utecl1", "--data"]
+        out = self.commandtest(command)
+        self.searchoutput(out,
+                          r'"system/cluster/allowed_personalities" = list\(\s*'
+                          r'"vmhost/allowedtest",\s*'
+                          r'"vmhost/generic",\s*'
+                          r'"vmhost/vulcan-10g-server-prod"\s*\);',
+                          command)
 
     def test_20_checkconstraint(self):
         command = ["show_cluster", "--cluster=utecl1"]
         out = self.commandtest(command)
-        self.matchoutput(out, "Allowed Personality: Personality vmhost/vulcan-1g-desktop-prod", command)
-        self.matchoutput(out, "Allowed Personality: Personality vmhost/generic", command)
+        self.matchoutput(out, "Allowed Personality: vulcan-10g-server-prod Archetype: vmhost", command)
+        self.matchoutput(out, "Allowed Personality: generic Archetype: vmhost", command)
+        self.matchoutput(out, "Allowed Personality: allowedtest Archetype: vmhost", command)
 
-        command = ["show_cluster", "--cluster=utmc1"]
+        command = ["show_cluster", "--cluster=utecl1", "--format", "proto"]
+        cluster = self.protobuftest(command, expect=1)[0]
+        self.assertEqual(len(cluster.allowed_personalities), 3)
+        self.assertEqual(set(pers.name for pers in
+                             cluster.allowed_personalities),
+                         set(["allowedtest", "generic", "vulcan-10g-server-prod"]))
+
+        command = ["show_metacluster", "--metacluster=utmc1"]
         out = self.commandtest(command)
-        self.matchoutput(out, "Allowed Personality: Personality metacluster/metacluster", command)
+        self.matchoutput(out,
+                         "Allowed Personality: vulcan-10g-server-prod Archetype: esx_cluster",
+                         command)
 
+        command = ["show_metacluster", "--metacluster=utmc1", "--format", "proto"]
+        mc = self.protobuftest(command, expect=1)[0]
+        self.assertEqual(len(mc.allowed_personalities), 1)
+        self.assertEqual(mc.allowed_personalities[0].name,
+                         "vulcan-10g-server-prod")
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAddAllowedPersonality)

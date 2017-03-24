@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,14 +17,11 @@
 # limitations under the License.
 """Module for testing the cluster status commands."""
 
-import os
-import sys
 import unittest
 
 if __name__ == "__main__":
-    BINDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-    SRCDIR = os.path.join(BINDIR, "..", "..")
-    sys.path.append(os.path.join(SRCDIR, "lib", "python2.6"))
+    import utils
+    utils.import_depends()
 
 from brokertest import TestBrokerCommand
 
@@ -47,13 +44,12 @@ class TestChangeClusterStatus(TestBrokerCommand):
     def test_110_PromoteCluster(self):
         command = ["change_status", "--cluster", "utecl1",
                    "--buildstatus", "ready"]
-        out, err = self.successtest(command)
-        self.assertEmptyOut(out, command)
+        err = self.statustest(command)
         # FIXME: the number of changed templates is not deterministic, we have
         # to figure out why. Until then make the check less strict to allow
         # unrelated changes to be tested.
-        #self.matchoutput(err, "5/5 object template", command)
-        self.searchoutput(err, r'[1-5]/[1-5] object template', command)
+        # self.matchoutput(err, "5/5 template", command)
+        self.searchoutput(err, r'[1-5]/[1-5] template', command)
 
         # the almostready host should now be promoted
         command = "show host --hostname evh1.aqd-unittest.ms.com"
@@ -90,13 +86,12 @@ class TestChangeClusterStatus(TestBrokerCommand):
     def test_130_DemoteCluster(self):
         command = ["change_status", "--cluster", "utecl1",
                    "--buildstatus", "rebuild"]
-        out, err = self.successtest(command)
-        self.assertEmptyOut(out, command)
+        err = self.statustest(command)
         # FIXME: the number of changed templates is not deterministic, we have
         # to figure out why. Until then make the check less strict to allow
         # unrelated changes to be tested.
-        #self.matchoutput(err, "5/5 object template", command)
-        self.searchoutput(err, r'[1-5]/[1-5] object template', command)
+        # self.matchoutput(err, "5/5 template", command)
+        self.searchoutput(err, r'[1-5]/[1-5] template', command)
 
         # the ready host should be demoted
         command = "show host --hostname evh1.aqd-unittest.ms.com"
@@ -114,7 +109,7 @@ class TestChangeClusterStatus(TestBrokerCommand):
                         "--cluster", "utecl1", "--model", "utmedium"])
 
         command = ["change_status", "--cluster", "utecl1", "--buildstatus",
-                  "decommissioned"]
+                   "decommissioned"]
         out = self.badrequesttest(command)
         self.matchoutput(out,
                          "Cannot change state to decommissioned, as "
@@ -122,7 +117,7 @@ class TestChangeClusterStatus(TestBrokerCommand):
                          command)
 
         command = ["change_status", "--hostname", "evh1.aqd-unittest.ms.com",
-                  "--buildstatus", "decommissioned"]
+                   "--buildstatus", "decommissioned"]
         out = self.badrequesttest(command)
         self.matchoutput(out,
                          "Cannot change state to decommissioned, as "
@@ -144,21 +139,21 @@ class TestChangeClusterStatus(TestBrokerCommand):
 
         # can't add vm
         command = ["add", "machine", "--machine", "evm1",
-                        "--cluster", "utecl1", "--model", "utmedium"]
+                   "--cluster", "utecl1", "--model", "utmedium"]
         out = self.badrequesttest(command)
         self.matchoutput(out,
-                         "Cannot add virtual machines to decommissioned clusters.",
+                         "Cannot add virtual machines to decommissioned holders.",
                          command)
 
         # can't add host.
         command = ["cluster", "--hostname", "evh6.aqd-unittest.ms.com",
-                        "--cluster", "utecl1"]
+                   "--cluster", "utecl1"]
         out = self.badrequesttest(command)
         self.matchoutput(out,
                          "Cannot add hosts to decommissioned clusters.",
                          command)
 
-        #revert status changes
+        # revert status changes
         self.successtest(["change_status", "--cluster", "utecl1",
                           "--buildstatus", "rebuild"])
 
@@ -167,6 +162,15 @@ class TestChangeClusterStatus(TestBrokerCommand):
                               "--hostname", "evh%d.aqd-unittest.ms.com" % i,
                               "--buildstatus", "rebuild"])
 
+    def test_150_change_status_metacluster(self):
+        command = ["change_status", "--metacluster", "utmc1",
+                   "--buildstatus", "ready"]
+        self.statustest(command)
+
+    def test_155_verify_metacluster(self):
+        command = ["show_metacluster", "--metacluster", "utmc1"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Build Status: ready", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestChangeClusterStatus)

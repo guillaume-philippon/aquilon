@@ -3,21 +3,21 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="del_static_route"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_del_static_route"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>del_static_route</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_del_static_route</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>del static route</refname>
-        <refpurpose>
+	<refname>aq del static route</refname>
+	<refpurpose>
 	    Deletes a static route
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
@@ -27,19 +27,28 @@
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
 	    <arg choice="plain"><option>--gateway <replaceable>GW</replaceable></option></arg>
 	    <arg choice="plain"><option>--ip <replaceable>IP</replaceable></option></arg>
 	    <group choice="req">
-	        <arg choice="plain"><option>--netmask <replaceable>MASK</replaceable></option></arg>
-	        <arg choice="plain"><option>--prefixlen <replaceable>PREFIX</replaceable></option></arg>
+		<arg choice="plain"><option>--netmask <replaceable>MASK</replaceable></option></arg>
+		<arg choice="plain"><option>--prefixlen <replaceable>PREFIX</replaceable></option></arg>
 	    </group>
-	    <arg choice="opt"><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
+	    <group>
+		<arg choice="plain"><option>--personality <replaceable>PERS</replaceable></option></arg>
+		<arg><option>--personality_stage <replaceable>STAGE</replaceable></option></arg>
+		<arg><option>--archetype <replaceable>ARCH</replaceable></option></arg>
+	    </group>
+	    <arg><option>--network_environment <replaceable>NETENV</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq del static route</command> command deletes a static route.
 	</para>
@@ -50,11 +59,11 @@
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--gateway <replaceable>GW</replaceable></option>
 		</term>
 		<listitem>
@@ -64,7 +73,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--ip <replaceable>IP</replaceable></option>
 		</term>
 		<listitem>
@@ -76,7 +85,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--netmask <replaceable>MASK</replaceable></option>,
 		    <option>--prefixlen <replaceable>PREFIX</replaceable></option>
 		</term>
@@ -89,7 +98,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--network_environment <replaceable>NETENV</replaceable></option>
 		</term>
 		<listitem>
@@ -100,7 +109,41 @@
 		    </para>
 		</listitem>
 	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--personality <replaceable>PERS</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Name of a personality. If specified only static routes will the supplied
+			personality will be deleted.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--personality_stage <replaceable>STAGE</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Select the stage of the personality to use. Defaults to <literal>next</literal>.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--archetype <replaceable>ARCH</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Name of an archetype. If <option>--personality</option> is used, then
+			this option is used as a qualifier to select the right archetype if
+			the name of the personality is not unique.
+		    </para>
+		</listitem>
+	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -117,9 +160,9 @@ aq del static route --gateway 192.168.0.1 --ip 192.168.1.0 --prefixlen 24
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>add_static_route</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>show_network</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>show_host</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	    <citerefentry><refentrytitle>aq_add_static_route</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_network</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_host</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

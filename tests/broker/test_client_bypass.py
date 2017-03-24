@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@
 # limitations under the License.
 """Module for tests that bypass the aq client."""
 
-import os
-import sys
 import unittest
-import urllib
 
 if __name__ == "__main__":
-    BINDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-    SRCDIR = os.path.join(BINDIR, "..", "..")
-    sys.path.append(os.path.join(SRCDIR, "lib", "python2.6"))
+    import utils
+    utils.import_depends()
+
+from six.moves.urllib_parse import urlencode, quote  # pylint: disable=F0401
+from six.moves.urllib_request import urlopen  # pylint: disable=F0401
+from six.moves.urllib_error import HTTPError  # pylint: disable=F0401
 
 from brokertest import TestBrokerCommand
 
@@ -39,18 +39,23 @@ class TestClientBypass(TestBrokerCommand):
         openport = self.config.get("broker", "openport")
         server = self.config.get("broker", "servername")
         url = "http://" + server + ":" + openport + path
-        if post:
-            data = urllib.urlencode(kwargs)
-            stream = urllib.urlopen(url, data)
-        else:
-            arglist = []
-            for key, value in kwargs.items():
-                arglist.append("%s=%s" % (urllib.quote(key), urllib.quote(value)))
-            if arglist:
-                url += "?" + "&".join(arglist)
-            stream = urllib.urlopen(url)
-        status = stream.getcode()
-        output = "\n".join(stream.readlines())
+        try:
+            if post:
+                data = urlencode(kwargs)
+                stream = urlopen(url, data)
+            else:
+                arglist = []
+                for key, value in kwargs.items():
+                    arglist.append("%s=%s" % (quote(key), quote(value)))
+                if arglist:
+                    url += "?" + "&".join(arglist)
+                stream = urlopen(url)
+            status = stream.getcode()
+            output = stream.read()
+        except HTTPError as err:
+            status = err.code
+            output = err.read()
+
         self.assertEqual(status, expect_status,
                          "HTTP status code for %s (%s) was %d instead of %d"
                          "\nOutput was:\n@@@\n%s\n@@@\n"
@@ -60,13 +65,7 @@ class TestClientBypass(TestBrokerCommand):
     def badrequesttest(self, path, **kwargs):
         return self.urltest(path, 400, **kwargs)
 
-    def testintarg1(self):
-        # search cpu --speed not-a-number
-        path = "/find/hardware/cpu"
-        out = self.badrequesttest(path, speed="not-a-number")
-        self.matchoutput(out, "Expected an integer for --speed.", path)
-
-    def testintarg2(self):
+    def testintarg(self):
         # search machine --cpucount not-a-number
         path = "/find/machine"
         out = self.badrequesttest(path, cpucount="not-a-number")
@@ -77,21 +76,6 @@ class TestClientBypass(TestBrokerCommand):
         path = "/host"
         out = self.badrequesttest(path, all="not-a-bool")
         self.matchoutput(out, "Expected a boolean value for --all.", path)
-
-    # Can't test this here because the permission check happens first,
-    # and update_personality will not work unauthenticated.
-    # Thus there is no coverage on this block of broker code, as the
-    # client will catch the error first.
-    # If we ever have a search command that takes a float, that should
-    # be used here.
-#   def testfloatarg(self):
-#       # update personality
-#       path = "/personality/vmhost/vulcan-1g-desktop-prod"
-#       out = self.badrequesttest(path, post=True, archetype="vmhost",
-#                                 personality="vulcan-1g-desktop-prod",
-#                                 vmhost_overcommit_memory="not-a-float")
-#       self.matchoutput(out, "Expected an floating point", path)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestClientBypass)

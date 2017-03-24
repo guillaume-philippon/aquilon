@@ -3,21 +3,21 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_feature"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_feature"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_feature</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_feature</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add feature</refname>
-        <refpurpose>
+	<refname>aq add feature</refname>
+	<refpurpose>
 	    Add a feature
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
@@ -27,16 +27,27 @@
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
 	    <arg choice="plain"><option>--feature <replaceable>NAME</replaceable></option></arg>
 	    <arg choice="plain"><option>--type <replaceable>TYPE</replaceable></option></arg>
-	    <arg choice="opt"><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
-	    <arg choice="opt"><option>--post_personality</option></arg>
+	    <group choice="req">
+		<arg choice="plain"><option>--grn <replaceable>GRN</replaceable></option></arg>
+		<arg choice="plain"><option>--eon_id <replaceable>EON_ID</replaceable></option></arg>
+	    </group>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <arg><option>--pre_personality</option></arg>
+	    <arg><option>--visibility <replaceable>VISIBILITY</replaceable></option></arg>
+	    <arg><option>--activation <replaceable>ACTIVATION</replaceable></option></arg>
+	    <arg><option>--deactivation <replaceable>DEACTIVATION</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add feature</command> command creates a new feature.
 	</para>
@@ -56,9 +67,9 @@
 	    Host features are the most generic, and usually control software that gets installed on the host.
 	    If a host template is active, then
 	    <filename>features/<replaceable>NAME</replaceable>/config.tpl</filename>
-	    will be included either before or after the personality template. If the <option>--post_personality</option>
-	    option is specified, then the feature template will be included after the personality template; if
-	    this option is missing, then the feature template will be included before the personality template.
+	    will be included either before or after the personality template. If the <option>--pre_personality</option>
+	    option is specified, then the feature template will be included before the personality template; if
+	    this option is missing, then the feature template will be included after the personality template.
 	</para>
 	<para>
 	    The position where the feature template gets included depends on how the feature is implemented.
@@ -88,11 +99,11 @@
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--feature <replaceable>NAME</replaceable></option>
 		</term>
 		<listitem>
@@ -107,7 +118,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--type <replaceable>TYPE</replaceable></option>
 		</term>
 		<listitem>
@@ -118,18 +129,18 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
-		    <option>--post_personality</option>
+		<term>
+		    <option>--pre_personality</option>
 		</term>
 		<listitem>
 		    <para>
-			Indicate that the feature template should be included after the personality
+			Indicate that the feature template should be included before the personality
 			template. This option may be specified for host features only.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--comments <replaceable>COMMENTS</replaceable></option>
 		</term>
 		<listitem>
@@ -138,17 +149,178 @@
 		    </para>
 		</listitem>
 	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--grn <replaceable>GRN</replaceable></option>,
+		    <option>--eon_id <replaceable>EON_ID</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			The owner GRN of the feature to be added. Scripts should use the
+			numeric <replaceable>EON_ID</replaceable>, the textual <replaceable>GRN</replaceable> is
+			more suitable for humans.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--visibility <replaceable>VISIBILITY</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Atrribute for controlling who is allowed to use the feature. Possible values of
+			<replaceable>VISIBILITY</replaceable> are:
+		    </para>
+		    <variablelist>
+			<varlistentry>
+			    <term><literal>public</literal></term>
+			    <listitem>
+				<para>
+				    No restrictions.
+				</para>
+			    </listitem>
+			</varlistentry>
+			<varlistentry>
+			    <term><literal>owner_only</literal></term>
+			    <listitem>
+				<para>
+				    The feature is available for self-service, but only people
+				    having appropriate roles on the feature's GRN can use it.
+				</para>
+			    </listitem>
+			</varlistentry>
+			<varlistentry>
+			    <term><literal>owner_approved</literal></term>
+			    <listitem>
+				<para>
+				    The feature is available for self-servie, but using it requires
+				    explicit approval from the feature's owner.
+				</para>
+			    </listitem>
+			</varlistentry>
+			<varlistentry>
+			    <term><literal>restricted</literal></term>
+			    <listitem>
+				<para>
+				    The feature is not available for self-service.
+				</para>
+			    </listitem>
+			</varlistentry>
+			<varlistentry>
+			    <term><literal>legacy</literal></term>
+			    <listitem>
+				<para>
+				    The feature should not be added to new personalities, but self-service tools
+				    should allow it to be removed.
+				</para>
+			    </listitem>
+			</varlistentry>
+		    </variablelist>
+		    <para>
+			The default value is <literal>restricted</literal>.
+		    </para>
+		    <para>
+			Currently, the broker does not enforce the above rules itself, but relies on
+			external tools and procedures doing so.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--activation <replaceable>ACTIVATION</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Attribute for determining what action needs to be done on the host for this feature to be activated after bound to the personality.
+			Possible values of
+			<replaceable>ACTIVATION</replaceable> are:
+		    </para>
+		    <variablelist>
+			<varlistentry>
+			    <term><literal>dispatch</literal></term>
+			    <listitem>
+				<para>
+				    The feature gets automatically activated after a host compile.
+				</para>
+			    </listitem>
+			</varlistentry>
+			<varlistentry>
+			    <term><literal>reboot</literal></term>
+			    <listitem>
+				<para>
+				    The host needs to be rebooted for the feature to be activated.
+				</para>
+			    </listitem>
+			</varlistentry>
+			<varlistentry>
+			    <term><literal>rebuild</literal></term>
+			    <listitem>
+				<para>
+				    The feature is activated only after the host is rebuilt.
+				</para>
+			    </listitem>
+			</varlistentry>
+		    </variablelist>
+		    <para>
+			Currently, the broker does not enforce the above rules itself, but relies on
+			external tools and procedures doing so.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>
+		    <option>--deactivation <replaceable>DEACTIVATION</replaceable></option>
+		</term>
+		<listitem>
+		    <para>
+			Atrribute for determining what action needs to be done on the host for this feature to be deactivaed after removing from the personality.
+			Possible values of
+			<replaceable>DEACTIVATION</replaceable> are:
+		    </para>
+		    <variablelist>
+			<varlistentry>
+			    <term><literal>dispatch</literal></term>
+			    <listitem>
+				<para>
+				    The feature gets automatically de-activated after a host compile.
+				</para>
+			    </listitem>
+			</varlistentry>
+			<varlistentry>
+			    <term><literal>reboot</literal></term>
+			    <listitem>
+				<para>
+				    The host needs to be rebooted for the feature to be de-activated.
+				</para>
+			    </listitem>
+			</varlistentry>
+			<varlistentry>
+			    <term><literal>rebuild</literal></term>
+			    <listitem>
+				<para>
+				    The feature is de-activated only after the host is rebuilt.
+				</para>
+			    </listitem>
+			</varlistentry>
+		    </variablelist>
+		    <para>
+			Currently, the broker does not enforce the above rules itself, but relies on
+			external tools and procedures doing so.
+		    </para>
+		</listitem>
+	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>bind_feature</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>unbind_feature</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>del_feature</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-	    <citerefentry><refentrytitle>show_feature</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+	    <citerefentry><refentrytitle>aq_bind_feature</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_unbind_feature</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_del_feature</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_feature</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

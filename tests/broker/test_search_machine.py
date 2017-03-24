@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,6 +47,12 @@ class TestSearchMachine(TestBrokerCommand):
         self.matchoutput(out, "evm", command)
         self.matchoutput(out, "ut", command)
 
+    def testdesk(self):
+        command = "search machine --desk utdesk1"
+        out = self.commandtest(command.split(" "))
+        self.matchoutput(out, "utnorack", command)
+        self.matchclean(out, "evm", command)
+
     def testlocationexact(self):
         # Should only show virtual machines, since all the physical machines
         # are at the rack level and this search is exact.
@@ -64,7 +70,6 @@ class TestSearchMachine(TestBrokerCommand):
         self.matchclean(out, "ut", command)
 
     def testhost(self):
-        hostname = self.config.get("unittest", "hostname")
         command = "search machine --hostname ut3c5n10.aqd-unittest.ms.com"
         out = self.notfoundtest(command.split(" "))
         self.matchoutput(out, "DnsRecord ut3c5n10.aqd-unittest.ms.com, "
@@ -79,9 +84,9 @@ class TestSearchMachine(TestBrokerCommand):
     def testhost_not_found(self):
         hostname = 'not_there.msad.ms.com'
         command = "search machine --hostname %s" % hostname
-        out = self.notfoundtest(command.split(" "))
+        self.notfoundtest(command.split(" "))
         command = "search machine --hostname %s --fullinfo" % hostname
-        out = self.notfoundtest(command.split(" "))
+        self.notfoundtest(command.split(" "))
 
     def testmemory(self):
         command = "search machine --memory 8192"
@@ -94,31 +99,23 @@ class TestSearchMachine(TestBrokerCommand):
     def testfullinfo(self):
         command = "search machine --machine evm1 --fullinfo"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Virtual_machine: evm1", command)
+        self.matchoutput(out, "Machine: evm1", command)
+        self.matchoutput(out, "Model Type: virtual_machine", command)
         self.matchoutput(out, "Hosted by: ESX Cluster utecl1", command)
         self.matchoutput(out, "Vendor: utvendor Model: utmedium", command)
 
     def testexactcpu(self):
-        command = ["search_machine", "--cpuname=xeon_5150", "--cpuspeed=2660",
-                   "--cpuvendor=intel"]
+        command = ["search_machine", "--cpuname=l5520", "--cpuvendor=intel"]
         out = self.commandtest(command)
         self.matchoutput(out, "evm1", command)
         self.matchclean(out, "ut9s03p1", command)
         self.matchclean(out, "ut3c5n10", command)
 
     def testexactcpufailvendor(self):
-        command = ["search_machine", "--cpuname=xeon_5150", "--cpuspeed=2660",
+        command = ["search_machine", "--cpuname=l5520",
                    "--cpuvendor=vendor-does-not-exist"]
         out = self.notfoundtest(command)
         self.matchoutput(out, "Vendor vendor-does-not-exist not found.",
-                         command)
-
-    def testfailexactcpu(self):
-        command = ["search_machine", "--cpuname=xeon_5150", "--cpuspeed=0",
-                   "--cpuvendor=intel"]
-        out = self.notfoundtest(command)
-        self.matchoutput(out,
-                         "Cpu xeon_5150, vendor intel, speed 0 not found.",
                          command)
 
     def testpartialcpufailvendor(self):
@@ -127,28 +124,143 @@ class TestSearchMachine(TestBrokerCommand):
         self.matchoutput(out, "Vendor vendor-does-not-exist not found.",
                          command)
 
-    def testpartialcpu(self):
-        command = ["search_machine", "--cpuspeed=2660", "--cpuvendor=intel"]
-        out = self.commandtest(command)
-        self.matchoutput(out, "evm1", command)
-        self.matchoutput(out, "np3c5n5", command)
-        self.matchoutput(out, "ut3c5n10", command)
-        self.matchclean(out, "ut9s03p1", command)
-
     def testcpuname(self):
-        command = ["search_machine", "--cpuname=xeon_5150"]
+        command = ["search_machine", "--cpuname=l5520"]
         out = self.commandtest(command)
         self.matchoutput(out, "evm1", command)
         self.matchclean(out, "ut9s03p1", command)
         self.matchclean(out, "ut3c5n10", command)
 
-    def testshare(self):
+    def testsharedeprecated(self):
         command = ["search_machine", "--share=test_share_1"]
         out = self.commandtest(command)
         self.matchoutput(out, "evm1", command)
         self.matchclean(out, "evm2", command)
         self.matchclean(out, "evm10", command)
 
+    def testclustershare(self):
+        # Share bound to cluster
+        command = ["search_machine", "--disk_share=test_share_1"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "evm1", command)
+        self.matchclean(out, "evm2", command)
+        self.matchclean(out, "evm10", command)
+
+    def testmetaclustershare(self):
+        # Share bound to metacluster
+        command = ["search_machine", "--disk_share=test_v2_share"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "evm40", command)
+        self.matchclean(out, "evm1", command)
+        self.matchclean(out, "evm2", command)
+
+    def testsharebad(self):
+        command = ["search_machine", "--share", "no-such-share"]
+        out = self.notfoundtest(command)
+        self.matchoutput(out, "No shares found with name no-such-share.",
+                         command)
+
+    def testdiskname(self):
+        command = ["search_machine", "--disk_name", "c0d0"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ut3c1n3", command)
+        self.matchclean(out, "ut3c5n10", command)
+        self.matchclean(out, "evm", command)
+
+    def testdiskctrl(self):
+        command = ["search_machine", "--disk_name", "c0d0",
+                   "--disk_controller", "scsi"]
+        self.noouttest(command)
+
+    def testdiskwwn(self):
+        # Add some separators and uppercase letters to the mix
+        command = ["search_machine", "--disk_wwn",
+                   "60:05:08:b112233445566778899aabbCCD"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ut3c1n3", command)
+        self.matchclean(out, "ut3c5n10", command)
+        self.matchclean(out, "evm", command)
+
+    def testdiskaddress(self):
+        command = ["search_machine", "--disk_address", "0:0:1:0"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ut3c5n10", command)
+        self.matchclean(out, "ut3c1n3", command)
+        self.matchclean(out, "evm", command)
+
+    def testip(self):
+        ip = self.net["unknown0"].usable[2]
+        command = ["search_machine", "--ip=%s" % ip]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ut3c1n3", command)
+
+    def testclusterpg(self):
+        command = ["search_machine", "--cluster", "utecl8", "--pg", "user-v710"]
+        out = self.commandtest(command)
+        self.searchoutput(out, r"evm19$", command)
+
+        # These are bound to user-v710, but on different clusters
+        self.matchclean(out, "evm10", command)
+        self.matchclean(out, "evm14", command)
+        self.matchclean(out, "evm23", command)
+
+        # These are on utecl8, but different pg
+        self.matchclean(out, "evm20", command)
+        self.matchclean(out, "evm21", command)
+
+    def testpgwildcard(self):
+        command = ["search_machine", "--pg", "user"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "evm10", command)
+        self.matchoutput(out, "evm14", command)
+        self.matchoutput(out, "evm19", command)
+        self.matchoutput(out, "evm20", command)
+        self.matchoutput(out, "evm21", command)
+        self.matchoutput(out, "evm23", command)
+        self.matchclean(out, "ut11s01", command)
+        self.matchclean(out, "ut12s02", command)
+
+    def testphyspg(self):
+        command = ["search_machine", "--pg", "storage-v701"]
+        out = self.commandtest(command)
+        for port in range(1, 13):
+            for template in ['ut11s01p%d', 'ut12s02p%d']:
+                self.matchoutput(out, template % port, command)
+        self.matchclean(out, "evm", command)
+
+    def testnetworkip(self):
+        command = ["search_machine", "--networkip", self.net["ut01ga2s01_v710"].ip]
+        out = self.commandtest(command)
+        self.searchoutput(out, r"evm10$", command)
+        self.searchoutput(out, r"evm14$", command)
+        self.matchclean(out, "evm11", command)
+        self.matchclean(out, "evm15", command)
+        self.matchclean(out, "evm17", command)
+
+    def testmetacluster(self):
+        command = "search machine --metacluster utmc8"
+        out = self.commandtest(command.split(" "))
+        self.matchoutput(out, "evm40", command)
+        self.matchoutput(out, "evm41", command)
+        self.matchoutput(out, "evm42", command)
+        self.matchclean(out, "ut14s1p0", command)
+
+    def testused(self):
+        command = ["search_machine", "--used"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ut9s03p1", command)
+        self.matchoutput(out, "ut3c5n10", command)
+        self.matchclean(out, "ut3c1n9", command)
+        self.matchclean(out, "utnorack", command)
+
+    def testunused(self):
+        command = ["search_machine", "--unused"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "evm2", command)
+        self.matchoutput(out, "ut3c1n9", command)
+        self.matchoutput(out, "utnorack", command)
+        self.matchclean(out, "ut9s03p1", command)
+        self.matchclean(out, "ut3c5n10", command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSearchMachine)

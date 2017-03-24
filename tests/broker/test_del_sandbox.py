@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2010,2011,2013  Contributor
+# Copyright (C) 2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 # limitations under the License.
 """Module for testing the del sandbox command."""
 
-
 import os
+from shutil import rmtree
+
 import unittest
 
 if __name__ == "__main__":
@@ -30,81 +31,70 @@ from brokertest import TestBrokerCommand
 
 class TestDelSandbox(TestBrokerCommand):
 
-    def testdelutsandbox(self):
+    def test_100_del_utsandbox(self):
         command = "del sandbox --sandbox utsandbox"
-        (out, err) = self.successtest(command.split(" "))
-        self.assertEmptyOut(out, command)
+        err = self.statustest(command.split(" "))
         sandboxdir = os.path.join(self.sandboxdir, "utsandbox")
         self.matchoutput(err, "please `rm -rf %s`" % sandboxdir, command)
+        rmtree(sandboxdir, ignore_errors=True)
 
-    def testverifydelutsandbox(self):
+    def test_101_verify_utsandbox(self):
         command = "show sandbox --sandbox utsandbox"
         self.notfoundtest(command.split(" "))
 
-    def testdelchangetest1sandbox(self):
+    def test_120_del_changetest1(self):
         command = "del sandbox --sandbox changetest1"
-        (out, err) = self.successtest(command.split(" "))
-        self.assertEmptyOut(out, command)
+        err = self.statustest(command.split(" "))
         sandboxdir = os.path.join(self.sandboxdir, "changetest1")
         self.matchoutput(err, "please `rm -rf %s`" % sandboxdir, command)
+        rmtree(sandboxdir, ignore_errors=True)
 
-    def testverifydelchangetest1sandbox(self):
-        command = "show sandbox --sandbox changetest1"
-        self.notfoundtest(command.split(" "))
-
-    def testdelchangetest2sandbox(self):
-        command = "del sandbox --sandbox changetest2"
-        (out, err) = self.successtest(command.split(" "))
-        self.assertEmptyOut(out, command)
-        sandboxdir = os.path.join(self.sandboxdir, "changetest2")
+    def test_121_del_umasktest(self):
+        command = "del sandbox --sandbox umasktest"
+        err = self.statustest(command.split(" "))
+        sandboxdir = os.path.join(self.sandboxdir, "umasktest")
         self.matchoutput(err, "please `rm -rf %s`" % sandboxdir, command)
+        rmtree(sandboxdir, ignore_errors=True)
 
-    def testdelextrachangetest2(self):
+    def test_130_del_changetest2(self):
         command = "del sandbox --sandbox changetest2"
-        (p, out, err) = self.runcommand(command.split(" "))
-        self.assertEqual(p.returncode, 4,
-                         "Return code for %s was %d instead of %d"
-                         "\nSTDOUT:\n@@@\n'%s'\n@@@"
-                         "\nSTDERR:\n@@@\n'%s'\n@@@" %
-                         (command, p.returncode, 4, out, err))
         sandboxdir = os.path.join(self.sandboxdir, "changetest2")
-        self.matchoutput(err, "please `rm -rf %s`" % sandboxdir, command)
-        self.matchoutput(err,
-                         "No aqdb record for sandbox changetest2 was found",
-                         command)
+        rmtree(sandboxdir, ignore_errors=True)
+        err = self.statustest(command.split(" "))
+        self.matchclean(err, "please `rm -rf %s`" % sandboxdir, command)
 
-    def testverifydelchangetest2sandbox(self):
+    def test_131_del_changetest2_again(self):
+        command = "del sandbox --sandbox changetest2"
+        err = self.notfoundtest(command.split(" "))
+        sandboxdir = os.path.join(self.sandboxdir, "changetest2")
+        self.matchoutput(err, "Sandbox changetest2 not found.", command)
+        rmtree(sandboxdir, ignore_errors=True)
+
+    def test_132_verify_changetest2(self):
         command = "show sandbox --sandbox changetest2"
         self.notfoundtest(command.split(" "))
 
-    def testdelcamelcasetest1sandbox(self):
+    def test_140_del_camelcasetest1(self):
         command = "del sandbox --sandbox CamelCaseTest1"
-        (out, err) = self.successtest(command.split(" "))
-        self.assertEmptyOut(out, command)
+        err = self.statustest(command.split(" "))
         sandboxdir = os.path.join(self.sandboxdir, "camelcasetest1")
         self.matchoutput(err, "please `rm -rf %s`" % sandboxdir, command)
+        rmtree(sandboxdir, ignore_errors=True)
 
-    def testdelcamelcasetest2sandbox(self):
+    def test_145_del_camelcasetest2(self):
         command = "del sandbox --sandbox camelcasetest2"
-        (out, err) = self.successtest(command.split(" "))
-        self.assertEmptyOut(out, command)
+        err = self.statustest(command.split(" "))
         sandboxdir = os.path.join(self.sandboxdir, "camelcasetest2")
         self.matchoutput(err, "please `rm -rf %s`" % sandboxdir, command)
+        rmtree(sandboxdir, ignore_errors=True)
 
-    def testdelnonexisting(self):
+    def test_200_del_nonexisting(self):
         command = "del sandbox --sandbox sandbox-does-not-exist"
-        (p, out, err) = self.runcommand(command.split(" "))
-        self.assertEqual(p.returncode, 4,
-                         "Return code for %s was %d instead of %d"
-                         "\nSTDOUT:\n@@@\n'%s'\n@@@"
-                         "\nSTDERR:\n@@@\n'%s'\n@@@" %
-                         (command, p.returncode, 4, out, err))
+        err = self.notfoundtest(command.split(" "))
         self.matchclean(err, "please `rm -rf", command)
         self.matchoutput(err,
-                         "Not Found: No aqdb record for sandbox "
-                         "sandbox-does-not-exist was found",
+                         "Sandbox sandbox-does-not-exist not found.",
                          command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelSandbox)

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2013  Contributor
+# Copyright (C) 2009,2010,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ class TestBindClientConstraints(TestBrokerCommand):
         m = self.searchoutput(out, r'(\S+)', command)
         host = m.group(1)
         # Sanity check that the host is currently aligned.
-        command = ["search_host", "--host=%s" % host,
+        command = ["search_host", "--hostname=%s" % host,
                    "--service=esx_management_server",
                    "--instance=%s" % instance]
         out = self.commandtest(command)

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2013  Contributor
+# Copyright (C) 2008,2009,2010,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,9 @@
 
 import os
 import signal
-import unittest
 from time import sleep
+
+import unittest
 
 if __name__ == "__main__":
     import utils
@@ -31,6 +32,10 @@ from aquilon.config import Config
 
 class TestBrokerStop(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.config = Config()
+
     def setUp(self):
         pass
 
@@ -38,13 +43,14 @@ class TestBrokerStop(unittest.TestCase):
         pass
 
     def teststop(self):
-        config = Config()
-        pidfile = os.path.join(config.get("broker", "rundir"), "aqd.pid")
-        self.assert_(os.path.exists(pidfile))
-        f = file(pidfile)
-        pid = f.readline()
+        pidfile = os.path.join(self.config.get("broker", "rundir"), "aqd.pid")
+        self.terminate_daemon(pidfile)
+
+    def terminate_daemon(self, pidfile):
+        self.assertTrue(os.path.exists(pidfile), msg=pidfile)
+        with open(pidfile) as f:
+            pid = f.readline()
         self.assertNotEqual(pid, "")
-        f.close()
         pid = int(pid)
         os.kill(pid, signal.SIGTERM)
 
@@ -60,7 +66,11 @@ class TestBrokerStop(unittest.TestCase):
             sleep(1)
 
         # Verify that the broker is down
-        self.failUnlessRaises(OSError, os.kill, pid, 0)
+        self.assertRaises(OSError, os.kill, pid, 0)
+
+    def testeventsstop(self):
+        pidfile = os.path.join(self.config.get('broker', 'rundir'), 'read_events.pid')
+        self.terminate_daemon(pidfile)
 
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2013  Contributor
+# Copyright (C) 2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,108 +28,108 @@ from brokertest import TestBrokerCommand
 
 class TestHub(TestBrokerCommand):
 
-    def testaddhub(self):
+    def test_100_add_hub1_default_org(self):
         command = ["add", "hub", "--hub", "hub1", "--fullname",
-                   "hub1 example", "--comments", "test hub1"]
+                   "hub1 example", "--comments", "Some hub comments"]
         self.noouttest(command)
 
-        command = ["add", "organization", "--organization", "example",
-                   "--fullname", "Example, Inc"]
+    def test_110_add_hubtest_org(self):
+        command = ["add", "organization", "--organization", "hubtest",
+                   "--fullname", "Hub Test, Inc"]
         self.noouttest(command)
 
+    def test_115_add_hub2(self):
         command = ["add", "hub", "--hub", "hub2", "--fullname", "hub2 example",
-                   "--organization", "example", "--comments", "test hub2"]
+                   "--organization", "hubtest", "--comments", "Some other hub comments"]
         self.noouttest(command)
 
-    def testaddhubshow(self):
+    def test_120_add_hk(self):
+        self.noouttest(["add_hub", "--hub", "hk", "--organization", "ms",
+                        "--fullname", "Non-Japan-Asia"])
+
+    def test_120_add_ln(self):
+        self.noouttest(["add_hub", "--hub", "ln", "--organization", "ms",
+                        "--fullname", "Europa"])
+
+    def test_120_add_ny(self):
+        self.noouttest(["add_hub", "--hub", "ny", "--organization", "ms",
+                        "--fullname", "Americas"])
+
+    def test_130_verify_hub1(self):
         command = "show hub --hub hub1"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Hub: hub1", command)
         self.matchoutput(out, "  Fullname: hub1 example", command)
-        self.matchoutput(out, "  Comments: test hub1", command)
+        self.matchoutput(out, "  Comments: Some hub comments", command)
         self.matchoutput(out, "  Location Parents: [Organization ms]", command)
 
+    def test_130_verify_hub2(self):
         command = "show hub --hub hub2"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Hub: hub2", command)
         self.matchoutput(out, "  Fullname: hub2 example", command)
-        self.matchoutput(out, "  Comments: test hub2", command)
-        self.matchoutput(out, "  Location Parents: [Organization example]",
+        self.matchoutput(out, "  Comments: Some other hub comments", command)
+        self.matchoutput(out, "  Location Parents: [Organization hubtest]",
                          command)
 
+    def test_130_show_all(self):
         command = "show hub --all"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Hub: hub1", command)
         self.matchoutput(out, "Hub: hub2", command)
 
-    def testverifydelhub(self):
+    def test_200_add_hub1_net(self):
+        self.net.allocate_network(self, "hub1_net", 24, "unknown", "hub", "hub1",
+                                  comments="Made-up network")
+
+    def test_201_del_hub1_fail(self):
+        command = "del hub --hub hub1"
+        err = self.badrequesttest(command.split(" "))
+        self.matchoutput(err,
+                         "Bad Request: Could not delete hub hub1, networks "
+                         "were found using this location.",
+                         command)
+
+    def test_202_cleanup_hub1_net(self):
+        self.net.dispose_network(self, "hub1_net")
+
+    def test_210_del_hub1(self):
+        command = "del hub --hub hub1"
+        self.noouttest(command.split(" "))
+
+    def test_220_del_hub1_again(self):
+        command = "del hub --hub hub1"
+        out = self.notfoundtest(command.split(" "))
+        self.matchoutput(out, "Hub hub1 not found.", command)
+
+    def test_230_del_hub2(self):
+        command = "del hub --hub hub2"
+        self.noouttest(command.split(" "))
+
+    def test_240_del_hubtest_org(self):
+        command = "del organization --organization hubtest"
+        self.noouttest(command.split(" "))
+
+    def test_250_add_hub_badname(self):
+        command = ["add_hub", "--hub", "foo bar"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out, "'foo bar' is not a valid value for Hub", command)
+
+    def test_300_verify_hub1(self):
         command = "show hub --hub hub1"
         out = self.notfoundtest(command.split(" "))
         self.matchoutput(out, "Hub hub1 not found.", command)
 
+    def test_300_verify_hub2(self):
         command = "show hub --hub hub2"
         out = self.notfoundtest(command.split(" "))
         self.matchoutput(out, "Hub hub2 not found.", command)
 
+    def test_300_verify_all(self):
         command = "show hub --all"
         out = self.commandtest(command.split(" "))
         self.matchclean(out, "Hub: hub1", command)
         self.matchclean(out, "Hub: hub2", command)
-
-    def testdelhub(self):
-        test_hub = "hub1"
-
-        # add network to hub
-        self.noouttest(["add_network", "--ip", "192.176.6.0",
-                        "--network", "test_warn_network",
-                        "--netmask", "255.255.255.0",
-                        "--hub", test_hub,
-                        "--type", "unknown",
-                        "--comments", "Made-up network"])
-
-        # try delete hub
-        command = "del hub --hub %s" % test_hub
-        err = self.badrequesttest(command.split(" "))
-        self.matchoutput(err,
-                         "Bad Request: Could not delete hub %s, networks "
-                         "were found using this location." % test_hub,
-                         command)
-
-        # delete network
-        self.noouttest(["del_network", "--ip", "192.176.6.0"])
-
-    def testdelhub01(self):
-        command = "del hub --hub hub1"
-        self.noouttest(command.split(" "))
-
-        ## delete hub1 again
-        command = "del hub --hub hub1"
-        out = self.notfoundtest(command.split(" "))
-        self.matchoutput(out, "Hub hub1 not found.", command)
-
-    def testdelhub02(self):
-        command = "del hub --hub hub2"
-        self.noouttest(command.split(" "))
-
-        ## delete hub2 again
-        command = "del hub --hub hub2"
-        out = self.notfoundtest(command.split(" "))
-        self.matchoutput(out, "Hub hub2 not found.", command)
-
-        command = "del organization --organization example"
-        self.noouttest(command.split(" "))
-
-    def testaddhk(self):
-        self.noouttest(["add_hub", "--hub", "hk", "--organization", "ms",
-                        "--fullname", "Non-Japan-Asia"])
-
-    def testaddln(self):
-        self.noouttest(["add_hub", "--hub", "ln", "--organization", "ms",
-                        "--fullname", "Europa"])
-
-    def testaddny(self):
-        self.noouttest(["add_hub", "--hub", "ny", "--organization", "ms",
-                        "--fullname", "Americas"])
 
 
 if __name__ == '__main__':

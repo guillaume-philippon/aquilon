@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,9 +24,10 @@ if __name__ == '__main__':
     utils.import_depends()
 
 from brokertest import TestBrokerCommand
+from eventstest import EventsTestMixin
 
 
-class TestDelAlias(TestBrokerCommand):
+class TestDelAlias(EventsTestMixin, TestBrokerCommand):
     def test_100_del_alias2host(self):
         command = ["del", "alias", "--fqdn", "alias2host.aqd-unittest.ms.com"]
         out = self.badrequesttest(command)
@@ -54,14 +55,35 @@ class TestDelAlias(TestBrokerCommand):
         self.noouttest(command)
 
     def test_210_del_alias2host(self):
+        self.event_del_dns('alias2host.aqd-unittest.ms.com')
         command = ["del", "alias", "--fqdn", "alias2host.aqd-unittest.ms.com"]
         self.noouttest(command)
+        self.events_verify()
 
     def test_220_del_mscom_alias(self):
+        self.event_del_dns('alias.ms.com')
         command = ["del", "alias", "--fqdn", "alias.ms.com"]
         self.dsdb_expect("delete_host_alias -alias_name alias.ms.com")
         self.noouttest(command)
         self.dsdb_verify()
+        self.events_verify()
+
+    def test_230_del_alias2diff_environment(self):
+        command = ["del", "alias", "--fqdn", "alias2alias.aqd-unittest-ut-env.ms.com",
+                   "--dns_environment", "ut-env"]
+        self.noouttest(command)
+
+    def test_235_del_alias2diff_environment(self):
+        self.event_del_dns('alias2host.aqd-unittest-ut-env.ms.com', dns_enviornment='ut-env')
+        command = ["del", "alias", "--fqdn", "alias2host.aqd-unittest-ut-env.ms.com",
+                   "--dns_environment", "ut-env"]
+        self.noouttest(command)
+        self.events_verify()
+
+    def test_238_del_alias2diff_environment(self):
+        command = ["del", "alias", "--fqdn", "alias13.aqd-unittest.ms.com",
+                   "--dns_environment", "ut-env"]
+        self.noouttest(command)
 
     def test_300_del_restrict1(self):
         command = ["del", "alias", "--fqdn", "restrict1.aqd-unittest.ms.com"]
@@ -90,6 +112,27 @@ class TestDelAlias(TestBrokerCommand):
         self.noouttest(command)
         self.dsdb_verify(empty=True)
 
+    def test_330_del_srv_alases(self):
+        self.noouttest(["del_alias", "--fqdn", "srv-alias.one-nyp.ms.com"])
+        self.noouttest(["del_alias", "--fqdn", "srv-alias2.one-nyp.ms.com"])
+
+    def test_400_del_alias_added_with_grn(self):
+        command = ["del", "alias", "--fqdn", "alias2host-grn.aqd-unittest.ms.com"]
+        self.noouttest(command)
+        self.dsdb_verify(empty=True)
+
+    def test_405_verify_alias_with_grn_gone(self):
+        command = ["search", "dns", "--fqdn", "alias2host-grn.aqd-unittest.ms.com"]
+        self.notfoundtest(command)
+
+    def test_410_del_alias_added_with_eon_id(self):
+        command = ["del", "alias", "--fqdn", "alias2host-eon-id.aqd-unittest.ms.com"]
+        self.noouttest(command)
+        self.dsdb_verify(empty=True)
+
+    def test_415_verify_alias_with_eon_id_gone(self):
+        command = ["search", "dns", "--fqdn", "alias2host-eon-id.aqd-unittest.ms.com"]
+        self.notfoundtest(command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelAlias)

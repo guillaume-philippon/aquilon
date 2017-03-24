@@ -46,13 +46,12 @@ Role(name="nobody")
 Role(name="operations")
 Role(name="engineering")
 Role(name="aqd_admin")
-Role(name="telco_eng")
 Role(name="unixops_l2")
 Role(name="winops")
 
-Realm(name="example.realm")
+Realm(name="example.realm", trusted=True)
 UserPrincipal(name="njw", role=Role(name="aqd_admin"), realm=Realm(name="example.realm"))
-Domain(name="prod", owner=UserPrincipal(name="njw"),
+Domain(name="prod",
        compiler="/qwg/templates/external/panc/lib/panc.jar",
        comments="Production templates")
 
@@ -70,7 +69,6 @@ Vendor(name="generic")
 Vendor(name="dell")
 Vendor(name="hp")
 Vendor(name="ibm")
-Vendor(name="verari")
 Vendor(name="virtual")
 Vendor(name="vmware")
 Vendor(name="3com")
@@ -85,76 +83,74 @@ Vendor(name="netapp")
 @ibm Vendor(name="ibm")
 @dell Vendor(name="dell")
 
-Cpu(vendor=@amd, name="opteron_2212", speed=2000)
-Cpu(vendor=@amd, name="opteron_2216", speed=2400)
-Cpu(vendor=@amd, name="opteron_2218", speed=2600)
-Cpu(vendor=@amd, name="opteron_248", speed=2200)
-Cpu(vendor=@amd, name="opteron_250", speed=2400)
-Cpu(vendor=@amd, name="opteron_2600", speed=2600)
-Cpu(vendor=@amd, name="opteron_275", speed=2200)
-Cpu(vendor=@amd, name="opteron_280", speed=2400)
-Cpu(vendor=@intel, name="pentium_2660", speed=2600)
-Cpu(vendor=@intel, name="core_duo", speed=2000)
-Cpu(vendor=@intel, name="l5420", speed=2500)
-Cpu(vendor=@intel, name="woodcrest_2300", speed=2300)
-Cpu(vendor=@intel, name="woodcrest_2660", speed=2660)
-Cpu(vendor=@intel, name="xeon_2500", speed=2500)
-Cpu(vendor=@intel, name="xeon_2660", speed=2660)
-Cpu(vendor=@intel, name="xeon_3000", speed=3000)
-Cpu(vendor=@intel, name="xeon_3100", speed=3100)
-Cpu(vendor=@intel, name="xeon_3400", speed=3400)
-Cpu(vendor=@intel, name="xeon_3600", speed=3600)
-Cpu(vendor=Vendor(name="virtual"), name="virtual_cpu", speed=0)
+Model(vendor=@amd, name="opteron_2212", model_type="cpu")
+Model(vendor=@amd, name="opteron_2216", model_type="cpu")
+Model(vendor=@amd, name="opteron_2218", model_type="cpu")
+Model(vendor=@amd, name="opteron_248", model_type="cpu")
+Model(vendor=@amd, name="opteron_250", model_type="cpu")
+Model(vendor=@amd, name="opteron_2600", model_type="cpu")
+Model(vendor=@amd, name="opteron_275", model_type="cpu")
+Model(vendor=@amd, name="opteron_280", model_type="cpu")
+Model(vendor=@intel, name="pentium_2660", model_type="cpu")
+Model(vendor=@intel, name="core_duo", model_type="cpu")
+Model(vendor=@intel, name="l5420", model_type="cpu")
+Model(vendor=@intel, name="woodcrest_2300", model_type="cpu")
+Model(vendor=@intel, name="woodcrest_2660", model_type="cpu")
+Model(vendor=@intel, name="e5-2640", model_type="cpu")
+Model(vendor=@intel, name="e5-2660", model_type="cpu")
+Model(vendor=@intel, name="e5-2697-v3", model_type="cpu")
+Model(vendor=@intel, name="xeon_3100", model_type="cpu")
+Model(vendor=@intel, name="xeon_3400", model_type="cpu")
+Model(vendor=@intel, name="xeon_3600", model_type="cpu")
+Model(vendor=Vendor(name="virtual"), name="virtual_cpu", model_type="cpu")
 
-Model(vendor=@ibm, name="hs20-884345u", machine_type="blade")
-Model(vendor=@ibm, name="ls20-8850pap", machine_type="blade")
-Model(vendor=@ibm, name="hs21-8853l5u", machine_type="blade")
-Model(vendor=@ibm, name="bce", machine_type="chassis")
-Model(vendor=@ibm, name="bch", machine_type="chassis")
-Model(vendor=@ibm, name="dx320-6388ac1", machine_type="rackmount")
-Model(vendor=@ibm, name="dx320-6388dau", machine_type="rackmount")
-Model(vendor=@hp, name="bl35p", machine_type="blade")
-Model(vendor=@hp, name="bl465c", machine_type="blade")
-Model(vendor=@hp, name="bl480c", machine_type="blade")
-Model(vendor=@hp, name="bl680c", machine_type="blade")
-Model(vendor=@hp, name="bl685c", machine_type="blade")
-Model(vendor=@hp, name="dl145", machine_type="rackmount")
-Model(vendor=@hp, name="dl580", machine_type="rackmount")
-Model(vendor=@hp, name="bl45p", machine_type="blade")
-Model(vendor=@hp, name="bl260c", machine_type="blade")
-Model(vendor=@hp, name="c-class", machine_type="chassis")
-Model(vendor=@hp, name="p-class", machine_type="chassis")
-Model(vendor=Vendor(name="verari"), name="vb1205xm", machine_type="blade")
-Model(vendor=Vendor(name="netapp"), name="v3160", machine_type="rackmount")
-Model(vendor=Vendor(name="netapp"), name="v3170", machine_type="rackmount")
-Model(vendor=@dell, name="poweredge_6850", machine_type="rackmount")
-Model(vendor=@dell, name="poweredge_6650", machine_type="rackmount")
-Model(vendor=@dell, name="poweredge_2650", machine_type="rackmount")
-Model(vendor=@dell, name="poweredge_2850", machine_type="rackmount")
-Model(vendor=@dell, name="optiplex_260", machine_type="workstation")
+Model(vendor=@ibm, name="hs20-884345u", model_type="blade")
+Model(vendor=@ibm, name="ls20-8850pap", model_type="blade")
+Model(vendor=@ibm, name="hs21-8853", model_type="blade")
+Model(vendor=@ibm, name="bce", model_type="chassis")
+Model(vendor=@ibm, name="bch", model_type="chassis")
+Model(vendor=@ibm, name="dx320-6388ac1", model_type="rackmount")
+Model(vendor=@ibm, name="dx320-6388dau", model_type="rackmount")
+Model(vendor=@hp, name="bl35p", model_type="blade")
+Model(vendor=@hp, name="bl465c", model_type="blade")
+Model(vendor=@hp, name="bl480c", model_type="blade")
+Model(vendor=@hp, name="bl680c", model_type="blade")
+Model(vendor=@hp, name="bl685c", model_type="blade")
+Model(vendor=@hp, name="dl145", model_type="rackmount")
+Model(vendor=@hp, name="dl580", model_type="rackmount")
+Model(vendor=@hp, name="bl45p", model_type="blade")
+Model(vendor=@hp, name="bl460cg8", model_type="blade")
+Model(vendor=@hp, name="c-class", model_type="chassis")
+Model(vendor=@hp, name="p-class", model_type="chassis")
+Model(vendor=Vendor(name="netapp"), name="v3160", model_type="rackmount")
+Model(vendor=Vendor(name="netapp"), name="v3170", model_type="rackmount")
+Model(vendor=@dell, name="poweredge_6850", model_type="rackmount")
+Model(vendor=@dell, name="r730", model_type="rackmount")
+Model(vendor=@dell, name="poweredge_2650", model_type="rackmount")
+Model(vendor=@dell, name="poweredge_2850", model_type="rackmount")
+Model(vendor=@dell, name="optiplex_260", model_type="workstation")
 
 MachineSpecs(model=Model(name="hs20-884345u"),
-             cpu=Cpu(name="xeon_2660"), cpu_quantity=2, memory=8192,
-             controller_type="scsi", disk_type="local", disk_capacity=36, nic_count=2)
-MachineSpecs(model=Model(name="hs21-8853l5u"),
-             cpu=Cpu(name="xeon_2660"), cpu_quantity=2, memory=8192,
-             controller_type="scsi", disk_type="local", disk_capacity=68, nic_count=2)
-MachineSpecs(model=Model(name="poweredge_6650"),
-             cpu=Cpu(name="xeon_3000"), cpu_quantity=4, memory=16384,
-             controller_type="scsi", disk_type="local", disk_capacity=36, nic_count=2)
+             cpu_model=Model(name="e5-2660"), cpu_quantity=2, memory=8192,
+             controller_type="scsi", disk_type="local", disk_capacity=36)
+MachineSpecs(model=Model(name="hs21-8853"),
+             cpu_model=Model(name="e5-2660"), cpu_quantity=2, memory=8192,
+             controller_type="scsi", disk_type="local", disk_capacity=68)
+MachineSpecs(model=Model(name="r730"),
+             cpu_model=Model(name="e5-2697-v3"), cpu_quantity=4, memory=16384,
+             controller_type="scsi", disk_type="local", disk_capacity=36)
 MachineSpecs(model=Model(name="bl45p"),
-             cpu=Cpu(name="opteron_2600"), cpu_quantity=2, memory=32768,
-             controller_type="scsi", disk_type="local", disk_capacity=36, nic_count=2)
-MachineSpecs(model=Model(name="bl260c"),
-             cpu=Cpu(name="xeon_2500"), cpu_quantity=2, memory=24576,
-             controller_type="scsi", disk_type="local", disk_capacity=36, nic_count=2)
-MachineSpecs(model=Model(name="vb1205xm"),
-             cpu=Cpu(name="xeon_2500"), cpu_quantity=2, memory=24576,
-             controller_type="scsi", disk_type="local", disk_capacity=36, nic_count=2)
+             cpu_model=Model(name="opteron_2600"), cpu_quantity=2, memory=32768,
+             controller_type="scsi", disk_type="local", disk_capacity=36)
+MachineSpecs(model=Model(name="bl460cg8"),
+             cpu_model=Model(name="e5-2640"), cpu_quantity=2, memory=24576,
+             controller_type="scsi", disk_type="local", disk_capacity=36)
+MachineSpecs(model=Model(name="dl360g9"),
+             cpu_model=Model(name="e5-2640"), cpu_quantity=2, memory=24576,
+             controller_type="scsi", disk_type="local", disk_capacity=36)
 MachineSpecs(model=Model(name="v3160"),
-             cpu=Cpu(name="opteron_2600"), cpu_quantity=2, memory=16384,
-             controller_type="fibrechannel", disk_type="local", disk_capacity=0, nic_count=8)
+             cpu_model=Model(name="opteron_2600"), cpu_quantity=2, memory=16384,
+             controller_type="fibrechannel", disk_type="local", disk_capacity=0)
 MachineSpecs(model=Model(name="v3170"),
-             cpu=Cpu(name="opteron_2600"), cpu_quantity=2, memory=16384,
-             controller_type="fibrechannel", disk_type="local", disk_capacity=0, nic_count=8)
-
+             cpu_model=Model(name="opteron_2600"), cpu_quantity=2, memory=16384,
+             controller_type="fibrechannel", disk_type="local", disk_capacity=0)

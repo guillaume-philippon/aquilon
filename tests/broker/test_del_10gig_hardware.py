@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,34 +29,43 @@ from brokertest import TestBrokerCommand
 class TestDel10GigHardware(TestBrokerCommand):
 
     def test_200_del_hosts(self):
-        for i in range(0, 8) + range(9, 17):
+        nets = (self.net["ut01ga2s01_v710"], self.net["ut01ga2s01_v711"],
+                self.net["ut01ga2s01_v712"], self.net["ut01ga2s01_v713"],
+                self.net["ut01ga2s02_v710"], self.net["ut01ga2s02_v711"],
+                self.net["ut01ga2s02_v712"], self.net["ut01ga2s02_v713"])
+        for i in range(0, 8) + range(9, 16):
             hostname = "ivirt%d.aqd-unittest.ms.com" % (1 + i)
             command = "del_host --hostname %s" % hostname
 
             if i < 9:
-                net_index = (i % 4) + 2
-                usable_index = i / 4
+                net_index = (i % 4)
+                usable_index = i // 4
             else:
-                net_index = ((i - 9) % 4) + 6
-                usable_index = (i - 9) / 4
-            ip = self.net.unknown[net_index].usable[usable_index]
+                net_index = ((i - 9) % 4) + 4
+                usable_index = (i - 9) // 4
+            ip = nets[net_index].usable[usable_index]
             self.dsdb_expect_delete(ip)
 
-            (out, err) = self.successtest(command.split(" "))
-            self.assertEmptyOut(out, command)
+            self.statustest(command.split(" "))
         self.dsdb_verify()
 
     def test_300_delaux(self):
         for i in range(1, 25):
             hostname = "evh%d-e1.aqd-unittest.ms.com" % (i + 50)
-            self.dsdb_expect_delete(self.net.vm_storage_net[0].usable[i - 1])
-            command = ["del", "auxiliary", "--auxiliary", hostname]
-            (out, err) = self.successtest(command)
-            self.assertEmptyOut(out, command)
+            if i < 13:
+                port = i
+                machine = "ut11s01p%d" % port
+            else:
+                port = i - 12
+                machine = "ut12s02p%d" % port
+            self.dsdb_expect_delete(self.net["vm_storage_net"].usable[i - 1])
+            command = ["del_interface_address", "--fqdn", hostname,
+                       "--machine", machine, "--interface", "eth1"]
+            self.statustest(command)
         self.dsdb_verify()
 
     def test_700_delmachines(self):
-        for i in range(0, 8) + range(9, 17):
+        for i in range(0, 8) + range(9, 16):
             machine = "evm%d" % (10 + i)
             self.noouttest(["del", "machine", "--machine", machine])
 

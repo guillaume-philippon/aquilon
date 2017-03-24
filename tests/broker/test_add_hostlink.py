@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2011,2012,2013  Contributor
+# Copyright (C) 2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 # limitations under the License.
 """Module for testing the add hostlink command."""
 
-import os
 import unittest
 
 if __name__ == "__main__":
@@ -34,7 +33,7 @@ class TestAddHostlink(TestBrokerCommand):
                    "--target=/var/spool/hostlinks/app1",
                    "--hostname=server1.aqd-unittest.ms.com",
                    "--owner=user1",
-                   "--comments=testing"]
+                   "--comments=Some hostlink comments"]
         self.successtest(command)
 
     def test_105_make(self):
@@ -45,12 +44,13 @@ class TestAddHostlink(TestBrokerCommand):
         command = ["show_hostlink", "--hostlink=app1",
                    "--hostname=server1.aqd-unittest.ms.com"]
         out = self.commandtest(command)
-        self.matchoutput(out, "Hostlink: app1", command)
-        self.matchoutput(out, "Comments: testing", command)
-        self.matchoutput(out, "Bound to: Host server1.aqd-unittest.ms.com",
-                         command)
-        self.matchoutput(out, "Target Path: /var/spool/hostlinks/app1", command)
-        self.matchoutput(out, "Owner: user1", command)
+        self.output_equals(out, """
+            Hostlink: app1
+              Comments: Some hostlink comments
+              Bound to: Host server1.aqd-unittest.ms.com
+              Target Path: /var/spool/hostlinks/app1
+              Owner: user1
+            """, command)
 
     def test_110_show_host(self):
         command = ["show_host", "--hostname=server1.aqd-unittest.ms.com"]
@@ -60,27 +60,39 @@ class TestAddHostlink(TestBrokerCommand):
     def test_110_show_host_proto(self):
         command = ["show_host", "--hostname=server1.aqd-unittest.ms.com",
                    "--format=proto"]
-        out = self.commandtest(command)
-        hostlist = self.parse_hostlist_msg(out, expect=1)
-        host = hostlist.hosts[0]
+        host = self.protobuftest(command, expect=1)[0]
         hostlinkfound = False
         for resource in host.resources:
             if resource.name == "app1" and resource.type == "hostlink":
-                self.failUnlessEqual(resource.hostlink.target,
-                                     "/var/spool/hostlinks/app1")
-                self.failUnlessEqual(resource.hostlink.owner_user, "user1")
-                self.failUnlessEqual(resource.hostlink.owner_group, "")
+                self.assertEqual(resource.hostlink.target,
+                                 "/var/spool/hostlinks/app1")
+                self.assertEqual(resource.hostlink.owner_user, "user1")
+                self.assertEqual(resource.hostlink.owner_group, "")
                 hostlinkfound = True
         self.assertTrue(hostlinkfound,
                         "Hostlink app1 not found in the resources. "
                         "Existing resources: %s" %
-                        ", ".join(["%s %s" % (res.type, res.name) for res in
-                                              host.resources]))
+                        ", ".join("%s %s" % (res.type, res.name)
+                                  for res in host.resources))
 
     def test_110_cat_host(self):
         command = ["cat", "--hostname", "server1.aqd-unittest.ms.com", "--data"]
         out = self.commandtest(command)
         self.matchoutput(out, '"system/resources/hostlink" = append(create("resource/host/server1.aqd-unittest.ms.com/hostlink/app1/config"))', command)
+
+    def test_120_add_camelcase(self):
+        command = ["add_hostlink", "--hostlink=CaMeLcAsE",
+                   "--target=/var/spool/hostlinks/CaMeLcAsE",
+                   "--hostname=server1.aqd-unittest.ms.com",
+                   "--owner=user1"]
+        self.successtest(command)
+
+        self.check_plenary_exists("resource", "host",
+                                  "server1.aqd-unittest.ms.com", "hostlink",
+                                  "camelcase", "config")
+        self.check_plenary_gone("resource", "host",
+                                "server1.aqd-unittest.ms.com", "hostlink",
+                                "CaMeLcAsE", "config")
 
     def test_200_add_existing(self):
         command = ["add_hostlink", "--hostlink=app1",
@@ -91,29 +103,9 @@ class TestAddHostlink(TestBrokerCommand):
         self.matchoutput(out, "already exists", command)
 
     def test_200_notfound(self):
-        command = "show hostlink --hostlink app-does-not-exist"
-        self.notfoundtest(command.split(" "))
-
-    def test_300_del_hostlink(self):
-        plenary = self.plenary_name("resource", "host",
-                                    "server1.aqd-unittest.ms.com",
-                                    "hostlink", "app1", "config")
-        self.failUnless(os.path.exists(plenary),
-                        "Pleanry '%s' does not exist" % plenary)
-
-        command = ["del_hostlink", "--hostlink=app1",
-                   "--hostname=server1.aqd-unittest.ms.com"]
-        self.successtest(command)
-
-        dir = os.path.dirname(plenary)
-        self.failIf(os.path.exists(dir),
-                    "Plenary directory '%s' still exists" % dir)
-
-    def test_310_verify_del(self):
-        command = ["show_host", "--hostname", "server1.aqd-unittest.ms.com"]
-        out = self.commandtest(command)
-        self.matchclean(out, "Hostlink", command)
-
+        command = ["show_hostlink", "--hostlink", "hostlink-does-not-exist",
+                   "--hostname", "server1.aqd-unittest.ms.com"]
+        self.notfoundtest(command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAddHostlink)

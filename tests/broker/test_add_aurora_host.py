@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,12 +27,18 @@ from brokertest import TestBrokerCommand
 
 
 class TestAddAuroraHost(TestBrokerCommand):
+    linux_version_prev = None
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestAddAuroraHost, cls).setUpClass()
+        cls.linux_version_prev = cls.config.get("unittest", "linux_version_prev")
 
     def testaddaurorawithnode(self):
         self.dsdb_expect("show_host -host_name %s" % self.aurora_with_node)
         self.dsdb_expect("show_rack -rack_name oy604")
         self.noouttest(["add", "aurora", "host",
-                        "--osname", "linux", "--osversion", "5.0.1-x86_64",
+                        "--osname", "linux", "--osversion", self.linux_version_prev,
                         "--hostname", self.aurora_with_node])
         self.dsdb_verify()
 
@@ -40,12 +46,15 @@ class TestAddAuroraHost(TestBrokerCommand):
         command = "show host --hostname %s.ms.com" % self.aurora_with_node
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Primary Name: %s" % self.aurora_with_node, command)
-        self.matchoutput(out, "Aurora_node: %s" % self.aurora_with_node, command)
+        self.matchoutput(out, "Machine: %s" % self.aurora_with_node, command)
+        self.matchoutput(out, "Model Type: aurora_node", command)
         self.matchoutput(out, "Chassis: oy604c2.ms.com", command)
         self.matchoutput(out, "Slot: 6", command)
         self.matchoutput(out, "Archetype: aurora", command)
         self.matchoutput(out, "Personality: generic", command)
-        self.matchoutput(out, "Domain: ny-prod", command)
+        self.matchoutput(out, "Domain: %s" % self.config.get("archetype_aurora",
+                                                             "default_domain"),
+                         command)
         self.matchoutput(out, "Status: ready", command)
 
         # Rack data from DSDB supported.
@@ -55,7 +64,7 @@ class TestAddAuroraHost(TestBrokerCommand):
     def testaddaurorawithoutnode(self):
         self.dsdb_expect("show_host -host_name %s" % self.aurora_without_node)
         self.noouttest(["add", "aurora", "host",
-                        "--osname", "linux", "--osversion", "5.0.1-x86_64",
+                        "--osname", "linux", "--osversion", self.linux_version_prev,
                         "--hostname", self.aurora_without_node])
         self.dsdb_verify()
 
@@ -63,30 +72,31 @@ class TestAddAuroraHost(TestBrokerCommand):
         command = "show host --hostname %s.ms.com" % self.aurora_without_node
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Primary Name: %s" % self.aurora_without_node,
-                command)
-        self.matchoutput(out, "Aurora_node: ", command)
+                         command)
+        self.matchoutput(out, "Machine: ", command)
+        self.matchoutput(out, "Model Type: aurora_node", command)
         self.matchoutput(out, "Building: ", command)
         self.matchoutput(out, "Archetype: aurora", command)
         self.matchoutput(out, "Personality: generic", command)
-        self.matchoutput(out, "Domain: ny-prod", command)
+        self.matchoutput(out, "Domain: %s" % self.config.get("archetype_aurora",
+                                                             "default_domain"),
+                         command)
         self.matchoutput(out, "Status: ready", command)
 
     def testdsdbmissing(self):
         self.dsdb_expect("show_host -host_name not-in-dsdb", fail=True)
         command = ["add", "aurora", "host", "--hostname", "not-in-dsdb",
-                   "--osname", "linux", "--osversion", "5.0.1-x86_64"]
+                   "--osname", "linux", "--osversion", self.linux_version_prev]
         out = self.badrequesttest(command)
         self.matchoutput(out, "Could not find not-in-dsdb in DSDB", command)
         self.dsdb_verify()
-
-    aurora_without_rack = "oy605c2n6"
 
     def testdsdbrackmissing(self):
         self.dsdb_expect("show_host -host_name %s" % self.aurora_without_rack)
         self.dsdb_expect("show_rack -rack_name oy605", fail=True)
         command = ["add", "aurora", "host",
                    "--hostname", self.aurora_without_rack,
-                   "--osname", "linux", "--osversion", "5.0.1-x86_64"]
+                   "--osname", "linux", "--osversion", self.linux_version_prev]
         out = self.statustest(command)
         self.matchoutput(out, "Rack oy605 not defined in DSDB.", command)
         self.dsdb_verify()
@@ -99,26 +109,28 @@ class TestAddAuroraHost(TestBrokerCommand):
     def testaddnyaqd1(self):
         self.dsdb_expect("show_host -host_name nyaqd1")
         self.noouttest(["add", "aurora", "host", "--hostname", "nyaqd1",
-                        "--osname", "linux", "--osversion", "5.0.1-x86_64"])
+                        "--osname", "linux",
+                        "--osversion", self.linux_version_prev])
         self.dsdb_verify()
 
     def testverifyaddnyaqd1(self):
         command = "show host --hostname nyaqd1.ms.com"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Aurora_node: ny00l4as01", command)
+        self.matchoutput(out, "Machine: ny00l4as01", command)
+        self.matchoutput(out, "Model Type: aurora_node", command)
         self.matchoutput(out, "Primary Name: nyaqd1.ms.com", command)
 
     def testshowmachine(self):
-        command = "show machine --model aurora_model"
+        command = "search machine --model aurora_model --fullinfo"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Aurora_node: ny00l4as01", command)
+        self.matchoutput(out, "Machine: ny00l4as01", command)
+        self.matchoutput(out, "Model Type: aurora_node", command)
 
     def testcatmachine(self):
         command = "cat --machine %s" % self.aurora_without_node
-        out = self.badrequesttest(command.split(" "))
-        self.matchoutput(out,
-                         "Plenary file not available for "
-                         "aurora_node machines.",
+        out = self.commandtest(command.split(" "))
+        self.matchoutput(out, "structure template "
+                         "machine/americas/ut/None/%s" % self.aurora_without_node,
                          command)
 
     def testshowhostproto(self):
@@ -126,10 +138,7 @@ class TestAddAuroraHost(TestBrokerCommand):
         if not fqdn.endswith(".ms.com"):
             fqdn = "%s.ms.com" % fqdn
         command = ["show_host", "--hostname", fqdn, "--format=proto"]
-        (out, err) = self.successtest(command)
-        self.assertEmptyErr(err, command)
-        hostlist = self.parse_hostlist_msg(out, expect=1)
-        host = hostlist.hosts[0]
+        host = self.protobuftest(command, expect=1)[0]
         self.assertEqual(host.fqdn, fqdn)
         self.assertEqual(host.ip, "")
 

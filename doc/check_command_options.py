@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2012,2013  Contributor
+# Copyright (C) 2012,2013,2014,2015  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,16 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ms.version
-
-ms.version.addpkg('lxml', '2.2.8')
-ms.version.addpkg('argparse', '1.1')
-
 import os
 import sys
 import argparse
-from lxml import etree
 from collections import defaultdict
+
+try:
+    import ms.version
+except ImportError:
+    pass
+else:
+    ms.version.addpkg('lxml', '3.2.5')
+
+from lxml import etree
 
 was_error = False
 
@@ -127,7 +130,7 @@ def process_input_xml(file, commands, default_options):
 
 
 def check_errors(commands, default_options):
-    for cmd in sorted(commands.keys()):
+    for cmd in sorted(commands):
         for option, flags in sorted(commands[cmd].items()):
             if "docbook" not in flags and "body" in flags:
                 error("Command %s, option %s is documented but not mentioned "
@@ -155,7 +158,7 @@ def check_errors(commands, default_options):
                 error("Command %s, option %s has an argument in the "
                       "description, but not in the synopsis." % (cmd, option))
 
-            if "inputxml_has_arg" in flags and not "synopsis_has_arg" in flags \
+            if "inputxml_has_arg" in flags and "synopsis_has_arg" not in flags \
                and option not in default_options:
                 error("Command %s, option %s has an argument in input.xml, "
                       "but not in the documentation." % (cmd, option))

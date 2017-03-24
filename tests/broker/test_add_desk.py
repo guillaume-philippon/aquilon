@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,16 +28,15 @@ from brokertest import TestBrokerCommand
 
 class TestAddDesk(TestBrokerCommand):
 
-    def testaddutdesk1(self):
+    def test_100_add_utdesk1(self):
         command = ["add", "desk", "--desk", "utdesk1", "--room", "utroom1",
                    "--fullname", "Desk utroom1/1"]
         self.noouttest(command)
 
-    def testverifyaddutdesk1(self):
+    def test_105_show_utdesk1(self):
         command = "show desk --desk utdesk1"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "Desk: utdesk1", command)
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAddDesk)

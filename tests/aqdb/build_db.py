@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ The way to populate an aqdb instance """
+
+from __future__ import print_function
+
+import argparse
 import sys
 import logging
-import optparse
-import getpass
 import os
 import subprocess
 
@@ -29,14 +31,12 @@ log = logging.getLogger('aqdb.populate')
 import utils
 utils.load_classpath()
 
-import argparse
-
 from sqlalchemy.orm import configure_mappers
 
 from aquilon.config import Config
 config = Config()
 
-from aquilon.aqdb.model import *
+from aquilon.aqdb.model import *  # pylint: disable=W0401,W0614
 from aquilon.aqdb.db_factory import DbFactory
 from aquilon.aqdb.utils import constraints as cnst
 from loader import load_from_file
@@ -55,33 +55,26 @@ def importName(modulename, name):
     try:
         return getattr(module, name)
     except AttributeError:
-        print 'getattr(%s, %s) failed (modulename = %s)' % (module,
-                                                            name, modulename)
+        print('getattr(%s, %s) failed (modulename = %s)' % (module,
+                                                            name, modulename))
 
 
 def parse_cli(*args, **kw):
     parser = argparse.ArgumentParser(
-        description = 'rebuilds the aquilon data store (aqdb) from scratch')
+        description='rebuilds the aquilon data store (aqdb) from scratch')
 
-    parser.add_argument('-v', '--verbose',
-                      action  = 'store_true',
-                      dest    = 'verbose',
-                      help    = 'makes metadata bind.echo = True')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='makes metadata bind.echo = True')
 
-    parser.add_argument('-D', '--delete',
-                      action  = 'store_true',
-                      dest    = 'delete_db',
-                      help    = 'delete database without confirmation')
+    parser.add_argument('-D', '--delete', action='store_true', dest='delete_db',
+                        help='delete database without confirmation')
 
-    parser.add_argument('-d', '--debug',
-                      action  = 'store_true',
-                      dest    = 'debug',
-                      help    = 'write debug info on stdout')
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='write debug info on stdout')
 
     parser.add_argument('-p', '--populate',
-                      dest    = 'populate',
-                      help    = 'run functions to prepopulate data from the named file',
-                      default = os.path.join(BINDIR, "data", "unittest.dump"))
+                        help='run functions to prepopulate data from the named file',
+                        default=os.path.join(BINDIR, "data", "unittest.dump"))
 
     return parser.parse_args()
 
@@ -96,12 +89,13 @@ def main(*args, **kw):
     assert db, "No db_factory in build_db"
     Base.metadata.bind = db.engine
 
-    if opts.verbose:
-        db.meta.bind.echo = True
-
-    if opts.delete_db == True:
+    if opts.delete_db:
         log.debug('Dropping database')
-        db.drop_all_tables_and_sequences(no_confirm=True)
+        # Let SQLAlchemy try first - it may not clean everything, e.g. if there
+        # was a schema change
+        Base.metadata.drop_all(checkfirst=True)
+        # Clean up the rest
+        db.drop_all_tables_and_sequences()
 
     if opts.populate:
         s = db.Session()
@@ -125,13 +119,11 @@ def main(*args, **kw):
 
     # CONSTRAINTS
     if db.engine.dialect.name == 'oracle':
-        #TODO: rename should be able to dump DDL to a file
+        # TODO: rename should be able to dump DDL to a file
         log.debug('renaming constraints...')
         cnst.rename_non_null_check_constraints(db)
 
-
     log.info('database built and populated')
-
 
 if __name__ == '__main__':
     main(sys.argv)

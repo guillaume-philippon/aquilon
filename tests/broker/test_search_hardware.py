@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ from brokertest import TestBrokerCommand
 class TestSearchHardware(TestBrokerCommand):
 
     def testmodelavailable(self):
-        command = "search hardware --model hs21-8853l5u"
+        command = "search hardware --model hs21-8853"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "ut3c1n3", command)
         self.matchoutput(out, "ut3c1n4", command)
@@ -42,25 +42,25 @@ class TestSearchHardware(TestBrokerCommand):
                          command)
 
     def testmodelavailablefull(self):
-        command = "search hardware --model poweredge_6650 --fullinfo"
+        command = "search hardware --model r730 --fullinfo"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "Rackmount: ut3s01p1", command)
+        self.matchoutput(out, "Machine: ut3s01p1", command)
 
     def testmodelvendorconflict(self):
-        command = "search hardware --model vb1205xm --vendor dell"
+        command = "search hardware --model dl360g9 --vendor dell"
         out = self.notfoundtest(command.split(" "))
-        self.matchoutput(out, "Model vb1205xm, vendor dell not found.",
+        self.matchoutput(out, "Model dl360g9, vendor dell not found.",
                          command)
 
     def testmodelmachinetypeconflict(self):
-        command = ["search_hardware", "--model=vb1205xm",
+        command = ["search_hardware", "--model=dl360g9",
                    "--machine_type=virtual_machine"]
         out = self.notfoundtest(command)
-        self.matchoutput(out, "Model vb1205xm, machine_type "
+        self.matchoutput(out, "Model dl360g9, model_type "
                          "virtual_machine not found.", command)
 
     def testvendoravailable(self):
-        command = "search hardware --vendor verari"
+        command = "search hardware --vendor hp"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "ut8s02p1", command)
         self.matchoutput(out, "ut8s02p2", command)
@@ -75,13 +75,15 @@ class TestSearchHardware(TestBrokerCommand):
     def testmachinetypeavailable(self):
         command = "search hardware --machine_type blade"
         out = self.commandtest(command.split(" "))
-        self.matchoutput(out, "ut8s02p1", command)
+        self.matchoutput(out, "ut3c1n3", command)
+        self.matchoutput(out, "ut3c5n10", command)
+        self.matchoutput(out, "ut9s03p1", command)
 
     def testmachinetypeunavailable(self):
         command = "search hardware --machine_type machine_type-does-not-exist"
-        out = self.notfoundtest(command.split(" "))
-        self.matchoutput(out, "Model machine_type "
-                         "machine_type-does-not-exist not found.", command)
+        out = self.badrequesttest(command.split(" "))
+        self.matchoutput(out, "Unknown machine type "
+                         "machine_type-does-not-exist", command)
 
     def testserialavailable(self):
         command = "search hardware --serial 99C5553"
@@ -93,7 +95,7 @@ class TestSearchHardware(TestBrokerCommand):
         self.noouttest(command.split(" "))
 
     def testmacavailable(self):
-        command = "search hardware --mac " + self.net.unknown[0].usable[2].mac
+        command = "search hardware --mac " + self.net["unknown0"].usable[2].mac
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "ut3c1n3", command)
 
@@ -105,7 +107,6 @@ class TestSearchHardware(TestBrokerCommand):
         command = "search hardware --building np"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "ny00l4as01", command)
-        self.matchoutput(out, "evm70", command)
         self.matchoutput(out, "np3c5n5", command)
         self.matchoutput(out, "np06bals03", command)
 
@@ -113,7 +114,6 @@ class TestSearchHardware(TestBrokerCommand):
         command = "search hardware --building np --exact_location"
         out = self.commandtest(command.split(" "))
         self.matchoutput(out, "ny00l4as01", command)
-        self.matchclean(out, "evm70", command)
         self.matchclean(out, "np3c5n5", command)
         self.matchclean(out, "np06bals03", command)
 
@@ -137,9 +137,28 @@ class TestSearchHardware(TestBrokerCommand):
         # This is a good sampling, but not the full output
         self.matchoutput(out, "Switch: ut3gd1r01", command)
         self.matchoutput(out, "Chassis: ut3c1", command)
-        self.matchoutput(out, "Blade: ut3c5n10", command)
-        self.matchoutput(out, "Rackmount: ut3s01p1", command)
-        self.matchoutput(out, "Aurora_node: ny00l4as01", command)
+        self.matchoutput(out, "Machine: ut3c5n10", command)
+        self.matchoutput(out, "Machine: ut3s01p1", command)
+        self.matchoutput(out, "Machine: ny00l4as01", command)
+
+    def testsearchinterfacename(self):
+        command = ["search", "hardware", "--interface_name", "eth1.2"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ut3c5n10", command)
+        self.searchclean(out, "ut3c5n1$", command)
+        self.matchclean(out, "ut3c5n2", command)
+        self.matchclean(out, "ut3c5n3", command)
+        self.matchclean(out, "ut3gd1r01", command)
+
+    def testsearchinterfacebus(self):
+        command = ["search", "hardware",
+                   "--interface_bus_address", "pci:0000:0b:00.0"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "ut3c5n10", command)
+        self.searchclean(out, "ut3c5n1$", command)
+        self.matchclean(out, "ut3c5n2", command)
+        self.matchclean(out, "ut3c5n3", command)
+        self.matchclean(out, "ut3gd1r01", command)
 
     def testsearchinterfacemodel(self):
         command = ["search", "hardware", "--interface_model", "e1000"]
@@ -148,6 +167,12 @@ class TestSearchHardware(TestBrokerCommand):
         self.matchclean(out, "ut3c5n1", command)
         self.matchclean(out, "ut3c5n3", command)
         self.matchclean(out, "ut3gd1r01", command)
+
+    def testsearchinterfacemodelbad(self):
+        command = ["search", "hardware", "--interface_model", "utmedium"]
+        out = self.notfoundtest(command)
+        self.matchoutput(out, "Model utmedium, model_type nic not found.",
+                         command)
 
     def testsearchinterfacevendor(self):
         command = ["search", "hardware", "--interface_vendor", "intel"]

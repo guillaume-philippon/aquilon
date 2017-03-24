@@ -3,44 +3,45 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_reboot_intervention"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_reboot_intervention"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_reboot_intervention</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_reboot_intervention</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add reboot intervention</refname>
-        <refpurpose>
+	<refname>aq add reboot intervention</refname>
+	<refpurpose>
 	    Add a reboot intervention resource onto a host or cluster.
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
     <refsynopsisdiv>
 	<cmdsynopsis>
-	    <command>aq add reboot intervention </command>
-	    <group>
-	      <arg choice="req"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
-	      <arg choice="req"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-            </group>
-	    <arg choice="req"><option>--expiry <replaceable>WHEN</replaceable></option></arg>
-	    <arg choice="req"><option>--justification <replaceable>REASON</replaceable></option></arg>
-	    <arg choice="opt"><option>--start_time <replaceable>WHEN</replaceable></option></arg>
-	    <arg choice="opt"><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <command>aq add reboot intervention</command>
 	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group choice="req">
+		<arg choice="plain"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+	    </group>
+	    <arg choice="plain"><option>--expiry <replaceable>WHEN</replaceable></option></arg>
+	    <arg choice="plain"><option>--justification <replaceable>TOKENS</replaceable></option></arg>
+	    <arg><option>--reason <replaceable>REASON</replaceable></option></arg>
+	    <arg><option>--start_time <replaceable>WHEN</replaceable></option></arg>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add_reboot_intervention</command> command adds a
 	    reboot intervention resource onto a host or a cluster. This
@@ -58,35 +59,30 @@
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" or "unixops_l2" role</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Templates</title>
-        <para>
-      This command will modify the templates for the host or
-      cluster (depending on which option was given) and the resource
-      template for the intervention itself.
+	<title>Templates</title>
+	<para>
+	    This command will modify the templates for the host or
+	    cluster (depending on which option was given) and the resource
+	    template for the intervention itself.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOSTNAME</replaceable></option>,
 		</term>
 		<listitem>
 		    <para>
-		        Specify the target host for the intervention.
+			Specify the target host for the intervention.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -96,50 +92,41 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--expiry <replaceable>WHEN</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-	    A date when the intervention should expire. The date format
-	    is anything that the python library dateutil.parser can understand.
-	    This treats treats the date as the whole day inclusive to
-	    expiry. Time of the expiry is ignored.
+			A date when the intervention should expire. The date format
+			is anything that the python library dateutil.parser can understand.
+			This treats treats the date as the whole day inclusive to
+			expiry. Time of the expiry is ignored.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
-		    <option>--justification <replaceable>WHY</replaceable></option>
-		</term>
-		<listitem>
-		    <para>
-	    Extra authorization tokens (e.g. change management reference ID) to with which the system can validate or correlate the request.
-		    </para>
-		</listitem>
-	    </varlistentry>
-	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--start_time <replaceable>WHEN</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-	    A date when the intervention should start. The date format
-	    is anything that the python library dateutil.parser can understand.
+			A date when the intervention should start. The date format
+			is anything that the python library dateutil.parser can understand.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--comments <replaceable>WHY</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
-	    Any additional notes for the intervention.
+			Any additional notes for the intervention.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -149,11 +136,11 @@
 	    <title>Suspending reboot</title>
 	    <programlisting>
 aq add reboot intervention --hostname foo.example.com \
-	--justification tcm=6001234 --expiry 1/1/2012
+    --justification tcm=6001234 --expiry 1/1/2012
 	    </programlisting>
 	    <para>
-	    Which results in no scheduled reboots for the host until
-	    January 1, 2012.
+		Which results in no scheduled reboots for the host until
+		January 1, 2012.
 	    </para>
 	</example>
     </refsect1>
@@ -161,7 +148,8 @@ aq add reboot intervention --hostname foo.example.com \
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_reboot_intervention</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_del_reboot_intervention</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_reboot_intervention</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

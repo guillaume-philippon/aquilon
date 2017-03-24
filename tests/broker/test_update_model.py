@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2010,2011,2012,2013  Contributor
+# Copyright (C) 2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Module for testing the update model command."""
-
 
 import unittest
 
@@ -39,15 +38,16 @@ class TestUpdateModel(TestBrokerCommand):
                           command)
         self.searchoutput(out,
                           r'"cpu" = list\(\s*'
-                          r'create\("hardware/cpu/intel/xeon_5150"\)\s*\);',
+                          r'create\("hardware/cpu/intel/l5520"\)\s*\);',
                           command)
         self.matchoutput(out, '"capacity", 15*GB,', command)
         self.matchoutput(out, '"interface", "sata",', command)
 
     def test_100_updateexisting(self):
         command = ["update_model", "--model=utmedium", "--vendor=utvendor",
-                   "--cpuname=utcpu", "--cpunum=1", "--memory=4096", "--nics=1",
+                   "--cpuname=utcpu", "--cpunum=1", "--memory=4096",
                    "--disksize=45", "--diskcontroller=scsi",
+                   "--update_existing_machines",
                    "--comments", "New model comments"]
         self.noouttest(command)
 
@@ -58,7 +58,6 @@ class TestUpdateModel(TestBrokerCommand):
                          command)
         self.matchoutput(out, "Cpu: utcpu x 1", command)
         self.matchoutput(out, "Memory: 4096 MB", command)
-        self.matchoutput(out, "NIC count: 1", command)
         self.matchoutput(out, "Disk: sda 45 GB scsi (virtual_disk)", command)
         self.matchoutput(out, "Comments: New model comments", command)
 
@@ -84,18 +83,28 @@ class TestUpdateModel(TestBrokerCommand):
         self.matchoutput(out, '"capacity", 45*GB,', command)
         self.matchoutput(out, '"interface", "scsi",', command)
 
+    def test_130_clear_comments(self):
+        self.noouttest(["update_model", "--vendor", "utvendor",
+                        "--model", "utmedium", "--comments", "",
+                        "--update_existing_machines"])
+
+    def test_135_verify_comments(self):
+        command = ["show_model", "--vendor", "utvendor", "--model", "utmedium"]
+        out = self.commandtest(command)
+        self.matchclean(out, "Comments", command)
+
     def test_200_faildisktype(self):
         command = ["update_model", "--model=utmedium", "--vendor=utvendor",
                    "--cpuname=utcpu", "--cpuvendor=intel",
-                   "--cpuspeed=1000", "--disktype=local"]
+                   "--disktype=local", "--update_existing_machines"]
         out = self.badrequesttest(command)
         self.matchoutput(out, "This cannot be converted automatically.",
                          command)
 
     def test_210_updatedisktype(self):
         command = ["update_model", "--model=utmedium", "--vendor=utvendor",
-                   "--cpuname=xeon_2660", "--cpuvendor=intel",
-                   "--cpuspeed=2660", "--disktype=local", "--leave_existing"]
+                   "--cpuname=e5-2660", "--cpuvendor=intel",
+                   "--disktype=local"]
         self.noouttest(command)
 
     def test_220_verifyspecs(self):
@@ -103,9 +112,8 @@ class TestUpdateModel(TestBrokerCommand):
         out = self.commandtest(command)
         self.matchoutput(out, "MachineSpecs for utvendor utmedium:",
                          command)
-        self.matchoutput(out, "Cpu: xeon_2660 x 1", command)
+        self.matchoutput(out, "Cpu: e5-2660 x 1", command)
         self.matchoutput(out, "Memory: 4096 MB", command)
-        self.matchoutput(out, "NIC count: 1", command)
         self.matchoutput(out, "Disk: sda 45 GB scsi (local)", command)
 
     def test_230_verifymachine(self):
@@ -132,7 +140,7 @@ class TestUpdateModel(TestBrokerCommand):
 
     def test_301_leavevendor(self):
         command = ["update_model", "--model=utmedium", "--vendor=utvendor",
-                   "--newmodel=utmedium-v1", "--leave_existing"]
+                   "--newmodel=utmedium-v1"]
         out = self.badrequesttest(command)
         self.matchoutput(out,
                          "Cannot update model name or vendor without "
@@ -141,14 +149,15 @@ class TestUpdateModel(TestBrokerCommand):
 
     def test_302_dupename(self):
         command = ["update_model", "--model=utblade", "--vendor=aurora_vendor",
-                   "--newmodel=utmedium", "--newvendor=utvendor"]
+                   "--newmodel=utmedium", "--newvendor=utvendor",
+                   "--update_existing_machines"]
         out = self.badrequesttest(command)
         self.matchoutput(out, "Model utmedium, vendor utvendor already exists.",
                          command)
 
     def test_310_updatename(self):
         command = ["update_model", "--model=utmedium", "--vendor=utvendor",
-                   "--newmodel=utmedium-v1"]
+                   "--newmodel=utmedium-v1", "--update_existing_machines"]
         self.noouttest(command)
 
     def test_311_verifyname(self):
@@ -165,7 +174,7 @@ class TestUpdateModel(TestBrokerCommand):
 
     def test_320_updatevendor(self):
         command = ["update_model", "--model=utmedium-v1", "--vendor=utvendor",
-                   "--newvendor=virtual"]
+                   "--newvendor=virtual", "--update_existing_machines"]
         self.noouttest(command)
 
     def test_321_verifyvendor(self):
@@ -182,7 +191,8 @@ class TestUpdateModel(TestBrokerCommand):
 
     def test_330_restore(self):
         command = ["update_model", "--model=utmedium-v1", "--vendor=virtual",
-                   "--newvendor=utvendor", "--newmodel=utmedium"]
+                   "--newvendor=utvendor", "--newmodel=utmedium",
+                   "--update_existing_machines"]
         self.noouttest(command)
 
     def test_331_verifyupdate(self):
@@ -205,15 +215,16 @@ class TestUpdateModel(TestBrokerCommand):
         command = ["cat", "--machine", "evm1"]
         out = self.commandtest(command)
         self.searchoutput(out,
-                          r'"cards/nic" = nlist\(\s*'
-                          r'"eth0", create\("hardware/nic/generic/generic_nic",\s*'
+                          r'"cards/nic/eth0" = '
+                          r'create\("hardware/nic/generic/generic_nic",\s*'
                           r'"boot", true,\s*'
-                          r'"hwaddr", "00:50:56:01:20:00"\s*\)\s*\);',
+                          r'"hwaddr", "00:50:56:01:20:00"\s*\);',
                           command)
 
     def test_342_update_nic(self):
         command = ["update", "model", "--model", "utlarge", "--vendor", "utvendor",
-                   "--nicvendor", "utvirt", "--nicmodel", "default"]
+                   "--nicvendor", "utvirt", "--nicmodel", "default",
+                   "--update_existing_machines"]
         self.noouttest(command)
 
     def test_343_verify_model_update(self):
@@ -225,15 +236,38 @@ class TestUpdateModel(TestBrokerCommand):
         command = ["cat", "--machine", "evm1"]
         out = self.commandtest(command)
         self.searchoutput(out,
-                          r'"cards/nic" = nlist\(\s*'
-                          r'"eth0", create\("hardware/nic/utvirt/default",\s*'
+                          r'"cards/nic/eth0" = '
+                          r'create\("hardware/nic/utvirt/default",\s*'
                           r'"boot", true,\s*'
-                          r'"hwaddr", "00:50:56:01:20:00"\s*\)\s*\);',
+                          r'"hwaddr", "00:50:56:01:20:00"\s*\);',
                           command)
 
     def test_344_change_evm1_back(self):
-        command = ["update", "machine", "--machine", "evm1", "--model", "utmedium"]
+        command = ["update", "machine", "--machine", "evm1", "--model",
+                   "utmedium"]
         self.noouttest(command)
+
+    def test_400_clear_cpu_comments(self):
+        command = ["update_model", "--model", "utcpu", "--vendor", "intel",
+                   "--comments", ""]
+        self.statustest(command)
+
+    def test_405_verify_cpu_comments(self):
+        command = "show model --model utcpu --vendor intel"
+        out = self.commandtest(command.split(" "))
+        self.matchclean(out, "Comments", command)
+
+    def test_410_update_cpu(self):
+        command = ["update_model", "--model", "utcpu", "--vendor", "intel",
+                   "--comments", "New CPU comments"]
+        self.statustest(command)
+
+    def test_415_verify_cpu_update(self):
+        command = "show model --model utcpu --vendor intel"
+        out = self.commandtest(command.split(" "))
+        self.matchoutput(out, "Vendor: intel Model: utcpu", command)
+        self.matchoutput(out, "Model Type: cpu", command)
+        self.matchoutput(out, "Comments: New CPU comments", command)
 
     def test_700_failnospecs(self):
         command = ["update_model", "--model=utblade", "--vendor=aurora_vendor",
@@ -250,8 +284,7 @@ class TestUpdateModel(TestBrokerCommand):
         command = ["update_model", "--model=utblade", "--vendor=aurora_vendor",
                    "--cpuname=utcpu", "--cpunum=2", "--memory=8192",
                    "--disktype=local", "--diskcontroller=scsi", "--disksize=30",
-                   "--nics=2", "--nicmodel=generic_nic", "--nicvendor=generic",
-                   "--leave_existing"]
+                   "--nicmodel=generic_nic", "--nicvendor=generic"]
         self.noouttest(command)
 
     def test_810_verifyspecs(self):
@@ -261,8 +294,16 @@ class TestUpdateModel(TestBrokerCommand):
                          command)
         self.matchoutput(out, "Cpu: utcpu x 2", command)
         self.matchoutput(out, "Memory: 8192 MB", command)
-        self.matchoutput(out, "NIC count: 2", command)
         self.matchoutput(out, "Disk: sda 30 GB scsi (local)", command)
+
+    def test_811_addspecsswitch(self):
+        command = ['update_model', '--model=uttorswitch', '--vendor=hp',
+                   '--cpuname=intel', '--cpunum=1', '--memory=1',
+                   '--disktype=local', '--diskcontroller=sata',
+                   '--disksize=1']
+        out = self.badrequesttest(command)
+        self.matchoutput(out, "Machine specfications are only valid "
+                         "for machine types", command)
 
 
 if __name__ == '__main__':

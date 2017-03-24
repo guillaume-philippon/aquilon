@@ -3,21 +3,21 @@
 "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY aqd_version SYSTEM "../version.txt">
 ]>
-<refentry xml:id="add_reboot_schedule"
-          xmlns="http://docbook.org/ns/docbook"
+<refentry xml:id="aq_add_reboot_schedule"
+	  xmlns="http://docbook.org/ns/docbook"
 	  xmlns:xi="http://www.w3.org/2001/XInclude">
     <refmeta>
-        <refentrytitle>add_reboot_schedule</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class="version">&aqd_version;</refmiscinfo>
-        <refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
+	<refentrytitle>aq_add_reboot_schedule</refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo class="version">&aqd_version;</refmiscinfo>
+	<refmiscinfo class="manual">Aquilon Commands</refmiscinfo>
     </refmeta>
 
     <refnamediv>
-        <refname>add reboot schedule</refname>
-        <refpurpose>
+	<refname>aq add reboot schedule</refname>
+	<refpurpose>
 	    Add a reboot schedule resource onto a host or cluster.
-        </refpurpose>
+	</refpurpose>
 	<refclass>Aquilon</refclass>
     </refnamediv>
 
@@ -25,22 +25,26 @@
 	<cmdsynopsis>
 	    <command>aq add reboot schedule</command>
 	    <group>
-	      <arg choice="req"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
-	      <arg choice="req"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
-            </group>
-	    <arg choice="req"><option>--week <replaceable>WHEN</replaceable></option></arg>
-	    <arg choice="req"><option>--day <replaceable>WHEN</replaceable></option></arg>
-	    <arg choice="opt"><option>--time <replaceable>WHEN</replaceable></option></arg>
-	    <arg choice="opt"><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
-	    <group>
 		<synopfragmentref linkend="global-options">Global options</synopfragmentref>
 	    </group>
+	    <group>
+		<synopfragmentref linkend="change-management">Change management</synopfragmentref>
+	    </group>
+	    <group choice="req">
+		<arg choice="plain"><option>--hostname <replaceable>HOSTNAME</replaceable></option></arg>
+		<arg choice="plain"><option>--cluster <replaceable>CLUSTER</replaceable></option></arg>
+	    </group>
+	    <arg choice="plain"><option>--week <replaceable>WHEN</replaceable></option></arg>
+	    <arg choice="plain"><option>--day <replaceable>WHEN</replaceable></option></arg>
+	    <arg><option>--time <replaceable>WHEN</replaceable></option></arg>
+	    <arg><option>--comments <replaceable>COMMENTS</replaceable></option></arg>
+	    <xi:include href="../common/change_management.xml"/>
 	    <xi:include href="../common/global_options.xml"/>
 	</cmdsynopsis>
     </refsynopsisdiv>
 
     <refsect1>
-        <title>Description</title>
+	<title>Description</title>
 	<para>
 	    The <command>aq add_reboot_schedule</command> command adds a
 	    reboot schedule onto a host or a cluster.
@@ -56,35 +60,30 @@
     </refsect1>
 
     <refsect1>
-        <title>Entitlements</title>
-        <para>Requires "operations" or "unixops_l2" role</para>
-    </refsect1>
-
-    <refsect1>
-        <title>Templates</title>
-        <para>
-      This command will modify the templates for the host or
-      cluster (depending on which option was given) and the resource
-      template for the reboot schedule itself.
+	<title>Templates</title>
+	<para>
+	    This command will modify the templates for the host or
+	    cluster (depending on which option was given) and the resource
+	    template for the reboot schedule itself.
 	</para>
     </refsect1>
 
     <refsect1>
-        <title>Options</title>
+	<title>Options</title>
 	<variablelist>
 	    <title>Command-specific options</title>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--hostname <replaceable>HOSTNAME</replaceable></option>,
 		</term>
 		<listitem>
 		    <para>
-		        Specify the target host for the reboot schedule.
+			Specify the target host for the reboot schedule.
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--cluster <replaceable>CLUSTER</replaceable></option>
 		</term>
 		<listitem>
@@ -94,18 +93,18 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--week <replaceable>WHEN</replaceable></option>
 		</term>
 		<listitem>
 		    <para>
 			A comma separated list of weeks where valid values
-			are the numbers 1 through 5 and the string "all".
+			are the numbers 1 through 4 and the string "all".
 		    </para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--day <replaceable>WHEN</replaceable></option>
 		</term>
 		<listitem>
@@ -118,7 +117,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--time <replaceable>WHEN</replaceable></option>
 		</term>
 		<listitem>
@@ -130,7 +129,7 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-	        <term>
+		<term>
 		    <option>--comments <replaceable>WHY</replaceable></option>
 		</term>
 		<listitem>
@@ -140,6 +139,7 @@
 		</listitem>
 	    </varlistentry>
 	</variablelist>
+	<xi:include href="../common/change_management_desc.xml"/>
 	<xi:include href="../common/global_options_desc.xml"/>
     </refsect1>
 
@@ -160,7 +160,8 @@ aq add reboot schedule --hostname foo.example.com --week 1 day Sun
     <refsect1>
 	<title>See also</title>
 	<para>
-	    <citerefentry><refentrytitle>del_reboot_schedule</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_del_reboot_schedule</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+	    <citerefentry><refentrytitle>aq_show_reboot_schedule</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 	</para>
     </refsect1>
 </refentry>

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2008,2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2008,2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
 """Module for testing the del service command."""
 
 import unittest
-import os.path
 
 if __name__ == "__main__":
     import utils
@@ -26,175 +25,115 @@ if __name__ == "__main__":
 
 from brokertest import TestBrokerCommand
 
+services_to_delete = {
+    "afs": ["q.ny.ms.com", "afs-by-net", "afs-by-net2", "q.ln.ms.com"],
+    "aqd": ["ny-prod"],
+    "badservice": [],
+    "bootserver": ["one-nyp", "unittest"],
+    "capacity_test": ["max_clients"],
+    "dns": ["unittest", "one-nyp"],
+    "esx_management_server": ["ut.a", "ut.b"],
+    "ips": ["northamerica"],
+    "lemon": ["ny-prod"],
+    "scope_test": ["scope-building", "target-personality", "scope-network",
+                   "target-dev", "target-qa"],
+    "support-group": ["ec-service"],
+    "syslogng": ["ny-prod"],
+    "unmapped": ["instance1"],
+    "utnotify": ["localhost"],
+    "utsvc": ["utsi1", "utsi2"],
+    "vcenter": ["ut"],
+    "vmseasoning": ["salt", "pepper"],
+}
+
 
 class TestDelService(TestBrokerCommand):
 
-    def testdelafsinstance(self):
-        command = "del service --service afs --instance q.ny.ms.com"
-        self.noouttest(command.split(" "))
+    def test_100_delete_services(self):
+        service_plenaries = ["servicedata/%s/config",
+                             "service/%s/client/config",
+                             "service/%s/server/config"]
+        instance_plenaries = ["servicedata/%s/%s/config",
+                              "servicedata/%s/%s/srvconfig",
+                              "service/%s/%s/client/config",
+                              "service/%s/%s/server/config"]
 
-    def testverifydelafsinstance(self):
-        command = "show service --service afs"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: afs Instance: q.ny.ms.com", command)
+        for service, instances in services_to_delete.items():
+            for pattern in service_plenaries:
+                self.check_plenary_exists(pattern % service)
 
-    def testdelafsbynetinstance(self):
-        command = "del service --service afs --instance afs-by-net"
-        self.noouttest(command.split(" "))
+            for instance in instances:
+                for pattern in instance_plenaries:
+                    self.check_plenary_exists(pattern % (service, instance))
 
-        command = "del service --service afs --instance afs-by-net2"
-        self.noouttest(command.split(" "))
+                self.noouttest(["del_service", "--service", service,
+                                "--instance", instance])
 
-    def testverifydelafsbynetinstance(self):
-        command = "show service --service afs"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: afs Instance: afs-by-net", command)
+                for pattern in instance_plenaries:
+                    self.check_plenary_gone(pattern % (service, instance))
 
-    def testdelnetmappersinstance(self):
-        command = "del service --service netmap --instance netmap-pers"
-        self.noouttest(command.split(" "))
+            command = ["show_service", "--service", service]
+            out = self.commandtest(command)
+            for instance in instances:
+                self.matchclean(out, instance, command)
 
-        command = "del service --service netmap --instance q.ny.ms.com"
-        self.noouttest(command.split(" "))
-
-        command = "del service --service netmap --instance p-q.ny.ms.com"
-        self.noouttest(command.split(" "))
-
-    def testverifydelnetmappersinstance(self):
-        command = "show service --service netmap"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: netmap Instance: netmap-pers", command)
-        self.matchclean(out, "Service: netmap Instance: q.ny.ms.com", command)
-        self.matchclean(out, "Service: netmap Instance: p-q.ny.ms.com", command)
-
-    def testdelextraafsinstance(self):
-        command = "del service --service afs --instance q.ln.ms.com"
-        self.notfoundtest(command.split(" "))
-
-    def testverifydelextraafsinstance(self):
-        command = "show service --service afs"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: afs Instance: q.ln.ms.com", command)
-
-    def testdelbootserverinstance(self):
-        command = "del service --service bootserver --instance np.test"
-        self.noouttest(command.split(" "))
-
-    def testverifydelbootserverinstance(self):
-        command = "show service --service bootserver"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: bootserver Instance: np.test", command)
-
-    def testdellemoninstance(self):
-        command = "del service --service lemon --instance ny-prod"
-        self.noouttest(command.split(" "))
-
-    def testverifydellemoninstance(self):
-        command = "show service --service lemon"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: lemon Instance: ny-prod", command)
-
-    def testdeldnsinstance(self):
-        command = "del service --service dns --instance utdnsinstance"
-        self.noouttest(command.split(" "))
-
-    def testverifydeldnsinstance(self):
-        command = "show service --service dns"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: dns Instance: utdnsinstance", command)
-
-    def testverifydnsinstanceplenary(self):
-        dir = os.path.join(self.config.get("broker", "plenarydir"),
-                           "service", "dns", "utdnsinstance")
-        self.failIf(os.path.exists(dir),
-                    "Plenary directory '%s' still exists" % dir)
+            self.noouttest(["del_service", "--service", service])
+            for pattern in service_plenaries:
+                self.check_plenary_gone(pattern % service)
 
     # At this point, pa.ny.na still is still mapped.  del_service
     # should silently remove the mappings.
-    def testdelntpinstance(self):
+    def test_110_verify_ntp_map(self):
+        command = ["show_map", "--service", "ntp"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Service: ntp Instance: pa.ny.na Map: City ny",
+                         command)
+
+    def test_111_del_ntp_instance(self):
         command = "del service --service ntp --instance pa.ny.na"
         self.noouttest(command.split(" "))
 
-    def testverifydelntpinstance(self):
+    def test_112_verify_service_gone(self):
         command = "show service --service ntp"
         out = self.commandtest(command.split(" "))
         self.matchclean(out, "Service: ntp Instance: pa.ny.na", command)
 
-    def testdelutsi1instance(self):
-        command = "del service --service utsvc --instance utsi1"
-        self.noouttest(command.split(" "))
+    def test_113_verify_map_gone(self):
+        command = ["show_map", "--service", "ntp"]
+        self.notfoundtest(command)
 
-    def testdelutsi2instance(self):
-        command = "del service --service utsvc --instance utsi2"
-        self.noouttest(command.split(" "))
+        command = ["show_map", "--all"]
+        out = self.commandtest(command)
+        self.matchclean(out, "ntp", command)
 
-    def testverifydelutsvcinstance(self):
-        command = "show service --service utsvc"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: utsvc Instance: utsi1", command)
-        self.matchclean(out, "Service: utsvc Instance: utsi2", command)
-
-    def testdelutsvc2(self):
-        command = "del service --service utsvc2"
-        self.noouttest(command.split(" "))
-
-    def testverifydelutsvc2(self):
-        command = "show service --service utsvc2"
-        self.notfoundtest(command.split(" "))
-
-    def tetverifydelutsvc2plenary(self):
-        dir = os.path.join(self.config.get("broker", "plenarydir"),
-                           "service", "utsvc2")
-        self.failIf(os.path.exists(dir),
-                    "Plenary directory '%s' still exists" % dir)
-
-    def testdelunmappedservice(self):
-        command = "del service --service unmapped --instance instance1"
-        self.noouttest(command.split(" "))
-
-    def testverifydelunmappedservice(self):
-        command = "show service --service unmapped"
-        out = self.commandtest(command.split(" "))
-        self.matchclean(out, "Service: unmapped Instance: instance1", command)
-
-    def testdelesxmanagement(self):
-        command = "del service --service esx_management_server --instance ut.a"
-        self.noouttest(command.split(" "))
-        command = "del service --service esx_management_server --instance ut.b"
-        self.noouttest(command.split(" "))
-        command = "del service --service esx_management_server --instance np"
-        self.noouttest(command.split(" "))
-        command = "del service --service esx_management_server"
-        self.noouttest(command.split(" "))
-
-    def testverifydelesxmanagement(self):
-        command = "show service --service esx_management_server"
-        self.notfoundtest(command.split(" "))
-
-    def testdelvmseasoning(self):
-        command = "del service --service vmseasoning --instance salt"
-        self.noouttest(command.split(" "))
-        command = "del service --service vmseasoning --instance pepper"
-        self.noouttest(command.split(" "))
-        command = "del service --service vmseasoning --instance sugar"
-        self.noouttest(command.split(" "))
-        command = "del service --service vmseasoning"
-        self.noouttest(command.split(" "))
-
-    def testverifydelvmseasoning(self):
-        command = "show service --service vmseasoning"
-        self.notfoundtest(command.split(" "))
-
-    def testdelpollhelper(self):
+    def test_120_del_poll_helper_instance(self):
         service = self.config.get("broker", "poll_helper_service")
         self.noouttest(["del", "service", "--service", service,
                         "--instance", "unittest"])
+
+    def test_125_del_poll_helper_instance_again(self):
+        service = self.config.get("broker", "poll_helper_service")
+        self.notfoundtest(["del", "service", "--service", service,
+                           "--instance", "unittest"])
+
+    def test_130_del_poll_helper(self):
+        service = self.config.get("broker", "poll_helper_service")
         self.noouttest(["del", "service", "--service", service])
 
-    def testdelecservice(self):
-        command = "del service --service support-group --instance ec-service"
-        self.noouttest(command.split(" "))
+    def test_135_del_poll_helper_again(self):
+        service = self.config.get("broker", "poll_helper_service")
+        self.notfoundtest(["del", "service", "--service", service])
 
+    def test_140_del_camelcase_instance(self):
+        self.check_plenary_exists("servicedata", "camelcase", "camelcase", "config")
+        self.noouttest(["del_service", "--service", "camelcase",
+                        "--instance", "CaMeLcAsE"])
+        self.check_plenary_gone("servicedata", "camelcase", "camelcase", "config")
+
+    def test_141_del_camelcase(self):
+        self.check_plenary_exists("servicedata", "camelcase", "config")
+        self.noouttest(["del_service", "--service", "CaMeLcAsE"])
+        self.check_plenary_gone("servicedata", "camelcase", "config")
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDelService)

@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 # -*- cpy-indent-level: 4; indent-tabs-mode: nil -*-
 # ex: set expandtab softtabstop=4 shiftwidth=4:
 #
-# Copyright (C) 2009,2010,2011,2012,2013  Contributor
+# Copyright (C) 2009,2010,2011,2012,2013,2014,2015,2016  Contributor
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 # limitations under the License.
 """Module for testing the update personality command."""
 
-
 import unittest
 
 if __name__ == "__main__":
@@ -26,150 +25,71 @@ if __name__ == "__main__":
 
 from broker.brokertest import TestBrokerCommand
 from broker.grntest import VerifyGrnsMixin
+from broker.personalitytest import PersonalityTestMixin
 
 
-class TestUpdatePersonality(VerifyGrnsMixin, TestBrokerCommand):
-
-    def test_200_invalid_function(self):
-        """ Verify that the list of built-in functions is restricted """
-        command = ["update_personality", "--personality", "vulcan-1g-desktop-prod",
-                   "--archetype", "esx_cluster",
-                   "--vmhost_capacity_function", "locals()"]
-        out = self.badrequesttest(command)
-        self.matchoutput(out, "name 'locals' is not defined", command)
-
-    def test_200_invalid_type(self):
-        command = ["update_personality", "--personality", "vulcan-1g-desktop-prod",
-                   "--archetype", "esx_cluster",
-                   "--vmhost_capacity_function", "memory - 100"]
-        out = self.badrequesttest(command)
-        self.matchoutput(out, "The function should return a dictonary.", command)
-
-    def test_200_invalid_dict(self):
-        command = ["update_personality", "--personality", "vulcan-1g-desktop-prod",
-                   "--archetype", "esx_cluster",
-                   "--vmhost_capacity_function", "{'memory': 'bar'}"]
-        out = self.badrequesttest(command)
-        self.matchoutput(out,
-                         "The function should return a dictionary with all "
-                         "keys being strings, and all values being numbers.",
-                         command)
-
-    def test_200_missing_memory(self):
-        command = ["update_personality", "--personality", "vulcan-1g-desktop-prod",
-                   "--archetype", "esx_cluster",
-                   "--vmhost_capacity_function", "{'foo': 5}"]
-        out = self.badrequesttest(command)
-        self.matchoutput(out,
-                         "The memory constraint is missing from the returned "
-                         "dictionary.", command)
-
-    def test_200_not_enough_memory(self):
-        command = ["update_personality", "--personality", "vulcan-1g-desktop-prod",
-                   "--archetype", "esx_cluster",
-                   "--vmhost_capacity_function", "{'memory': memory / 4}"]
-        out = self.badrequesttest(command)
-        self.matchoutput(out,
-                         "Validation failed for the following clusters:",
-                         command)
-        self.matchoutput(out,
-                         "ESX Cluster utecl1 is over capacity regarding memory",
-                         command)
-
+class TestUpdatePersonality(VerifyGrnsMixin, PersonalityTestMixin,
+                            TestBrokerCommand):
     def test_100_update_capacity(self):
-        command = ["update_personality", "--personality", "vulcan-1g-desktop-prod",
+        command = ["update_personality", "--personality", "vulcan-10g-server-prod",
                    "--archetype", "esx_cluster",
-                   "--vmhost_capacity_function", "{'memory': (memory - 1500) * 0.94}"]
-        self.noouttest(command)
-
-    def test_110_update_overcommit(self):
-        command = ["update_personality", "--personality", "vulcan-1g-desktop-prod",
-                   "--archetype", "esx_cluster",
-                   "--vmhost_overcommit_memory", 1.04]
+                   "--vmhost_capacity_function", "{'memory': (memory - 1500) * 0.94}",
+                   "--justification", "tcm=12345678"]
         self.noouttest(command)
 
     def test_115_verify_update_capacity(self):
-        command = ["show_personality", "--personality", "vulcan-1g-desktop-prod",
+        command = ["show_personality", "--personality", "vulcan-10g-server-prod",
                    "--archetype", "esx_cluster"]
         out = self.commandtest(command)
         self.matchoutput(out,
                          "VM host capacity function: {'memory': (memory - 1500) * 0.94}",
                          command)
-        self.matchoutput(out, "VM host overcommit factor: 1.04", command)
 
-    def test_200_update_cluster_inuse(self):
-        command = ["update_personality", "--personality=vulcan-1g-desktop-prod",
-                   "--archetype=esx_cluster",
-                   "--cluster"]
-        out = self.badrequesttest(command)
-        self.matchoutput(out, "The personality vulcan-1g-desktop-prod is in use", command)
-
-    def test_120_update_cluster_requirement(self):
-        command = ["add_personality", "--archetype=aquilon", "--grn=grn:/ms/ei/aquilon/aqd",
-                   "--personality=unused", "--host_environment=infra"]
-        self.successtest(command)
-
-        command = ["update_personality", "--personality", "unused",
-                   "--archetype=aquilon", "--cluster"]
-        out = self.successtest(command)
-
-        command = ["del_personality", "--personality", "unused",
+    def test_120_update_basic_attributes(self):
+        command = ["promote", "--personality", "utunused/dev",
                    "--archetype=aquilon"]
-        out = self.successtest(command)
-
-    def test_130_add_testovrpersona_dev(self):
-        command = ["add_personality", "--archetype=aquilon", "--grn=grn:/ms/ei/aquilon/aqd",
-                   "--personality=testovrpersona/dev", "--host_environment=dev"]
         self.successtest(command)
 
-        command = ["show_personality", "--personality=testovrpersona/dev",
+        command = ["update_personality", "--personality", "utunused/dev",
+                   "--archetype=aquilon",
+                   "--cluster_required",
+                   "--noconfig_override",
+                   "--unstaged",
+                   "--comments", "New personality comments"]
+        self.successtest(command)
+
+    def test_121_verify_updates(self):
+        command = ["show_personality", "--personality=utunused/dev",
                    "--archetype=aquilon"]
         out = self.commandtest(command)
+
+        self.matchoutput(out, "Personality: utunused/dev Archetype: aquilon",
+                         command)
+        self.matchoutput(out, "Comments: New personality comments", command)
+        self.matchoutput(out, "Requires clustered hosts", command)
         self.matchclean(out, "override", command)
 
-        command = ["cat", "--archetype=aquilon", "--personality=testovrpersona/dev"]
-        out = self.commandtest(command)
-        self.matchclean(out, 'override', command)
+        self.verifycatpersonality("aquilon", "utunused/dev")
 
-    def test_131_update_config_override(self):
-        command = ["update_personality", "--personality=testovrpersona/dev",
-                   "--archetype=aquilon", "--config_override"]
+    def test_125_restore_utunused_dev(self):
+        # Well, except the comments, which are removed
+        command = ["update_personality", "--personality", "utunused/dev",
+                   "--archetype=aquilon",
+                   "--nocluster_required",
+                   "--config_override",
+                   "--comments", ""]
         self.successtest(command)
 
-        command = ["show_personality", "--personality=testovrpersona/dev",
+    def test_126_verify_utunused_dev(self):
+        command = ["show_personality", "--personality=utunused/dev",
                    "--archetype=aquilon"]
         out = self.commandtest(command)
+        self.matchclean(out, "Comments", command)
+        self.matchclean(out, "Requires clustered hosts", command)
         self.matchoutput(out, "Config override: enabled", command)
 
-        command = ["cat", "--archetype=aquilon", "--personality=testovrpersona/dev"]
-        out = self.commandtest(command)
-        self.matchoutput(out, 'include { "features/personality/config_override/config" }',
-                         command)
-
-    def test_132_remove_config_override(self):
-        command = ["update_personality", "--personality=testovrpersona/dev",
-                   "--archetype=aquilon", "--noconfig_override"]
-        self.successtest(command)
-
-        command = ["show_personality", "--personality=testovrpersona/dev",
-                   "--archetype=aquilon"]
-        out = self.commandtest(command)
-        self.matchclean(out, "override", command)
-
-        command = ["cat", "--archetype=aquilon", "--personality=testovrpersona/dev"]
-        self.matchclean(out, 'override', command)
-
-    def test_133_update_hostenv_testovrpersona(self):
-        command = ["update_personality", "--personality=testovrpersona/dev",
-                    "--archetype=aquilon", "--host_environment=dev"]
-        out = self.badrequesttest(command)
-        self.matchoutput(out, "The personality 'testovrpersona/dev' already has env set to 'dev' and cannot be update",
-                         command)
-
-    def test_139_delete_testovrpersona_dev(self):
-        command = ["del_personality", "--personality=testovrpersona/dev",
-                   "--archetype=aquilon"]
-        out = self.successtest(command)
+        self.verifycatpersonality("aquilon", "utunused/dev",
+                                  config_override=True)
 
     def test_140_update_owner_grn(self):
         command = ["update_personality", "--personality", "compileserver",
@@ -177,90 +97,233 @@ class TestUpdatePersonality(VerifyGrnsMixin, TestBrokerCommand):
         # Some hosts may emit warnings if 'aq make' was not run on them
         self.successtest(command)
 
-    def test_141_verify_owner_grn(self):
+    def test_141_verify_show_personality(self):
         command = ["show_personality", "--personality", "compileserver"]
         out = self.commandtest(command)
         self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/ut2", command)
 
-        command = ["show_host", "--hostname", "unittest20.aqd-unittest.ms.com"]
-        out = self.commandtest(command)
-        self.matchoutput(out, "Personality: compileserver", command)
-        self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/ut2", command)
-
-        # unittest02 had a different GRN before, so it should not have been
-        # updated
+    def test_141_verify_show_unittest02(self):
+        # Different owner, should not be updated
         command = ["show_host", "--hostname", "unittest02.one-nyp.ms.com"]
         out = self.commandtest(command)
         self.matchoutput(out, "Personality: compileserver", command)
-        self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/aqd", command)
+        self.searchoutput(out, r"^  Owned by GRN: grn:/ms/ei/aquilon/aqd", command)
 
-    def test_142_update_owner_grn_nohosts(self):
-        command = ["update_personality", "--personality", "compileserver",
-                   "--archetype", "aquilon", "--grn", "grn:/ms/ei/aquilon/unittest",
-                   "--leave_existing"]
-        self.noouttest(command)
-
-    def test_143_verify_update(self):
-        command = ["show_personality", "--personality", "compileserver"]
-        out = self.commandtest(command)
-        self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/unittest", command)
-
-        command = ["show_host", "--hostname", "unittest20.aqd-unittest.ms.com"]
+    def test_141_verify_show_unittest21(self):
+        # Owner is the same as the personality - should be updated
+        command = ["show_host", "--hostname", "unittest21.aqd-unittest.ms.com"]
         out = self.commandtest(command)
         self.matchoutput(out, "Personality: compileserver", command)
-        self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/ut2", command)
+        self.searchoutput(out, r"^  Owned by GRN: grn:/ms/ei/aquilon/ut2", command)
 
-        command = ["show_host", "--hostname", "unittest02.one-nyp.ms.com"]
-        out = self.commandtest(command)
-        self.matchoutput(out, "Personality: compileserver", command)
-        self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/aqd", command)
-
-    def test_144_verify_cat(self):
+    def test_141_verify_cat_personality(self):
         command = ["cat", "--personality", "compileserver"]
         out = self.commandtest(command)
         self.searchoutput(out, r'"/system/personality/owner_eon_id" = %d;' %
-                          self.grns["grn:/ms/ei/aquilon/unittest"], command)
+                          self.grns["grn:/ms/ei/aquilon/ut2"], command)
 
+    def test_141_verify_cat_unittest02(self):
+        # Different owner, should not be updated
         command = ["cat", "--hostname", "unittest02.one-nyp.ms.com", "--data"]
         out = self.commandtest(command)
         self.searchoutput(out, r'"system/owner_eon_id" = %d;' %
                           self.grns["grn:/ms/ei/aquilon/aqd"], command)
 
+    def test_141_verify_cat_unittest20(self):
+        # Inherited - should be updated
         command = ["cat", "--hostname", "unittest20.aqd-unittest.ms.com", "--data"]
         out = self.commandtest(command)
         self.searchoutput(out, r'"system/owner_eon_id" = %d;' %
                           self.grns["grn:/ms/ei/aquilon/ut2"], command)
 
-    def test_150_update_hostenv_infra(self):
-        command = ["add_personality", "--archetype=windows", "--grn=grn:/ms/ei/aquilon/aqd",
-                   "--personality=prod-perim", "--host_environment=legacy"]
-        self.successtest(command)
-
-        command = ["update_personality", "--personality=prod-perim",
-                    "--archetype=windows", "--host_environment=infra"]
-        out = self.successtest(command)
-
-        command = ["show_personality", "--personality=prod-perim",
-                   "--archetype=windows"]
+    def test_141_verify_cat_unittest21(self):
+        # Owner is the same as the personality - should be updated
+        command = ["cat", "--hostname", "unittest21.aqd-unittest.ms.com", "--data"]
         out = self.commandtest(command)
-        self.matchoutput(out, "Environment: infra", command)
+        self.searchoutput(out, r'"system/owner_eon_id" = %d;' %
+                          self.grns["grn:/ms/ei/aquilon/ut2"], command)
 
-        command = ["del_personality", "--archetype=windows", "--personality=prod-perim"]
-        self.successtest(command)
+    def test_142_update_owner_grn_nohosts(self):
+        command = ["update_personality", "--personality", "compileserver",
+                   "--archetype", "aquilon", "--grn", "grn:/ms/ei/aquilon/unittest",
+                   "--leave_existing"]
+        self.statustest(command)
 
-    def test_155_update_hostenv_prod(self):
-        command = ["update_personality", "--personality=desktop",
-                    "--archetype=windows", "--host_environment=prod"]
-        out = self.successtest(command)
-
-        command = ["show_personality", "--personality=desktop",
-                   "--archetype=windows"]
+    def test_143_verify_show_personality(self):
+        command = ["show_personality", "--personality", "compileserver"]
         out = self.commandtest(command)
-        self.matchoutput(out, "Environment: prod", command)
+        self.matchoutput(out, "Owned by GRN: grn:/ms/ei/aquilon/unittest", command)
 
-        command = ["cat", "--personality=desktop"]
+    def test_143_verify_show_unittest02(self):
+        command = ["show_host", "--hostname", "unittest02.one-nyp.ms.com"]
         out = self.commandtest(command)
-        self.searchoutput(out, r'"/system/personality/host_environment" = "prod";', command)
+        self.matchoutput(out, "Personality: compileserver", command)
+        self.searchoutput(out, r"^  Owned by GRN: grn:/ms/ei/aquilon/aqd", command)
+
+    def test_143_verify_show_unittest21(self):
+        command = ["show_host", "--hostname", "unittest21.aqd-unittest.ms.com"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Personality: compileserver", command)
+        self.searchoutput(out, r"^  Owned by GRN: grn:/ms/ei/aquilon/ut2", command)
+
+    def test_144_verify_cat_personality(self):
+        command = ["cat", "--personality", "compileserver"]
+        out = self.commandtest(command)
+        self.searchoutput(out, r'"/system/personality/owner_eon_id" = %d;' %
+                          self.grns["grn:/ms/ei/aquilon/unittest"], command)
+
+    def test_144_verify_cat_unittest02(self):
+        # Different owner, should not be updated
+        command = ["cat", "--hostname", "unittest02.one-nyp.ms.com", "--data"]
+        out = self.commandtest(command)
+        self.searchoutput(out, r'"system/owner_eon_id" = %d;' %
+                          self.grns["grn:/ms/ei/aquilon/aqd"], command)
+
+    def test_144_verify_cat_unittest20(self):
+        # Inherited, should be updated
+        command = ["cat", "--hostname", "unittest20.aqd-unittest.ms.com", "--data"]
+        out = self.commandtest(command)
+        self.searchoutput(out, r'"system/owner_eon_id" = %d;' %
+                          self.grns["grn:/ms/ei/aquilon/unittest"], command)
+
+    def test_144_verify_cat_unittest21(self):
+        # Should not be updated due to --leave_existing
+        command = ["cat", "--hostname", "unittest21.aqd-unittest.ms.com", "--data"]
+        out = self.commandtest(command)
+        self.searchoutput(out, r'"system/owner_eon_id" = %d;' %
+                          self.grns["grn:/ms/ei/aquilon/ut2"], command)
+
+    def test_170_make_staged(self):
+        self.check_plenary_gone("aquilon", "personality",
+                                "compileserver+next", "config")
+        self.noouttest(["update_personality", "--personality", "compileserver",
+                        "--archetype", "aquilon", "--staged"])
+        self.check_plenary_exists("aquilon", "personality",
+                                  "compileserver+next", "config")
+
+    def test_171_show_current(self):
+        command = ["show_personality", "--personality", "compileserver",
+                   "--archetype", "aquilon"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Stage: current", command)
+
+    def test_171_cat_current(self):
+        self.verifycatpersonality("aquilon", "compileserver", stage="current")
+
+    def test_172_show_next(self):
+        command = ["show_personality", "--personality", "compileserver",
+                   "--archetype", "aquilon", "--personality_stage", "next"]
+        out = self.commandtest(command)
+        self.matchoutput(out, "Stage: next", command)
+
+    def test_172_cat_next(self):
+        self.verifycatpersonality("aquilon", "compileserver", stage="next")
+
+    def test_174_delete_next(self):
+        self.noouttest(["del_personality", "--personality", "compileserver",
+                        "--archetype", "aquilon", "--personality_stage", "next"])
+
+    def test_175_verify_next_gone(self):
+        command = ["show_personality", "--personality", "compileserver",
+                   "--archetype", "aquilon", "--personality_stage", "next"]
+        out = self.notfoundtest(command)
+        self.matchoutput(out, "Personality aquilon/compileserver does not have "
+                         "stage next.", command)
+        self.check_plenary_gone("aquilon", "personality",
+                                "compileserver+next", "config")
+
+    def test_176_create_next_again(self):
+        self.noouttest(["update_personality", "--personality", "compileserver",
+                        "--archetype", "aquilon"])
+
+    def test_178_make_unstaged(self):
+        self.check_plenary_exists("aquilon", "personality",
+                                  "compileserver+next", "config")
+        self.noouttest(["update_personality", "--personality", "compileserver",
+                        "--archetype", "aquilon", "--unstaged"])
+        self.check_plenary_gone("aquilon", "personality",
+                                "compileserver+next", "config")
+
+    def test_179_verify_unstaged(self):
+        command = ["show_personality", "--personality", "compileserver",
+                   "--archetype", "aquilon"]
+        out = self.commandtest(command)
+        self.matchclean(out, "Stage:", command)
+
+    def test_179_cat_unstaged(self):
+        self.verifycatpersonality("aquilon", "compileserver")
+
+    def test_200_invalid_function(self):
+        """ Verify that the list of built-in functions is restricted """
+        command = ["update_personality", "--personality", "vulcan-10g-server-prod",
+                   "--archetype", "esx_cluster",
+                   "--vmhost_capacity_function", "locals()",
+                   "--justification", "tcm=12345678"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out, "name 'locals' is not defined", command)
+
+    def test_200_invalid_type(self):
+        command = ["update_personality", "--personality", "vulcan-10g-server-prod",
+                   "--archetype", "esx_cluster",
+                   "--vmhost_capacity_function", "memory - 100",
+                   "--justification", "tcm=12345678"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out, "The function should return a dictonary.", command)
+
+    def test_200_invalid_dict(self):
+        command = ["update_personality", "--personality", "vulcan-10g-server-prod",
+                   "--archetype", "esx_cluster",
+                   "--vmhost_capacity_function", "{'memory': 'bar'}",
+                   "--justification", "tcm=12345678"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "The function should return a dictionary with all "
+                         "keys being strings, and all values being numbers.",
+                         command)
+
+    def test_200_missing_memory(self):
+        command = ["update_personality", "--personality", "vulcan-10g-server-prod",
+                   "--archetype", "esx_cluster",
+                   "--vmhost_capacity_function", "{'foo': 5}",
+                   "--justification", "tcm=12345678"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "The memory constraint is missing from the returned "
+                         "dictionary.", command)
+
+    def test_200_update_cluster_inuse(self):
+        command = ["update_personality", "--personality=vulcan-10g-server-prod",
+                   "--archetype=esx_cluster",
+                   "--cluster",
+                   "--justification", "tcm=12345678"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out, "Personality esx_cluster/vulcan-10g-server-prod is in use", command)
+
+    def test_200_missing_personality(self):
+        command = ["update_personality", "--archetype", "aquilon",
+                   "--personality", "personality-does-not-exist"]
+        out = self.notfoundtest(command)
+        self.matchoutput(out, "Personality personality-does-not-exist, "
+                         "archetype aquilon not found.", command)
+
+    def test_200_missing_personality_stage(self):
+        command = ["update_personality", "--archetype", "aquilon",
+                   "--personality", "nostage",
+                   "--personality_stage", "previous"]
+        out = self.notfoundtest(command)
+        self.matchoutput(out,
+                         "Personality aquilon/nostage does not have stage "
+                         "previous.",
+                         command)
+
+    def test_200_change_environment(self):
+        command = ["update_personality", "--personality=utunused/dev",
+                   "--archetype=aquilon", "--host_environment=infra"]
+        out = self.badrequesttest(command)
+        self.matchoutput(out,
+                         "Personality aquilon/utunused/dev already has "
+                         "its environment set to dev, and cannot be updated.",
+                         command)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUpdatePersonality)
